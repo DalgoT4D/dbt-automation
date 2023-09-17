@@ -47,21 +47,6 @@ def mk_normalized_dbtmodel(source_name: str, table_name: str) -> str:
 
 
 # ================================================================================
-def write_models(src: dict, output_dir: str):
-    """iterates through the tables in a source and creates their normalized models"""
-    for table in src["tables"]:
-        model_filename = Path(output_dir) / (table["name"] + ".sql")
-        logger.info(
-            "[write_models] %s.%s => %s", src["name"], table["name"], model_filename
-        )
-
-        with open(model_filename, "w", encoding="utf-8") as outfile:
-            model = mk_normalized_dbtmodel(src["name"], table["name"])
-            outfile.write(model)
-            outfile.close()
-
-
-# ================================================================================
 def get_models_config(src: dict, output_schema: str):
     """iterates through the tables in a source and creates the corresponding model
     configs. only one column is specified in the model: _airbyte_ab_id"""
@@ -107,8 +92,17 @@ if source is None:
     sys.exit(1)
 
 # for every table in the source, generate an output model file
-output_schema_dir = dbtproject.models_dir(args.output_schema)
-write_models(source, output_schema_dir)
+models_dir = dbtproject.models_dir(args.output_schema)
+for srctable in source["tables"]:
+    model_filename = Path(models_dir) / (srctable["name"] + ".sql")
+    logger.info(
+        "[write_models] %s.%s => %s", source["name"], srctable["name"], model_filename
+    )
+
+    with open(model_filename, "w", encoding="utf-8") as outfile:
+        model = mk_normalized_dbtmodel(source["name"], srctable["name"])
+        outfile.write(model)
+        outfile.close()
 
 # also generate a configuration yml with a `models:` key under the output-schema
 models_filename = dbtproject.models_filename(args.output_schema)
