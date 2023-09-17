@@ -2,6 +2,7 @@
 import os
 import argparse
 from logging import basicConfig, getLogger, INFO
+from pathlib import Path
 import yaml
 import psycopg2
 
@@ -14,17 +15,15 @@ logger = getLogger()
 
 parser = argparse.ArgumentParser(
     """
-Generates a source.yml containing exactly one source
+Generates a sources.yml configuration containing exactly one source
 That source will have one or more tables
+Ref: https://docs.getdbt.com/reference/source-properties
+Database connection parameters are read from syncsources.env
 """
 )
-parser.add_argument("--schema", required=True, help="e.g. staging")
+parser.add_argument("--project-dir", required=True)
 parser.add_argument("--source-name", required=True)
-parser.add_argument("--input-sources-file")
-parser.add_argument(
-    "--output-sources-file",
-    help="can be the same as input-sources-file, will overwrite",
-)
+parser.add_argument("--schema", default="staging", help="e.g. staging")
 args = parser.parse_args()
 
 
@@ -132,12 +131,7 @@ def get_connection():
 
 
 # ================================================================================
-def make_source_definitions(
-    source_name: str,
-    input_schema: str,
-    existing_source_definitions_file=None,
-    output_sources_file=None,
-):
+def make_source_definitions(source_name: str, input_schema: str, sources_file: str):
     """
     reads tables from the input_schema to create a dbt sources.yml
     uses the metadata from the existing source definitions, if any
@@ -157,11 +151,9 @@ def make_source_definitions(
         dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
         logger.info("read sources from database schema %s", input_schema)
 
-    if existing_source_definitions_file:
-        filesourcedefinitions = readsourcedefinitions(existing_source_definitions_file)
-        logger.info(
-            "read existing source defs from %s", existing_source_definitions_file
-        )
+    if Path(sources_file).exists():
+        filesourcedefinitions = readsourcedefinitions(sources_file)
+        logger.info("read existing source defs from %s", sources_file)
 
     else:
         filesourcedefinitions = {"version": 2, "sources": []}
@@ -170,17 +162,12 @@ def make_source_definitions(
         filesourcedefinitions, dbsourcedefinitions
     )
     logger.info("created (new) source definitions")
-    if output_sources_file:
-        with open(output_sources_file, "w", encoding="utf-8") as outfile:
-            yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
-            logger.info("wrote source definitions to %s", output_sources_file)
-    else:
-        logger.info("sources to be written to file:")
-        logger.info(merged_definitions)
+    with open(sources_file, "w", encoding="utf-8") as outfile:
+        yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
+        logger.info("wrote source definitions to %s", sources_file)
 
 
 # ================================================================================
 if __name__ == "__main__":
-    make_source_definitions(
-        args.source_name, args.schema, args.input_sources_file, args.output_sources_file
-    )
+    sources_filename = Path(args.project_dir) / "models" / args.schema / "sources.yml"
+    make_source_definitions(args.source_name, args.schema, sources_filename)
