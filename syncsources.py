@@ -4,12 +4,11 @@ import argparse
 from logging import basicConfig, getLogger, INFO
 from pathlib import Path
 import yaml
-import psycopg2
 from dotenv import load_dotenv
 from lib.sourceschemas import mksourcedefinition
+from lib.postgres import get_connection
 
-
-load_dotenv("syncsources.env")
+load_dotenv("dbconnection.env")
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -95,25 +94,18 @@ def merge_sourcedefinitions(filedefs: dict, dbdefs: dict) -> dict:
 
 
 # ================================================================================
-def get_connection():
-    """returns a psycopg connection"""
-    connection = psycopg2.connect(
-        host=os.getenv("DBHOST"),
-        port=os.getenv("DBPORT"),
-        user=os.getenv("DBUSER"),
-        password=os.getenv("DBPASSWORD"),
-        database=os.getenv("DBNAME"),
-    )
-    return connection
-
-
-# ================================================================================
 def make_source_definitions(source_name: str, input_schema: str, sources_file: str):
     """
     reads tables from the input_schema to create a dbt sources.yml
     uses the metadata from the existing source definitions, if any
     """
-    with get_connection() as conn:
+    with get_connection(
+        os.getenv("DBHOST"),
+        os.getenv("DBPORT"),
+        os.getenv("DBUSER"),
+        os.getenv("DBPASSWORD"),
+        os.getenv("DBNAME"),
+    ) as conn:
         cursor = conn.cursor()
         cursor.execute(
             f"""
