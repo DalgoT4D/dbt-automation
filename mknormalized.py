@@ -1,11 +1,12 @@
 """creates the dbt models which call our flatten_json macro"""
-import os
+import sys
 import argparse
 from logging import basicConfig, getLogger, INFO
 from string import Template
 from pathlib import Path
 import yaml
-
+from lib.sourceschemas import get_source
+from lib.dbtproject import dbtProject
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -46,21 +47,31 @@ def mk_normalized_dbtmodel(source_name: str, table_name: str) -> str:
 
 
 # ================================================================================
-def process_source(src: dict, output_schema: str, output_dir: str):
-    """iterates through the tables in a source and creates their _normalized models"""
+def write_models(src: dict, output_dir: str):
+    """iterates through the tables in a source and creates their normalized models"""
+    for table in src["tables"]:
+        model_filename = Path(output_dir) / (table["name"] + ".sql")
+        logger.info(
+            "[write_models] %s.%s => %s", src["name"], table["name"], model_filename
+        )
+
+        with open(model_filename, "w", encoding="utf-8") as outfile:
+            model = mk_normalized_dbtmodel(src["name"], table["name"])
+            outfile.write(model)
+            outfile.close()
+
+
+# ================================================================================
+def get_models_config(src: dict, output_schema: str):
+    """iterates through the tables in a source and creates the corresponding model
+    configs. only one column is specified in the model: _airbyte_ab_id"""
     models = []
     for table in src["tables"]:
         logger.info(
-            "[process_source] source_name=%s table_name=%s", src["name"], table["name"]
+            "[get_models_config] adding model %s.%s",
+            src["name"],
+            table["name"],
         )
-        table_normalized_dbtmodel = mk_normalized_dbtmodel(src["name"], table["name"])
-
-        table_normalized_dbtmodel_filename = Path(output_dir) / (src["name"] + ".sql")
-
-        logger.info("writing %s", table_normalized_dbtmodel_filename)
-        with open(table_normalized_dbtmodel_filename, "w", encoding="utf-8") as outfile:
-            outfile.write(table_normalized_dbtmodel)
-            outfile.close()
 
         models.append(
             {
@@ -81,40 +92,33 @@ def process_source(src: dict, output_schema: str, output_dir: str):
 
 
 # ================================================================================
-def get_source(filename: str, input_schema: str) -> dict:
-    """read the config file containing `sources` keys and return the source
-    matching the input schema"""
-    with open(filename, "r", encoding="utf-8") as sources_file:
-        sources = yaml.safe_load(sources_file)
+dbtproject = dbtProject(args.project_dir)
 
-        for src in sources["sources"]:
-            if src["schema"] == input_schema:
-                return src
-
-    return None
-
-
-# ================================================================================
 # create the output directory
-output_schema_dir = Path(args.project_dir) / "models" / args.output_schema
-if not os.path.exists(output_schema_dir):
-    os.makedirs(output_schema_dir)
-    logger.info("created directory %s", output_schema_dir)
+dbtproject.ensure_models_dir(args.output_schema)
 
-sources_filename = Path(args.project_dir) / "models" / args.input_schema / "sources.yml"
-models_filename = Path(args.project_dir) / "models" / args.output_schema / "models.yml"
+# locate the sources.yml for the input-schema
+sources_filename = dbtproject.sources_filename(args.input_schema)
 
-output_config = {
-    "version": 2,
-    "models": [],
-}
-
+# find the source in that file... it should be the only one
 source = get_source(sources_filename, args.input_schema)
-if source:
-    output_config["models"] = process_source(
-        source, args.output_schema, output_schema_dir
-    )
+if source is None:
+    logger.error("no source for schema %s in %s", args.input_schema, sources_filename)
+    sys.exit(1)
 
+# for every table in the source, generate an output model file
+output_schema_dir = dbtproject.models_dir(args.output_schema)
+write_models(source, output_schema_dir)
+
+# also generate a configuration yml with a `models:` key under the output-schema
+models_filename = dbtproject.models_filename(args.output_schema)
+with open(models_filename, "w", encoding="utf-8") as models_file:
     logger.info("writing %s", models_filename)
-    with open(models_filename, "w", encoding="utf-8") as models_file:
-        yaml.safe_dump(output_config, models_file, sort_keys=False)
+    yaml.safe_dump(
+        {
+            "version": 2,
+            "models": get_models_config(source, args.output_schema),
+        },
+        models_file,
+        sort_keys=False,
+    )
