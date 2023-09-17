@@ -1,5 +1,7 @@
 """helpers for working with dbt source configs"""
 
+import yaml
+
 
 # ================================================================================
 def mksourcedefinition(sourcename: str, input_schema: str, tables: list):
@@ -23,3 +25,15 @@ def mksourcedefinition(sourcename: str, input_schema: str, tables: list):
         "sources": [source],
     }
     return sourcedefinitions
+
+
+# ================================================================================
+def get_source(filename: str, input_schema: str) -> dict:
+    """read the config file containing `sources` keys and return the source
+    matching the input schema"""
+    with open(filename, "r", encoding="utf-8") as sources_file:
+        sources = yaml.safe_load(sources_file)
+
+        return next(
+            (src for src in sources["sources"] if src["schema"] == input_schema), None
+        )
