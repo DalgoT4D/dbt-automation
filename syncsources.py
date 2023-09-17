@@ -5,8 +5,9 @@ from logging import basicConfig, getLogger, INFO
 from pathlib import Path
 import yaml
 import psycopg2
-
 from dotenv import load_dotenv
+from lib.sourceschemas import mksourcedefinition
+
 
 load_dotenv("syncsources.env")
 
@@ -36,52 +37,28 @@ def readsourcedefinitions(sourcefilename: str):
 
 
 # ================================================================================
-def mksourcedefinition(sourcename: str, input_schema: str, tables: list):
-    """generates the data structure for a dbt sources.yml"""
-    airbyte_prefix = "_airbyte_raw_"
-
-    source = {"name": sourcename, "schema": input_schema, "tables": []}
-
-    for tablename in tables:
-        cleaned_name = tablename.replace(airbyte_prefix, "")
-        source["tables"].append(
-            {
-                "name": cleaned_name,
-                "identifier": tablename,
-                "description": "",
-            }
-        )
-
-    sourcedefinitions = {
-        "version": 2,
-        "sources": [source],
-    }
-    return sourcedefinitions
-
-
-# ================================================================================
 def mergesource(dbsource: dict, filesources: list) -> dict:
     """
     finds the file source corresponding to the dbsource
     and update the name if possible
     """
     outputsource = {
-        "name": dbsource["name"],
+        "name": None,
         "schema": dbsource["schema"],
-        "tables": [],
+        "tables": None,
     }
 
-    for filesource in filesources:
-        if outputsource["schema"] == filesource["schema"]:
-            outputsource["name"] = filesource["name"]
-            outputsource["tables"] = [
-                mergetable(dbtable, filesource["tables"])
-                for dbtable in dbsource["tables"]
-            ]
-            return outputsource
-
-    # if we didn't find anything in the file source, then
-    outputsource["tables"] = dbsource["tables"]
+    try:
+        filesource = next(
+            fs for fs in filesources if fs["schema"] == dbsource["schema"]
+        )
+        outputsource["name"] = filesource["name"]
+        outputsource["tables"] = [
+            mergetable(dbtable, filesource["tables"]) for dbtable in dbsource["tables"]
+        ]
+    except StopIteration:
+        outputsource["name"] = dbsource["name"]
+        outputsource["tables"] = dbsource["tables"]
 
     return outputsource
 
