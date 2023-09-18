@@ -57,7 +57,7 @@ def get_json_columnspec(schema: str, table: str):
 
 
 # ================================================================================
-def get_model_config(modelname: str, schemaname: str, columnspec: list):
+def mk_model_config(schemaname: str, modelname_: str, columnspec: list):
     """iterates through the tables in a source and creates the corresponding model
     configs. only one column is specified in the model: _airbyte_ab_id"""
     columns = [
@@ -70,12 +70,12 @@ def get_model_config(modelname: str, schemaname: str, columnspec: list):
     for column in columnspec:
         columns.append(
             {
-                "name": cleaned_column_name(column),
+                "name": column,
                 "description": "",
             }
         )
     return {
-        "name": modelname,
+        "name": modelname_,
         "description": "",
         "+schema": schemaname,
         "columns": columns,
@@ -83,10 +83,8 @@ def get_model_config(modelname: str, schemaname: str, columnspec: list):
 
 
 # ================================================================================
-def mk_dbtmodel(sourcename: str, srctablename: str, columns: list):
+def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
     """create the .sql model for this table"""
-
-    assert len(columns) > 0
 
     dbtmodel = """
 {{ 
@@ -102,10 +100,8 @@ def mk_dbtmodel(sourcename: str, srctablename: str, columns: list):
     dbtmodel += "SELECT _airbyte_ab_id "
     dbtmodel += "\n"
 
-    for colname in columns:
-        dbtmodel += (
-            f", _airbyte_data->>'{colname}' as \"{cleaned_column_name(colname)}\""
-        )
+    for json_field, sql_column in columntuples:
+        dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
         dbtmodel += "\n"
 
     dbtmodel += f"FROM {sourcename}.{srctablename}"
@@ -115,46 +111,47 @@ def mk_dbtmodel(sourcename: str, srctablename: str, columns: list):
 
 # ================================================================================
 dbtproject = dbtProject(args.project_dir)
+SOURCE_SCHEMA = "staging"
+DEST_SCHEMA = "intermediate"
 
 # create the output directory
-dbtproject.ensure_models_dir("intermediate")
+dbtproject.ensure_models_dir(DEST_SCHEMA)
 
 # locate the sources.yml for the input-schema
-sources_filename = dbtproject.sources_filename("staging")
+sources_filename = dbtproject.sources_filename(SOURCE_SCHEMA)
 
 # find the source in that file... it should be the only one
-source = get_source(sources_filename, "staging")
+source = get_source(sources_filename, SOURCE_SCHEMA)
 if source is None:
-    logger.error("no source for schema %s in %s", "staging", sources_filename)
+    logger.error("no source for schema %s in %s", SOURCE_SCHEMA, sources_filename)
     sys.exit(1)
 
 # for every table in the source, generate an output model file
-models_dir = dbtproject.models_dir("intermediate")
+
 models = []
+
 for srctable in source["tables"]:
-    colspec = get_json_columnspec(source["schema"], srctable["identifier"])
+    modelname = srctable["name"]
+    tablename = srctable["identifier"]
 
-    models.append(get_model_config(srctable["name"], "intermediate", colspec))
+    # get the field names from the json objects
+    json_fields = get_json_columnspec(SOURCE_SCHEMA, tablename)
 
-    model_filename = Path(models_dir) / (srctable["name"] + ".sql")
-    logger.info(
-        "[write_models] %s.%s => %s", source["name"], srctable["name"], model_filename
+    # convert to sql-friendly column names
+    sql_columns = list(map(cleaned_column_name, json_fields))
+
+    # create the configuration
+    model_config = mk_model_config(DEST_SCHEMA, modelname, sql_columns)
+    models.append(model_config)
+
+    # and the .sql model
+    model_sql = mk_dbtmodel(
+        SOURCE_SCHEMA,
+        tablename,
+        zip(json_fields, sql_columns),
     )
+    dbtproject.write_model(DEST_SCHEMA, modelname, model_sql, logger=logger)
 
-    with open(model_filename, "w", encoding="utf-8") as outfile:
-        model = mk_dbtmodel(source["schema"], srctable["identifier"], colspec)
-        outfile.write(model)
-        outfile.close()
 
-# write the yml with the models configuration
-models_filename = dbtproject.models_filename("intermediate")
-with open(models_filename, "w", encoding="utf-8") as models_file:
-    logger.info("writing %s", models_filename)
-    yaml.safe_dump(
-        {
-            "version": 2,
-            "models": models,
-        },
-        models_file,
-        sort_keys=False,
-    )
+# finally write the yml with the models configuration
+dbtproject.write_model_config(DEST_SCHEMA, models, logger=logger)

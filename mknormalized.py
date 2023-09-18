@@ -105,14 +105,6 @@ for srctable in source["tables"]:
         outfile.close()
 
 # also generate a configuration yml with a `models:` key under the output-schema
-models_filename = dbtproject.models_filename(args.output_schema)
-with open(models_filename, "w", encoding="utf-8") as models_file:
-    logger.info("writing %s", models_filename)
-    yaml.safe_dump(
-        {
-            "version": 2,
-            "models": get_models_config(source, args.output_schema),
-        },
-        models_file,
-        sort_keys=False,
-    )
+dbtproject.write_model_config(
+    args.output_schema, get_models_config(source, args.output_schema), logger=logger
+)
