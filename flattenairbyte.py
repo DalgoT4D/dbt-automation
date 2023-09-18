@@ -3,12 +3,11 @@ import os
 import sys
 import argparse
 from logging import basicConfig, getLogger, INFO
-from pathlib import Path
-import yaml
 from dotenv import load_dotenv
 
 from lib.sourceschemas import get_source
 from lib.dbtproject import dbtProject
+from lib.dbtconfigs import mk_model_config
 from lib.postgres import get_columnspec as db_get_colspec, cleaned_column_name
 from lib.postgres import get_json_columnspec as db_get_json_colspec
 
@@ -33,7 +32,6 @@ connection_info = {
 }
 
 
-# ================================================================================
 def get_columnspec(schema: str, table: str):
     """get the column schema for this table"""
     return db_get_colspec(
@@ -50,36 +48,6 @@ def get_json_columnspec(schema: str, table: str):
         table,
         connection_info,
     )
-
-
-# print(get_json_columnspec("staging", "_airbyte_raw_daily_issue_form"))
-# sys.exit(0)
-
-
-# ================================================================================
-def mk_model_config(schemaname: str, modelname_: str, columnspec: list):
-    """iterates through the tables in a source and creates the corresponding model
-    configs. only one column is specified in the model: _airbyte_ab_id"""
-    columns = [
-        {
-            "name": "_airbyte_ab_id",
-            "description": "",
-            "tests": ["unique", "not_null"],
-        }
-    ]
-    for column in columnspec:
-        columns.append(
-            {
-                "name": column,
-                "description": "",
-            }
-        )
-    return {
-        "name": modelname_,
-        "description": "",
-        "+schema": schemaname,
-        "columns": columns,
-    }
 
 
 # ================================================================================
