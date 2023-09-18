@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import yaml
 
 
 class dbtProject:  # pylint:disable=invalid-name
@@ -25,6 +26,28 @@ class dbtProject:  # pylint:disable=invalid-name
         if not os.path.exists(output_schema_dir):
             os.makedirs(output_schema_dir)
 
-    def models_filename(self, schema: str) -> str:
-        """returns the pathname of the models.yml in the folder for the given schema"""
-        return Path(self.models_dir(schema)) / "models.yml"
+    def write_model(
+        self, schema: str, modelname: str, model_sql: str, **kwargs
+    ) -> None:
+        """writes a .sql model"""
+        model_filename = Path(self.models_dir(schema)) / (modelname + ".sql")
+        with open(model_filename, "w", encoding="utf-8") as outfile:
+            if kwargs.get("logger"):
+                kwargs["logger"].info("[write_model] %s", model_filename)
+            outfile.write(model_sql)
+            outfile.close()
+
+    def write_model_config(self, schema: str, models: list, **kwargs) -> None:
+        """writes a .yml with a models: key"""
+        models_filename = Path(self.models_dir(schema)) / "models.yml"
+        with open(models_filename, "w", encoding="utf-8") as models_file:
+            if kwargs.get("logger"):
+                kwargs["logger"].info("writing %s", models_filename)
+            yaml.safe_dump(
+                {
+                    "version": 2,
+                    "models": models,
+                },
+                models_file,
+                sort_keys=False,
+            )
