@@ -10,6 +10,7 @@ from lib.dbtproject import dbtProject
 from lib.dbtconfigs import mk_model_config
 from lib.postgres import get_columnspec as db_get_colspec, cleaned_column_name
 from lib.postgres import get_json_columnspec as db_get_json_colspec
+from lib.postgres import dedup_list
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -107,6 +108,9 @@ for srctable in source["tables"]:
 
     # convert to sql-friendly column names
     sql_columns = list(map(cleaned_column_name, json_fields))
+
+    # after cleaning we may have duplicates
+    sql_columns = dedup_list(sql_columns)
 
     # create the configuration
     model_config = mk_model_config(DEST_SCHEMA, modelname, sql_columns)

@@ -1,4 +1,5 @@
 """helpers for postgres"""
+import re
 import psycopg2
 
 
@@ -56,8 +57,18 @@ def get_json_columnspec(schema: str, table: str, conn_info: dict):
 
 def cleaned_column_name(colname: str) -> str:
     """cleans the column name"""
-    colname = colname.replace("-", "_")
-    colname = colname.replace("begin_group_", "BG_")
-    colname = colname.replace("/", "_")
+    pattern = r"[^0-9a-zA-Z]"
     colname = colname[:60]
+    colname = re.sub(pattern, "_", colname)
     return colname
+
+
+def dedup_list(names: list):
+    """ensures list does not contain duplicates, by appending an "_" to
+    any duplicates found"""
+    column_name_counts = Counter()
+    deduped_names = []
+    for colname in names:
+        column_name_counts[colname] += 1
+        deduped_names.append(colname + "_" * (column_name_counts[colname] - 1))
+    return deduped_names
