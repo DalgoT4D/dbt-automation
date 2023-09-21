@@ -58,18 +58,24 @@ def get_json_columnspec(schema: str, table: str, conn_info: dict):
 
 def cleaned_column_name(colname: str) -> str:
     """cleans the column name"""
+    colname = colname[:40]
     pattern = r"[^0-9a-zA-Z]"
-    colname = colname[:60]
     colname = re.sub(pattern, "_", colname)
     return colname
 
 
 def dedup_list(names: list):
-    """ensures list does not contain duplicates, by appending an "_" to
+    """ensures list does not contain duplicates, by appending to
     any duplicates found"""
     column_name_counts = Counter()
     deduped_names = []
     for colname in names:
         column_name_counts[colname] += 1
-        deduped_names.append(colname + "_" * (column_name_counts[colname] - 1))
+        if column_name_counts[colname] == 1:
+            deduped_name = colname
+        else:
+            deduped_name = (
+                colname + "_" + chr(column_name_counts[colname] - 1 + ord("a"))
+            )
+        deduped_names.append(deduped_name)
     return deduped_names
