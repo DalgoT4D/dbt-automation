@@ -1,6 +1,6 @@
 """takes a list of tables and a common column spec and creates a dbt model to merge them"""
 import os
-import sys
+
 import argparse
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
