@@ -6,6 +6,7 @@ from string import Template
 import argparse
 from pathlib import Path
 from logging import basicConfig, getLogger, INFO
+import yaml
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -70,3 +71,10 @@ dbtproject = PROJECT_TEMPLATE.substitute({"project_name": args.project_name})
 with open(dbtproject_filename, "w", encoding="utf-8") as dbtprojectfile:
     dbtprojectfile.write(dbtproject)
     logger.info("wrote %s", dbtproject_filename)
+
+dbtpackages_filename = Path(project_dir) / "packages.yml"
+with open(dbtpackages_filename, "w", encoding="utf-8") as dbtpackgesfile:
+    yaml.safe_dump(
+        {"packages": [{"package": "dbt-labs/dbt_utils", "version": "1.1.1"}]},
+        dbtpackgesfile,
+    )
