@@ -5,15 +5,15 @@ Example usage:
 
 1. 
 
-    python scaffolddbt.py --project-dir ../shridbt \
-                          --project-name shridbt 
+    python scaffolddbt.py --project-dir workspace/lahi \
+                          --project-name lahi 
 2. 
 
-    python syncsources.py --project-dir ../shridbt \
-                          --source-name shrikobo 
+    python syncsources.py --project-dir workspace/lahi \
+                          --source-name lahi 
 
 3. 
 
-    python mknormalized.py  --project-dir ../shridbt/ 
+    python flattenairbyte.py  --project-dir workspace/lahi
 
 

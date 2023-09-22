@@ -2,3 +2,4 @@ venv/
 dbconnection.env
 *.pyc
 workspace/
+*.yaml
