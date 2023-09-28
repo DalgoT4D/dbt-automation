@@ -63,7 +63,7 @@ for table in mergespec["tables"]:
 
 for table in mergespec["tables"]:
     columns = get_columns_from_model(models, table["tablename"])
-    statement: str = "SELECT "
+    statement: str = "{{ config(materialized='table',) }}\nSELECT "
     for column in all_columns:
         if column in columns:
             statement += f'"{column}" AS "{column}",'
@@ -84,8 +84,9 @@ for table in mergespec["tables"]:
     relations += f"ref('premerge_{table['tablename']}'),"
 relations = relations[:-1]
 relations += "]"
+union_code = "{{ config(materialized='table',) }}\n"
 # pylint:disable=consider-using-f-string
-union_code = "{{ dbt_utils.union_relations("
+union_code += "{{ dbt_utils.union_relations("
 union_code += f"relations={relations}"
 union_code += ")}}"
 dbtproject.write_model(
