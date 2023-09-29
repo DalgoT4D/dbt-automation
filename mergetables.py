@@ -70,7 +70,7 @@ for table in mergespec["tables"]:
         else:
             statement += f'NULL AS "{column}",'
     statement = statement[:-1]  # drop the final comma
-    statement += f" FROM {table['schema']}.{table['tablename']}"
+    statement += f"FROM {{{{ref('{table['tablename']}')}}}}"
     dbtproject.write_model(
         mergespec["outputsschema"],
         f'premerge_{table["tablename"]}',
