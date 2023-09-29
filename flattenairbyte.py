@@ -73,7 +73,7 @@ def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
         dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
         dbtmodel += "\n"
 
-    dbtmodel += f"FROM {sourcename}.{srctablename}"
+    dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
 
     return dbtmodel
 
@@ -118,8 +118,8 @@ for srctable in source["tables"]:
 
     # and the .sql model
     model_sql = mk_dbtmodel(
-        SOURCE_SCHEMA,
-        tablename,
+        source['name'], # pass the source in the yaml file
+        modelname,
         zip(json_fields, sql_columns),
     )
     dbtproject.write_model(DEST_SCHEMA, modelname, model_sql, logger=logger)
