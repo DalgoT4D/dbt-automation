@@ -47,7 +47,7 @@ def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
     dbtmodel += "\n"
 
     for json_field, sql_column in columntuples:
-        dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
+        dbtmodel += f", json_value('_airbyte_data', '$.{json_field}') as `{sql_column}`"
         dbtmodel += "\n"
 
     dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
