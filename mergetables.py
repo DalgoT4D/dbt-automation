@@ -1,7 +1,9 @@
 """takes a list of tables and a common column spec and creates a dbt model to merge them"""
 import os
+import sys
 
 import argparse
+from collections import Counter
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 import yaml
@@ -46,6 +48,15 @@ def get_columnspec(schema_: str, table_: str):
 with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
 
+table_counts = Counter([m["tablename"] for m in mergespec["tables"]])
+has_error: bool = False
+for tablename, tablenamecount in table_counts.items():
+    if tablenamecount > 1:
+        logger.error("table appears more than once in spec: %s", tablename)
+        has_error = True
+if has_error:
+    sys.exit(1)
+
 dbtproject = dbtProject(args.project_dir)
 dbtproject.ensure_models_dir(mergespec["outputsschema"])
 
@@ -63,7 +74,7 @@ for table in mergespec["tables"]:
 
 for table in mergespec["tables"]:
     columns = get_columns_from_model(models, table["tablename"])
-    statement: str = "SELECT "
+    statement: str = "{{ config(materialized='table',) }}\nSELECT "
     for column in all_columns:
         if column in columns:
             statement += f'"{column}" AS "{column}",'
@@ -84,8 +95,9 @@ for table in mergespec["tables"]:
     relations += f"ref('premerge_{table['tablename']}'),"
 relations = relations[:-1]
 relations += "]"
+union_code = "{{ config(materialized='table',) }}\n"
 # pylint:disable=consider-using-f-string
-union_code = "{{ dbt_utils.union_relations("
+union_code += "{{ dbt_utils.union_relations("
 union_code += f"relations={relations}"
 union_code += ")}}"
 dbtproject.write_model(
