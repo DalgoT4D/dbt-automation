@@ -1,7 +1,9 @@
 """takes a list of tables and a common column spec and creates a dbt model to merge them"""
 import os
+import sys
 
 import argparse
+from collections import Counter
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 import yaml
@@ -45,6 +47,15 @@ def get_columnspec(schema_: str, table_: str):
 # ================================================================================
 with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
+
+table_counts = Counter([m["tablename"] for m in mergespec["tables"]])
+has_error: bool = False
+for tablename, tablenamecount in table_counts.items():
+    if tablenamecount > 1:
+        logger.error("table appears more than once in spec: %s", tablename)
+        has_error = True
+if has_error:
+    sys.exit(1)
 
 dbtproject = dbtProject(args.project_dir)
 dbtproject.ensure_models_dir(mergespec["outputsschema"])
