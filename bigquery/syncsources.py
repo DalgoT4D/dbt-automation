@@ -1,6 +1,7 @@
 """Bigquer module"""
 import yaml
 import os
+import argparse
 from pathlib import Path
 import sys
 from logging import basicConfig, getLogger, INFO
@@ -27,19 +28,31 @@ from google.cloud import bigquery
 
 client = bigquery.Client()
 
+parser = argparse.ArgumentParser(
+    """
+Generates a sources.yml configuration containing exactly one source
+That source will have one or more tables
+Ref: https://docs.getdbt.com/reference/source-properties
+Database connection parameters are read from syncsources.env
+"""
+)
+parser.add_argument("--source-name", required=True)
+parser.add_argument("--schema", default="staging", help="e.g. staging")
+args = parser.parse_args()
+
 
 project_dir = os.getenv("DBT_PROJECT_DIR")
-DATASET = "dbt_automation"
-SOURCE_SCHEMA = "staging"
+source_name = args.source_name
+SOURCE_SCHEMA = args.schema
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 # get all the table names
-tables = client.list_tables(DATASET)
+tables = client.list_tables(SOURCE_SCHEMA)
 
 tablenames = [x.table_id for x in tables]
-dbsourcedefinitions = mksourcedefinition("sheets", "dbt_automation", tablenames)
+dbsourcedefinitions = mksourcedefinition("sheets", SOURCE_SCHEMA, tablenames)
 
 sources_filename = Path(project_dir) / "models" / SOURCE_SCHEMA / "sources.yml"
 
