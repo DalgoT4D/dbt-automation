@@ -13,15 +13,13 @@ from lib.dbtsources import (
 
 # from lib.postgres import get_json_columnspec
 
-load_dotenv("bg.env")
+load_dotenv("dbconnection.env")
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
     os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 )
 
 from google.cloud import bigquery
-
-client = bigquery.Client()
 
 parser = argparse.ArgumentParser(
     """
@@ -35,10 +33,7 @@ parser.add_argument("--source-name", required=True)
 parser.add_argument("--schema", default="staging", help="e.g. staging")
 args = parser.parse_args()
 
-
 project_dir = os.getenv("DBT_PROJECT_DIR")
-source_name = args.source_name
-# SOURCE_SCHEMA = args.schema
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -50,8 +45,10 @@ def make_source_definitions(source_name: str, input_schema: str, sources_file: s
     uses the metadata from the existing source definitions, if any
     """
 
+    conn_client = bigquery.Client()
+
     # get all the table names
-    tables = client.list_tables(input_schema)
+    tables = conn_client.list_tables(input_schema)
 
     tablenames = [x.table_id for x in tables]
     dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
