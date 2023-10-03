@@ -1,19 +1,14 @@
 """Bigquer module"""
-import yaml
+from logging import basicConfig, getLogger, INFO
 import os
 import argparse
 from pathlib import Path
-import sys
-from logging import basicConfig, getLogger, INFO
+import yaml
 from dotenv import load_dotenv
-from lib.sourceschemas import get_source
-from lib.dbtproject import dbtProject
 from lib.sourceschemas import mksourcedefinition
 from lib.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
-    mergesource,
-    mergetable,
 )
 
 # from lib.postgres import get_json_columnspec
@@ -43,27 +38,40 @@ args = parser.parse_args()
 
 project_dir = os.getenv("DBT_PROJECT_DIR")
 source_name = args.source_name
-SOURCE_SCHEMA = args.schema
+# SOURCE_SCHEMA = args.schema
 
 basicConfig(level=INFO)
 logger = getLogger()
 
-# get all the table names
-tables = client.list_tables(SOURCE_SCHEMA)
 
-tablenames = [x.table_id for x in tables]
-dbsourcedefinitions = mksourcedefinition("sheets", SOURCE_SCHEMA, tablenames)
+def make_source_definitions(source_name: str, input_schema: str, sources_file: str):
+    """
+    reads tables from the input_schema to create a dbt sources.yml
+    uses the metadata from the existing source definitions, if any
+    """
 
-sources_filename = Path(project_dir) / "models" / SOURCE_SCHEMA / "sources.yml"
+    # get all the table names
+    tables = client.list_tables(input_schema)
 
-if Path(sources_filename).exists():
-    filesourcedefinitions = readsourcedefinitions(sources_filename)
-    logger.info("read existing source defs from %s", sources_filename)
-else:
-    filesourcedefinitions = {"version": 2, "sources": []}
+    tablenames = [x.table_id for x in tables]
+    dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
 
-merged_definitions = merge_sourcedefinitions(filesourcedefinitions, dbsourcedefinitions)
-logger.info("created (new) source definitions")
-with open(sources_filename, "w", encoding="utf-8") as outfile:
-    yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
-    logger.info("wrote source definitions to %s", sources_filename)
+    if Path(sources_file).exists():
+        filesourcedefinitions = readsourcedefinitions(sources_file)
+        logger.info("read existing source defs from %s", sources_file)
+    else:
+        filesourcedefinitions = {"version": 2, "sources": []}
+
+    merged_definitions = merge_sourcedefinitions(
+        filesourcedefinitions, dbsourcedefinitions
+    )
+    logger.info("created (new) source definitions")
+    with open(sources_file, "w", encoding="utf-8") as outfile:
+        yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
+        logger.info("wrote source definitions to %s", sources_file)
+
+
+# ================================================================================
+if __name__ == "__main__":
+    sources_filename = Path(project_dir) / "models" / args.schema / "sources.yml"
+    make_source_definitions(args.source_name, args.schema, sources_filename)
