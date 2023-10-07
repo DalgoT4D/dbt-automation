@@ -64,7 +64,7 @@ def get_json_columnspec(schema: str, table: str):
 
 
 # ================================================================================
-def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
+def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: list):
     """create the .sql model for this table"""
 
     dbtmodel = """
@@ -77,15 +77,22 @@ def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
   ) 
 }}
     """
-
     dbtmodel += "SELECT _airbyte_ab_id "
     dbtmodel += "\n"
 
-    for json_field, sql_column in columntuples:
-        dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
-        dbtmodel += "\n"
+    if warehouse == "bigquery":
+        for json_field, sql_column in columntuples:
+            dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
+            dbtmodel += "\n"
 
-    dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
+        dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
+
+    if warehouse == "postgres":
+        for json_field, sql_column in columntuples:
+            dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
+            dbtmodel += "\n"
+
+        dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
 
     return dbtmodel
 
@@ -151,6 +158,7 @@ for srctable in source["tables"]:
 
     # and the .sql model
     model_sql = mk_dbtmodel(
+        args.warehouse,
         source["name"],  # pass the source in the yaml file
         modelname,
         zip(json_fields, sql_columns),
