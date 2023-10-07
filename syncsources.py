@@ -10,8 +10,6 @@ from lib.postgres import get_connection
 from lib.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
-    mergesource,
-    mergetable,
 )
 
 load_dotenv("dbconnection.env")
