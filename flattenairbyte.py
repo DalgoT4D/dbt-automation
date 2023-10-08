@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from lib.sourceschemas import get_source
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import mk_model_config
-from lib.postgres import get_columnspec as db_get_colspec, cleaned_column_name
+from lib.postgres import get_columnspec as db_get_colspec, make_cleaned_column_names
 from lib.postgres import get_json_columnspec as db_get_json_colspec
 from lib.postgres import dedup_list
 
@@ -82,8 +82,9 @@ def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: lis
 
     if warehouse == "bigquery":
         for json_field, sql_column in columntuples:
+            json_field = json_field.replace("'", "\\'")
             dbtmodel += (
-                f", json_value('_airbyte_data', '$.{json_field}') as `{sql_column}`"
+                f", json_value('_airbyte_data', '$.\"{json_field}\"') as `{sql_column}`"
             )
             dbtmodel += "\n"
 
@@ -131,7 +132,7 @@ for srctable in source["tables"]:
         json_fields = get_json_columnspec(SOURCE_SCHEMA, tablename)
 
         # convert to sql-friendly column names
-        sql_columns = list(map(cleaned_column_name, json_fields))
+        sql_columns = make_cleaned_column_names(json_fields)
 
         # after cleaning we may have duplicates
         sql_columns = dedup_list(sql_columns)
@@ -152,7 +153,7 @@ for srctable in source["tables"]:
         json_fields = []
         for row in query:
             json_fields = json.loads(row["_airbyte_data"]).keys()
-            sql_columns = list(map(cleaned_column_name, json_fields))
+            sql_columns = make_cleaned_column_names(json_fields)
 
     # create the configuration
     model_config = mk_model_config(DEST_SCHEMA, modelname, sql_columns)
