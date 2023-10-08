@@ -84,7 +84,7 @@ def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: lis
         for json_field, sql_column in columntuples:
             json_field = json_field.replace("'", "\\'")
             dbtmodel += (
-                f", json_value('_airbyte_data', '$.\"{json_field}\"') as `{sql_column}`"
+                f", json_value(_airbyte_data, '$.\"{json_field}\"') as `{sql_column}`"
             )
             dbtmodel += "\n"
 
