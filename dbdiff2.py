@@ -36,6 +36,19 @@ def get_tables(connection, schema: str):
     return tablenames
 
 
+def get_columns_spec(conn, schema: str, table: str):
+    """returns the list of columns"""
+    cursor = conn.cursor()
+    cursor.execute(
+        f"""SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = '{schema}'
+            AND table_name = '{table}'
+        """
+    )
+    return [x[0] for x in cursor.fetchall()]
+
+
 ref_schema = args.ref_schema
 comp_schema = args.comp_schema
 
@@ -59,6 +72,15 @@ with get_connection(
         print("not the same table sets")
         sys.exit(1)
 
+    columns_specs = {}
+    for tablename in ref_tables:
+        ref_columns = get_columns_spec(conn_ref, ref_schema, tablename)
+        comp_columns = get_columns_spec(conn_comp, comp_schema, tablename)
+        if set(ref_columns) != set(comp_columns):
+            print(f"columns for {tablename} are not the same")
+            sys.exit(1)
+        columns_specs[tablename] = ref_columns
+
 working_dir = args.working_dir
 os.makedirs(working_dir, exist_ok=True)
 os.makedirs(f"{working_dir}/{ref_schema}", exist_ok=True)
@@ -75,6 +97,7 @@ comp_user = connection_info["comp"]["user"]
 for tablename in ref_tables:
     print(tablename)
     ref_csvfile = f"{working_dir}/{ref_schema}/{tablename}.ref.csv"
+    columns_list = ",".join(columns_specs[tablename])
     subprocess_cmd = [
         "psql",
         "-h",
@@ -84,7 +107,7 @@ for tablename in ref_tables:
         "-U",
         ref_user,
         "-c",
-        f"\\COPY (SELECT * FROM {ref_schema}.{tablename}) TO '{ref_csvfile}' WITH CSV HEADER",
+        f"\\COPY (SELECT {columns_list} FROM {ref_schema}.{tablename}) TO '{ref_csvfile}' WITH CSV HEADER",
     ]
     os.environ["PGPASSWORD"] = connection_info["ref"]["password"]
     subprocess.check_call(subprocess_cmd)
@@ -116,7 +139,7 @@ for tablename in ref_tables:
         "-U",
         comp_user,
         "-c",
-        f"\\COPY (SELECT * FROM {comp_schema}.{tablename}) TO '{comp_csvfile}' WITH CSV HEADER",
+        f"\\COPY (SELECT {columns_list} FROM {comp_schema}.{tablename}) TO '{comp_csvfile}' WITH CSV HEADER",
     ]
     os.environ["PGPASSWORD"] = connection_info["comp"]["password"]
     subprocess.check_call(subprocess_cmd)
@@ -148,3 +171,5 @@ for tablename in ref_tables:
     except subprocess.CalledProcessError:
         print(f"diff failed for {tablename}")
         sys.exit(1)
+
+    break
