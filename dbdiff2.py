@@ -96,21 +96,22 @@ comp_user = connection_info["comp"]["user"]
 
 for tablename in ref_tables:
     print(tablename)
-    ref_csvfile = f"{working_dir}/{ref_schema}/{tablename}.ref.csv"
     columns_list = ",".join(columns_specs[tablename])
-    subprocess_cmd = [
-        "psql",
-        "-h",
-        ref_host,
-        "-d",
-        ref_database,
-        "-U",
-        ref_user,
-        "-c",
-        f"\\COPY (SELECT {columns_list} FROM {ref_schema}.{tablename}) TO '{ref_csvfile}' WITH CSV HEADER",
-    ]
-    os.environ["PGPASSWORD"] = connection_info["ref"]["password"]
-    subprocess.check_call(subprocess_cmd)
+    ref_csvfile = f"{working_dir}/{ref_schema}/{tablename}.ref.csv"
+    if not os.path.exists(ref_csvfile):
+        subprocess_cmd = [
+            "psql",
+            "-h",
+            ref_host,
+            "-d",
+            ref_database,
+            "-U",
+            ref_user,
+            "-c",
+            f"\\COPY (SELECT {columns_list} FROM {ref_schema}.{tablename}) TO '{ref_csvfile}' WITH CSV HEADER",
+        ]
+        os.environ["PGPASSWORD"] = connection_info["ref"]["password"]
+        subprocess.check_call(subprocess_cmd)
 
     # now drop the _airbyte_ab_id column
     dropped_csv = f"{working_dir}/{ref_schema}/{tablename}.ref.dropped.csv"
@@ -130,19 +131,20 @@ for tablename in ref_tables:
 
     # ok, now do the same for the comp
     comp_csvfile = f"{working_dir}/{comp_schema}/{tablename}.comp.csv"
-    subprocess_cmd = [
-        "psql",
-        "-h",
-        comp_host,
-        "-d",
-        comp_database,
-        "-U",
-        comp_user,
-        "-c",
-        f"\\COPY (SELECT {columns_list} FROM {comp_schema}.{tablename}) TO '{comp_csvfile}' WITH CSV HEADER",
-    ]
-    os.environ["PGPASSWORD"] = connection_info["comp"]["password"]
-    subprocess.check_call(subprocess_cmd)
+    if not os.path.exists(comp_csvfile):
+        subprocess_cmd = [
+            "psql",
+            "-h",
+            comp_host,
+            "-d",
+            comp_database,
+            "-U",
+            comp_user,
+            "-c",
+            f"\\COPY (SELECT {columns_list} FROM {comp_schema}.{tablename}) TO '{comp_csvfile}' WITH CSV HEADER",
+        ]
+        os.environ["PGPASSWORD"] = connection_info["comp"]["password"]
+        subprocess.check_call(subprocess_cmd)
 
     # now drop the _airbyte_ab_id column
     dropped_csv = f"{working_dir}/{comp_schema}/{tablename}.comp.dropped.csv"
