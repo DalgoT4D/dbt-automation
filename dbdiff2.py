@@ -172,4 +172,8 @@ for tablename in ref_tables:
         print(f"diff failed for {tablename}")
         sys.exit(1)
 
-    break
+    # delete the dropped and sorted csv files
+    os.remove(f"{working_dir}/{ref_schema}/{tablename}.ref.sorted.csv")
+    os.remove(f"{working_dir}/{ref_schema}/{tablename}.ref.dropped.csv")
+    os.remove(f"{working_dir}/{comp_schema}/{tablename}.comp.sorted.csv")
+    os.remove(f"{working_dir}/{comp_schema}/{tablename}.comp.dropped.csv")
