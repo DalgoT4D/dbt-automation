@@ -117,6 +117,12 @@ with get_connection(
         comp_columns = get_columns_spec(conn_comp, comp_schema, tablename)
         if set(ref_columns) != set(comp_columns):
             print(f"columns for {tablename} are not the same")
+            if len(ref_columns) > len(comp_columns):
+                print("ref has more columns")
+                print(set(ref_columns) - set(comp_columns))
+            else:
+                print("comp has more columns")
+                print(set(comp_columns) - set(ref_columns))
             sys.exit(1)
         columns_specs[tablename] = ref_columns
 
