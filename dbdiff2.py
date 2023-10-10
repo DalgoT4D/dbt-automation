@@ -134,7 +134,7 @@ comp_database = connection_info["comp"]["name"]
 comp_user = connection_info["comp"]["user"]
 
 for tablename in ref_tables:
-    print(tablename)
+    print(f"TABLE: {tablename}")
 
     ref_csvfile = f"{working_dir}/{ref_schema}/{tablename}.ref.csv"
     sorted_ref_csv = db2csv(
@@ -166,9 +166,8 @@ for tablename in ref_tables:
         for idx, (line1, line2) in enumerate(zip(sorted_comp, sorted_ref)):
             if line1 != line2:
                 print(f"mismatch for {tablename} at {idx}")
-                print(line1)
-                print(line2)
-                sys.exit(1)
+                print(line1.strip())
+                print(line2.strip())
 
     # delete the sorted csv files
     os.remove(sorted_ref_csv)
