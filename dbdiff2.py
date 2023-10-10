@@ -101,10 +101,15 @@ with get_connection(
     comp_tables = get_tables(conn_comp, comp_schema)
 
     if set(ref_tables) != set(comp_tables):
-        print("not the same table sets")
-        print(ref_tables)
-        print(comp_tables)
-        sys.exit(1)
+        print("WARNING: not the same table sets")
+        if len(ref_tables) > len(comp_tables):
+            print("ref has more tables")
+            print(set(ref_tables) - set(comp_tables))
+        else:
+            print("comp has more tables")
+            print(set(comp_tables) - set(ref_tables))
+
+        ref_tables = set(ref_tables) & set(comp_tables)
 
     columns_specs = {}
     for tablename in ref_tables:
