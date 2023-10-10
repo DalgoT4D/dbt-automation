@@ -49,6 +49,38 @@ def get_columns_spec(conn, schema: str, table: str):
     return [x[0] for x in cursor.fetchall()]
 
 
+def db2csv(
+    connection,
+    schema: str,
+    table: str,
+    columns: list,
+    exclude_columns: list,
+    csvfile: str,
+):
+    """dumps the table into a csv file"""
+    columns_list = ",".join([x for x in columns if x not in exclude_columns])
+    if not os.path.exists(csvfile):
+        subprocess_cmd = [
+            "psql",
+            "-h",
+            connection["host"],
+            "-d",
+            connection["name"],
+            "-U",
+            connection["user"],
+            "-c",
+            f"\\COPY (SELECT {columns_list} FROM {schema}.{table}) TO '{csvfile}' WITH CSV HEADER",
+        ]
+        os.environ["PGPASSWORD"] = connection["password"]
+        subprocess.check_call(subprocess_cmd)
+
+    sorted_csv = csvfile.replace(".csv", ".sorted.csv")
+    if not os.path.exists(sorted_csv):
+        subprocess_cmd = ["sort", csvfile, "-o", sorted_csv]
+        subprocess.check_call(subprocess_cmd)
+    return sorted_csv
+
+
 ref_schema = args.ref_schema
 comp_schema = args.comp_schema
 
@@ -70,6 +102,8 @@ with get_connection(
 
     if set(ref_tables) != set(comp_tables):
         print("not the same table sets")
+        print(ref_tables)
+        print(comp_tables)
         sys.exit(1)
 
     columns_specs = {}
@@ -96,86 +130,41 @@ comp_user = connection_info["comp"]["user"]
 
 for tablename in ref_tables:
     print(tablename)
-    columns_list = ",".join(columns_specs[tablename])
+
     ref_csvfile = f"{working_dir}/{ref_schema}/{tablename}.ref.csv"
-    if not os.path.exists(ref_csvfile):
-        subprocess_cmd = [
-            "psql",
-            "-h",
-            ref_host,
-            "-d",
-            ref_database,
-            "-U",
-            ref_user,
-            "-c",
-            f"\\COPY (SELECT {columns_list} FROM {ref_schema}.{tablename}) TO '{ref_csvfile}' WITH CSV HEADER",
-        ]
-        os.environ["PGPASSWORD"] = connection_info["ref"]["password"]
-        subprocess.check_call(subprocess_cmd)
-
-    # now drop the _airbyte_ab_id column
-    dropped_csv = f"{working_dir}/{ref_schema}/{tablename}.ref.dropped.csv"
-    subprocess_cmd = [
-        "python",
-        "dropcolumnfromcsv.py",
+    sorted_ref_csv = db2csv(
+        connection_info["ref"],
+        ref_schema,
+        tablename,
+        columns_specs[tablename],
+        ["_airbyte_ab_id"],
         ref_csvfile,
-        dropped_csv,
-        "_airbyte_ab_id",
-    ]
-    subprocess.check_call(subprocess_cmd)
-
-    # now sort the dropped csv
-    sorted_csv = f"{working_dir}/{ref_schema}/{tablename}.ref.sorted.csv"
-    subprocess_cmd = ["sort", dropped_csv, "-o", sorted_csv]
-    subprocess.check_call(subprocess_cmd)
+    )
 
     # ok, now do the same for the comp
     comp_csvfile = f"{working_dir}/{comp_schema}/{tablename}.comp.csv"
-    if not os.path.exists(comp_csvfile):
-        subprocess_cmd = [
-            "psql",
-            "-h",
-            comp_host,
-            "-d",
-            comp_database,
-            "-U",
-            comp_user,
-            "-c",
-            f"\\COPY (SELECT {columns_list} FROM {comp_schema}.{tablename}) TO '{comp_csvfile}' WITH CSV HEADER",
-        ]
-        os.environ["PGPASSWORD"] = connection_info["comp"]["password"]
-        subprocess.check_call(subprocess_cmd)
-
-    # now drop the _airbyte_ab_id column
-    dropped_csv = f"{working_dir}/{comp_schema}/{tablename}.comp.dropped.csv"
-    subprocess_cmd = [
-        "python",
-        "dropcolumnfromcsv.py",
+    sorted_comp_csv = db2csv(
+        connection_info["comp"],
+        comp_schema,
+        tablename,
+        columns_specs[tablename],
+        ["_airbyte_ab_id"],
         comp_csvfile,
-        dropped_csv,
-        "_airbyte_ab_id",
-    ]
-    subprocess.check_call(subprocess_cmd)
-
-    # now sort the dropped csv
-    sorted_csv = f"{working_dir}/{comp_schema}/{tablename}.comp.sorted.csv"
-    subprocess_cmd = ["sort", dropped_csv, "-o", sorted_csv]
-    subprocess.check_call(subprocess_cmd)
+    )
 
     # and finally compare the two sorted csv files
-    subprocess_cmd = [
-        "diff",
-        sorted_csv,
-        f"{working_dir}/{ref_schema}/{tablename}.ref.sorted.csv",
-    ]
-    try:
-        subprocess.check_call(subprocess_cmd)
-    except subprocess.CalledProcessError:
-        print(f"diff failed for {tablename}")
-        sys.exit(1)
+    with open(sorted_comp_csv, "r", encoding="utf-8") as sorted_comp, open(
+        sorted_ref_csv,
+        "r",
+        encoding="utf-8",
+    ) as sorted_ref:
+        for idx, (line1, line2) in enumerate(zip(sorted_comp, sorted_ref)):
+            if line1 != line2:
+                print(f"mismatch for {tablename} at {idx}")
+                print(line1)
+                print(line2)
+                sys.exit(1)
 
-    # delete the dropped and sorted csv files
-    os.remove(f"{working_dir}/{ref_schema}/{tablename}.ref.sorted.csv")
-    os.remove(f"{working_dir}/{ref_schema}/{tablename}.ref.dropped.csv")
-    os.remove(f"{working_dir}/{comp_schema}/{tablename}.comp.sorted.csv")
-    os.remove(f"{working_dir}/{comp_schema}/{tablename}.comp.dropped.csv")
+    # delete the sorted csv files
+    os.remove(sorted_ref_csv)
+    os.remove(sorted_comp_csv)
