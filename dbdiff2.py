@@ -20,6 +20,8 @@ args = parser.parse_args()
 with open("connections.yaml", "r", encoding="utf-8") as connection_yaml:
     connection_info = yaml.safe_load(connection_yaml)
 
+working_dir = args.working_dir
+
 
 def get_tables(connection, schema: str):
     """returns the list of table names in the given schema"""
@@ -58,21 +60,31 @@ def db2csv(
     csvfile: str,
 ):
     """dumps the table into a csv file"""
-    columns_list = ",".join([x for x in columns if x not in exclude_columns])
+    columns_list = [f'"{x}"' for x in columns if x not in exclude_columns]
     if not os.path.exists(csvfile):
+        cmdfile = f"{working_dir}/{table}.cmd"
+        print(f"writing {cmdfile}")
+        with open(cmdfile, "w", encoding="utf-8") as cmd:
+            cmd.write("\\COPY (SELECT ")
+            cmd.write(",".join(columns_list))
+            cmd.write(f" FROM {schema}.{table}) TO '{csvfile}' WITH CSV HEADER")
+            cmd.close()
         subprocess_cmd = [
             "psql",
             "-h",
             connection["host"],
+            "-p",
+            connection.get("port", "5432"),
             "-d",
             connection["name"],
             "-U",
             connection["user"],
-            "-c",
-            f"\\COPY (SELECT {columns_list} FROM {schema}.{table}) TO '{csvfile}' WITH CSV HEADER",
+            "-f",
+            cmdfile,
         ]
         os.environ["PGPASSWORD"] = connection["password"]
         subprocess.check_call(subprocess_cmd)
+        os.unlink(cmdfile)
 
     sorted_csv = csvfile.replace(".csv", ".sorted.csv")
     if not os.path.exists(sorted_csv):
@@ -126,7 +138,6 @@ with get_connection(
             sys.exit(1)
         columns_specs[tablename] = ref_columns
 
-working_dir = args.working_dir
 os.makedirs(working_dir, exist_ok=True)
 os.makedirs(f"{working_dir}/{ref_schema}", exist_ok=True)
 os.makedirs(f"{working_dir}/{comp_schema}", exist_ok=True)
@@ -163,6 +174,7 @@ for tablename in ref_tables:
         comp_csvfile,
     )
 
+    has_mismatches = False
     # and finally compare the two sorted csv files
     with open(sorted_comp_csv, "r", encoding="utf-8") as sorted_comp, open(
         sorted_ref_csv,
@@ -174,7 +186,9 @@ for tablename in ref_tables:
                 print(f"mismatch for {tablename} at {idx}")
                 print(line1.strip())
                 print(line2.strip())
+                has_mismatches = True
 
-    # delete the sorted csv files
-    os.remove(sorted_ref_csv)
-    os.remove(sorted_comp_csv)
+    if not has_mismatches:
+        # delete the sorted csv files
+        os.remove(sorted_ref_csv)
+        os.remove(sorted_comp_csv)
