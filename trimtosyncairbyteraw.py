@@ -3,6 +3,7 @@ import sys
 import argparse
 from logging import basicConfig, getLogger, INFO
 import yaml
+import json
 
 from lib.postgres import get_connection
 
@@ -10,11 +11,14 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--id-column", required=True)
 parser.add_argument("--delete", action="store_true")
 args = parser.parse_args()
 
 with open("connections.yaml", "r", encoding="utf-8") as connection_yaml:
     connection_info = yaml.safe_load(connection_yaml)
+
+ID_COLUMN = args.id_column
 
 
 def get_tables(connection, schema: str):
@@ -73,25 +77,44 @@ with get_connection(
             print("skipping")
             continue
 
-        statement = f"SELECT _airbyte_data->'_id' FROM staging.{tablename}"
+        statement = f"SELECT _airbyte_data->'{ID_COLUMN}' FROM staging.{tablename}"
 
         cursor_ref = conn_ref.cursor()
         cursor_ref.execute(statement)
-        resultset_ref = cursor_ref.fetchall()
+        resultset_ref = [x[0] for x in cursor_ref.fetchall()]
 
         cursor_comp = conn_comp.cursor()
         cursor_comp.execute(statement)
-        resultset_comp = cursor_comp.fetchall()
+        resultset_comp = [x[0] for x in cursor_comp.fetchall()]
 
         if len(resultset_ref) != len(resultset_comp):
             print(
                 f"{tablename} row counts differ: ref={len(resultset_ref)} comp={len(resultset_comp)}"
             )
-            assert len(resultset_comp) > len(resultset_ref)
-            for extra_id in set(resultset_comp) - set(resultset_ref):
-                print(f"deleting {extra_id[0]}")
-                del_statement = f"DELETE FROM staging.{tablename} WHERE _airbyte_data->'_id' = '{extra_id[0]}'"
-                if args.delete:
-                    cursor_comp.execute(del_statement)
+            resultset_comp = set(resultset_comp)
+            resultset_ref = set(resultset_ref)
+
+            if len(resultset_ref - resultset_comp) > 0:
+                for extra_id in resultset_ref - resultset_comp:
+                    if extra_id:
+                        extra_id_statement = f"SELECT _airbyte_data FROM staging.{tablename} WHERE _airbyte_data->'{ID_COLUMN}' = '{extra_id}'"
+                        cursor_ref.execute(extra_id_statement)
+                        extra_id_result = cursor_ref.fetchone()
+                        airbyte_data = extra_id_result[0]
+                        print(json.dumps(airbyte_data, indent=2))
+                        print("=" * 80)
+                    else:
+                        print(f"found _airbyte_data->>{ID_COLUMN} = None in ref")
+                sys.exit(1)
+
+            for extra_id in resultset_comp - resultset_ref:
+                if extra_id:
+                    print(f"deleting {extra_id[0]}")
+                    del_statement = f"DELETE FROM staging.{tablename} WHERE _airbyte_data->'{ID_COLUMN}' = '{extra_id[0]}'"
+                    if args.delete:
+                        cursor_comp.execute(del_statement)
+                else:
+                    print(f"found _airbyte_data->>{ID_COLUMN} = None in comp")
+
         cursor_comp.close()
         cursor_ref.close()
