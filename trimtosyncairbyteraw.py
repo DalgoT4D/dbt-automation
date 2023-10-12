@@ -10,6 +10,7 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--delete", action="store_true")
 args = parser.parse_args()
 
 with open("connections.yaml", "r", encoding="utf-8") as connection_yaml:
@@ -62,8 +63,8 @@ with get_connection(
 
     if set(ref_tables) != set(comp_tables):
         print("not the same table sets")
-        print(f"ref: {ref_tables}")
-        print(f"comp: {comp_tables}")
+        print(f"ref - comp: {ref_tables - comp_tables}")
+        print(f"comp - ref: {comp_tables - ref_tables}")
         sys.exit(1)
 
     for tablename in ref_tables:
@@ -90,6 +91,7 @@ with get_connection(
             for extra_id in set(resultset_comp) - set(resultset_ref):
                 print(f"deleting {extra_id[0]}")
                 del_statement = f"DELETE FROM staging.{tablename} WHERE _airbyte_data->'_id' = '{extra_id[0]}'"
-                cursor_comp.execute(del_statement)
+                if args.delete:
+                    cursor_comp.execute(del_statement)
         cursor_comp.close()
         cursor_ref.close()
