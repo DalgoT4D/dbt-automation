@@ -97,7 +97,7 @@ with get_connection(
             if len(resultset_ref - resultset_comp) > 0:
                 for extra_id in resultset_ref - resultset_comp:
                     if extra_id:
-                        extra_id_statement = f"SELECT _airbyte_data FROM staging.{tablename} WHERE _airbyte_data->'{ID_COLUMN}' = '{extra_id}'"
+                        extra_id_statement = f"SELECT _airbyte_data FROM staging.{tablename} WHERE _airbyte_data->>'{ID_COLUMN}' = '{extra_id}'"
                         cursor_ref.execute(extra_id_statement)
                         extra_id_result = cursor_ref.fetchone()
                         airbyte_data = extra_id_result[0]
@@ -110,7 +110,7 @@ with get_connection(
             for extra_id in resultset_comp - resultset_ref:
                 if extra_id:
                     print(f"deleting {extra_id[0]}")
-                    del_statement = f"DELETE FROM staging.{tablename} WHERE _airbyte_data->'{ID_COLUMN}' = '{extra_id[0]}'"
+                    del_statement = f"DELETE FROM staging.{tablename} WHERE _airbyte_data->>'{ID_COLUMN}' = '{extra_id[0]}'"
                     if args.delete:
                         cursor_comp.execute(del_statement)
                 else:
