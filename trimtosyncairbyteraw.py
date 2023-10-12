@@ -63,8 +63,8 @@ with get_connection(
 
     if set(ref_tables) != set(comp_tables):
         print("not the same table sets")
-        print(f"ref - comp: {ref_tables - comp_tables}")
-        print(f"comp - ref: {comp_tables - ref_tables}")
+        print(f"ref - comp: {set(ref_tables) - set(comp_tables)}")
+        print(f"comp - ref: {set(comp_tables) - set(ref_tables)}")
         sys.exit(1)
 
     for tablename in ref_tables:
