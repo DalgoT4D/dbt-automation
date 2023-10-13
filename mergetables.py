@@ -8,7 +8,6 @@ from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 import yaml
 
-from lib.postgres import get_columnspec as db_get_colspec
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import get_columns_from_model
 
@@ -26,24 +25,8 @@ args = parser.parse_args()
 
 # ================================================================================
 load_dotenv("dbconnection.env")
-connection_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
-}
 
 project_dir = os.getenv("DBT_PROJECT_DIR")
-
-
-def get_columnspec(schema_: str, table_: str):
-    """get the column schema for this table"""
-    return db_get_colspec(
-        schema_,
-        table_,
-        connection_info,
-    )
 
 
 def fmt_colname(colname: str):
