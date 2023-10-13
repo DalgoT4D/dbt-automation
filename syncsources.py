@@ -31,7 +31,7 @@ Ref: https://docs.getdbt.com/reference/source-properties
 Database connection parameters are read from syncsources.env
 """
 )
-parser.add_argument("--warehouse", required=True, help="postgres,bigquery")
+parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
 parser.add_argument("--source-name", required=True)
 parser.add_argument("--schema", default="staging", help="e.g. staging")
 args = parser.parse_args()

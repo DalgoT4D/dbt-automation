@@ -26,7 +26,7 @@ from google.cloud import bigquery
 
 # ================================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument("--warehouse", required=True, help="postgres,bigquery")
+parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
 parser.add_argument("--source-schema", required=True)
 parser.add_argument("--dest-schema", required=True)
 args = parser.parse_args()
