@@ -7,8 +7,18 @@ import yaml
 from dotenv import load_dotenv
 from lib.sourceschemas import mksourcedefinition
 from lib.postgres import get_connection
+from lib.dbtsources import (
+    readsourcedefinitions,
+    merge_sourcedefinitions,
+)
 
 load_dotenv("dbconnection.env")
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
+    os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+)
+
+from google.cloud import bigquery
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -21,101 +31,49 @@ Ref: https://docs.getdbt.com/reference/source-properties
 Database connection parameters are read from syncsources.env
 """
 )
-parser.add_argument("--project-dir", required=True)
+parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
 parser.add_argument("--source-name", required=True)
 parser.add_argument("--schema", default="staging", help="e.g. staging")
 args = parser.parse_args()
 
-
-# ================================================================================
-def readsourcedefinitions(sourcefilename: str):
-    """read the source definitions from a dbt sources.yml"""
-    with open(sourcefilename, "r", encoding="utf-8") as sourcefile:
-        sourcedefinitions = yaml.safe_load(sourcefile)
-        return sourcedefinitions
+project_dir = os.getenv("DBT_PROJECT_DIR")
 
 
 # ================================================================================
-def mergesource(dbsource: dict, filesources: list) -> dict:
-    """
-    finds the file source corresponding to the dbsource
-    and update the name if possible
-    """
-    outputsource = {
-        "name": None,
-        "schema": dbsource["schema"],
-        "tables": None,
-    }
-
-    try:
-        filesource = next(
-            fs for fs in filesources if fs["schema"] == dbsource["schema"]
-        )
-        outputsource["name"] = filesource["name"]
-        outputsource["tables"] = [
-            mergetable(dbtable, filesource["tables"]) for dbtable in dbsource["tables"]
-        ]
-    except StopIteration:
-        outputsource["name"] = dbsource["name"]
-        outputsource["tables"] = dbsource["tables"]
-
-    return outputsource
-
-
-# ================================================================================
-def mergetable(dbtable: dict, filetables: list):
-    """
-    finds the dbtable in the list of filetables by `identifier`
-    copies over the name and description if found
-    """
-    outputtable = {
-        "name": dbtable["identifier"],
-        "identifier": dbtable["identifier"],
-        "description": "",
-    }
-    for filetable in filetables:
-        if outputtable["identifier"] == filetable["identifier"]:
-            outputtable["name"] = filetable["name"]
-            outputtable["description"] = filetable["description"]
-            break
-    return outputtable
-
-
-# ================================================================================
-def merge_sourcedefinitions(filedefs: dict, dbdefs: dict) -> dict:
-    """outputs source definitions from dbdefs, with the descriptions from filedefs"""
-    outputdefs = {}
-    outputdefs["version"] = filedefs["version"]
-    outputdefs["sources"] = [
-        mergesource(dbsource, filedefs["sources"]) for dbsource in dbdefs["sources"]
-    ]
-
-    return outputdefs
-
-
-# ================================================================================
-def make_source_definitions(source_name: str, input_schema: str, sources_file: str):
+def make_source_definitions(
+    warehouse: str, source_name: str, input_schema: str, sources_file: str
+):
     """
     reads tables from the input_schema to create a dbt sources.yml
     uses the metadata from the existing source definitions, if any
     """
-    with get_connection(
-        os.getenv("DBHOST"),
-        os.getenv("DBPORT"),
-        os.getenv("DBUSER"),
-        os.getenv("DBPASSWORD"),
-        os.getenv("DBNAME"),
-    ) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            f"""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = '{input_schema}'
-        """
-        )
-        resultset = cursor.fetchall()
-        tablenames = [x[0] for x in resultset]
+    tablenames = []
+
+    if warehouse == "postgres":
+        with get_connection(
+            os.getenv("DBHOST"),
+            os.getenv("DBPORT"),
+            os.getenv("DBUSER"),
+            os.getenv("DBPASSWORD"),
+            os.getenv("DBNAME"),
+        ) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = '{input_schema}'
+            """
+            )
+            resultset = cursor.fetchall()
+            tablenames = [x[0] for x in resultset]
+
+    if warehouse == "bigquery":
+        conn_client = bigquery.Client()
+
+        # get all the table names
+        tables = conn_client.list_tables(input_schema)
+        tablenames = [x.table_id for x in tables]
 
         dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
         logger.info("read sources from database schema %s", input_schema)
@@ -138,5 +96,7 @@ def make_source_definitions(source_name: str, input_schema: str, sources_file: s
 
 # ================================================================================
 if __name__ == "__main__":
-    sources_filename = Path(args.project_dir) / "models" / args.schema / "sources.yml"
-    make_source_definitions(args.source_name, args.schema, sources_filename)
+    sources_filename = Path(project_dir) / "models" / args.schema / "sources.yml"
+    make_source_definitions(
+        args.warehouse, args.source_name, args.schema, sources_filename
+    )

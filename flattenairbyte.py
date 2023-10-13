@@ -1,5 +1,6 @@
 """generates models to flatten airbyte raw data"""
 import os
+import json
 import sys
 import argparse
 from logging import basicConfig, getLogger, INFO
@@ -8,7 +9,7 @@ from dotenv import load_dotenv
 from lib.sourceschemas import get_source
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import mk_model_config
-from lib.postgres import get_columnspec as db_get_colspec, cleaned_column_name
+from lib.postgres import get_columnspec as db_get_colspec, make_cleaned_column_names
 from lib.postgres import get_json_columnspec as db_get_json_colspec
 from lib.postgres import dedup_list
 
@@ -17,11 +18,22 @@ logger = getLogger()
 
 load_dotenv("dbconnection.env")
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
+    os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+)
+
+from google.cloud import bigquery
+
 # ================================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument("--project-dir", required=True)
+parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
+parser.add_argument("--source-schema", required=True)
+parser.add_argument("--dest-schema", required=True)
 args = parser.parse_args()
 
+project_dir = os.getenv("DBT_PROJECT_DIR")
+
+bg_client = bigquery.Client()
 
 # ================================================================================
 connection_info = {
@@ -52,7 +64,7 @@ def get_json_columnspec(schema: str, table: str):
 
 
 # ================================================================================
-def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
+def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: list):
     """create the .sql model for this table"""
 
     dbtmodel = """
@@ -65,23 +77,33 @@ def mk_dbtmodel(sourcename: str, srctablename: str, columntuples: list):
   ) 
 }}
     """
-
     dbtmodel += "SELECT _airbyte_ab_id "
     dbtmodel += "\n"
 
-    for json_field, sql_column in columntuples:
-        dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
-        dbtmodel += "\n"
+    if warehouse == "bigquery":
+        for json_field, sql_column in columntuples:
+            json_field = json_field.replace("'", "\\'")
+            dbtmodel += (
+                f", json_value(_airbyte_data, '$.\"{json_field}\"') as `{sql_column}`"
+            )
+            dbtmodel += "\n"
 
-    dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
+        dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
+
+    if warehouse == "postgres":
+        for json_field, sql_column in columntuples:
+            dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
+            dbtmodel += "\n"
+
+        dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
 
     return dbtmodel
 
 
 # ================================================================================
-dbtproject = dbtProject(args.project_dir)
-SOURCE_SCHEMA = "staging"
-DEST_SCHEMA = "intermediate"
+dbtproject = dbtProject(project_dir)
+SOURCE_SCHEMA = args.source_schema
+DEST_SCHEMA = args.dest_schema
 
 # create the output directory
 dbtproject.ensure_models_dir(DEST_SCHEMA)
@@ -103,14 +125,35 @@ for srctable in source["tables"]:
     modelname = srctable["name"]
     tablename = srctable["identifier"]
 
-    # get the field names from the json objects
-    json_fields = get_json_columnspec(SOURCE_SCHEMA, tablename)
+    sql_columns = []
+    json_fields = []
+    if args.warehouse == "postgres":
+        # get the field names from the json objects
+        json_fields = get_json_columnspec(SOURCE_SCHEMA, tablename)
 
-    # convert to sql-friendly column names
-    sql_columns = list(map(cleaned_column_name, json_fields))
+        # convert to sql-friendly column names
+        sql_columns = make_cleaned_column_names(json_fields)
 
-    # after cleaning we may have duplicates
-    sql_columns = dedup_list(sql_columns)
+        # after cleaning we may have duplicates
+        sql_columns = dedup_list(sql_columns)
+
+    if args.warehouse == "bigquery":
+        # get the field names from the json objects
+        print("table", tablename)
+        query = bg_client.query(
+            f"""
+                SELECT * FROM `{SOURCE_SCHEMA}`.`{tablename}` LIMIT 1
+            """,
+            location="asia-south1",
+        )
+
+        # fetch the col names
+        # convert to sql-friendly column names
+        sql_columns = []
+        json_fields = []
+        for row in query:
+            json_fields = json.loads(row["_airbyte_data"]).keys()
+            sql_columns = make_cleaned_column_names(json_fields)
 
     # create the configuration
     model_config = mk_model_config(DEST_SCHEMA, modelname, sql_columns)
@@ -118,7 +161,8 @@ for srctable in source["tables"]:
 
     # and the .sql model
     model_sql = mk_dbtmodel(
-        source['name'], # pass the source in the yaml file
+        args.warehouse,
+        source["name"],  # pass the source in the yaml file
         modelname,
         zip(json_fields, sql_columns),
     )

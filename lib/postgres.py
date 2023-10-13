@@ -61,7 +61,17 @@ def cleaned_column_name(colname: str) -> str:
     colname = colname[:40]
     pattern = r"[^0-9a-zA-Z]"
     colname = re.sub(pattern, "_", colname)
+    if colname.isdigit():
+        colname = "c" + colname
     return colname
+
+
+def make_cleaned_column_names(columns: list) -> list:
+    """cleans the column names"""
+    cleaned_names = [cleaned_column_name(colname) for colname in columns]
+    if len(set(cleaned_names)) != len(cleaned_names):
+        cleaned_names = dedup_list(cleaned_names)
+    return cleaned_names
 
 
 def dedup_list(names: list):

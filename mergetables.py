@@ -8,7 +8,6 @@ from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 import yaml
 
-from lib.postgres import get_columnspec as db_get_colspec
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import get_columns_from_model
 
@@ -19,29 +18,25 @@ logger = getLogger()
 
 # ================================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument("--project-dir", required=True)
 parser.add_argument("--models", required=True, help="models.yml")
 parser.add_argument("--mergespec", required=True)
+parser.add_argument("--warehouse", choices=["postgres", "bigquery"], required=True)
 args = parser.parse_args()
 
 # ================================================================================
 load_dotenv("dbconnection.env")
-connection_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
-}
+
+project_dir = os.getenv("DBT_PROJECT_DIR")
 
 
-def get_columnspec(schema_: str, table_: str):
-    """get the column schema for this table"""
-    return db_get_colspec(
-        schema_,
-        table_,
-        connection_info,
-    )
+def fmt_colname(colname: str):
+    """format a column name for the target warehouse"""
+    if args.warehouse == "postgres":
+        return '"' + colname + '"'
+    elif args.warehouse == "bigquery":
+        return colname.lower()
+    else:
+        raise ValueError(f"unknown warehouse: {args.warehouse}")
 
 
 # ================================================================================
@@ -57,7 +52,7 @@ for tablename, tablenamecount in table_counts.items():
 if has_error:
     sys.exit(1)
 
-dbtproject = dbtProject(args.project_dir)
+dbtproject = dbtProject(project_dir)
 dbtproject.ensure_models_dir(mergespec["outputsschema"])
 
 with open(args.models, "r", encoding="utf-8") as modelfile:
@@ -68,20 +63,16 @@ for table in mergespec["tables"]:
     columns = get_columns_from_model(models, table["tablename"])
     all_columns = all_columns.union(columns)
 
-# for table in mergespec["tables"]:
-#     columns = get_columns_from_model(models, table["tablename"])
-#     print(len(columns), len(all_columns))
-
 for table in mergespec["tables"]:
     columns = get_columns_from_model(models, table["tablename"])
     statement: str = "{{ config(materialized='table',) }}\nSELECT "
     for column in all_columns:
         if column in columns:
-            statement += f'"{column}" AS "{column}",'
+            statement += f"{fmt_colname(column)} AS {fmt_colname(column)},"
         else:
-            statement += f'NULL AS "{column}",'
+            statement += f"NULL AS {fmt_colname(column)},"
     statement = statement[:-1]  # drop the final comma
-    statement += f"FROM {{{{ref('{table['tablename']}')}}}}"
+    statement += f" FROM {{{{ref('{table['tablename']}')}}}}"
     dbtproject.write_model(
         mergespec["outputsschema"],
         f'premerge_{table["tablename"]}',
