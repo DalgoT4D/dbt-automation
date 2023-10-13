@@ -13,6 +13,7 @@ logger = getLogger()
 parser = argparse.ArgumentParser()
 parser.add_argument("--id-column", required=True)
 parser.add_argument("--delete", action="store_true")
+parser.add_argument("--show-diffs", action="store_true")
 args = parser.parse_args()
 
 with open("connections.yaml", "r", encoding="utf-8") as connection_yaml:
@@ -77,7 +78,9 @@ with get_connection(
             print("skipping")
             continue
 
-        statement = f"SELECT _airbyte_data->'{ID_COLUMN}' FROM staging.{tablename}"
+        statement = (
+            f"SELECT DISTINCT _airbyte_data->'{ID_COLUMN}' FROM staging.{tablename}"
+        )
 
         cursor_ref = conn_ref.cursor()
         cursor_ref.execute(statement)
@@ -101,8 +104,9 @@ with get_connection(
                         cursor_ref.execute(extra_id_statement)
                         extra_id_result = cursor_ref.fetchone()
                         airbyte_data = extra_id_result[0]
-                        print(json.dumps(airbyte_data, indent=2))
-                        print("=" * 80)
+                        if args.show_diffs:
+                            print(json.dumps(airbyte_data, indent=2))
+                            print("=" * 80)
                     else:
                         print(f"found _airbyte_data->>{ID_COLUMN} = None in ref")
                 sys.exit(1)
