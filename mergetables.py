@@ -19,7 +19,6 @@ logger = getLogger()
 
 # ================================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument("--project-dir", required=True)
 parser.add_argument("--models", required=True, help="models.yml")
 parser.add_argument("--mergespec", required=True)
 parser.add_argument("--warehouse", choices=["postgres", "bigquery"], required=True)
@@ -34,6 +33,8 @@ connection_info = {
     "DBPASSWORD": os.getenv("DBPASSWORD"),
     "DBNAME": os.getenv("DBNAME"),
 }
+
+project_dir = os.getenv("DBT_PROJECT_DIR")
 
 
 def get_columnspec(schema_: str, table_: str):
@@ -68,7 +69,7 @@ for tablename, tablenamecount in table_counts.items():
 if has_error:
     sys.exit(1)
 
-dbtproject = dbtProject(args.project_dir)
+dbtproject = dbtProject(project_dir)
 dbtproject.ensure_models_dir(mergespec["outputsschema"])
 
 with open(args.models, "r", encoding="utf-8") as modelfile:
