@@ -89,3 +89,13 @@ def dedup_list(names: list):
             )
         deduped_names.append(deduped_name)
     return deduped_names
+
+
+def fmt_colname(colname: str, warehouse: str):
+    """format a column name for the target warehouse"""
+    if warehouse == "postgres":
+        return '"' + colname + '"'
+    elif warehouse == "bigquery":
+        return colname.lower()
+    else:
+        raise ValueError(f"unsupported warehouse: {warehouse}")

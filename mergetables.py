@@ -10,7 +10,7 @@ import yaml
 
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import get_columns_from_model
-
+from lib.postgres import fmt_colname
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -27,17 +27,6 @@ args = parser.parse_args()
 load_dotenv("dbconnection.env")
 
 project_dir = os.getenv("DBT_PROJECT_DIR")
-
-
-def fmt_colname(colname: str):
-    """format a column name for the target warehouse"""
-    if args.warehouse == "postgres":
-        return '"' + colname + '"'
-    elif args.warehouse == "bigquery":
-        return colname.lower()
-    else:
-        raise ValueError(f"unknown warehouse: {args.warehouse}")
-
 
 # ================================================================================
 with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
