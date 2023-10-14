@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 from lib.sourceschemas import get_source
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import mk_model_config
-from lib.postgres import get_columnspec as db_get_colspec
 from lib.columnutils import make_cleaned_column_names, dedup_list
-from lib.postgres import get_json_columnspec as db_get_json_colspec
+from lib.postgres import get_json_columnspec as pg_get_json_colspec
+from lib.bigquery import get_json_columnspec as bg_get_json_columnspec
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -45,22 +45,22 @@ connection_info = {
 }
 
 
-def get_columnspec(schema: str, table: str):
-    """get the column schema for this table"""
-    return db_get_colspec(
-        schema,
-        table,
-        connection_info,
-    )
+# def get_columnspec(schema: str, table: str):
+#     """get the column schema for this table"""
+#     return db_get_colspec(
+#         schema,
+#         table,
+#         connection_info,
+#     )
 
 
-def get_json_columnspec(schema: str, table: str):
-    """get the column schema for this table"""
-    return db_get_json_colspec(
-        schema,
-        table,
-        connection_info,
-    )
+# def get_json_columnspec(schema: str, table: str):
+#     """get the column schema for this table"""
+#     return db_get_json_colspec(
+#         schema,
+#         table,
+#         connection_info,
+#     )
 
 
 # ================================================================================
@@ -129,31 +129,17 @@ for srctable in source["tables"]:
     json_fields = []
     if args.warehouse == "postgres":
         # get the field names from the json objects
-        json_fields = get_json_columnspec(SOURCE_SCHEMA, tablename)
-
-        # convert to sql-friendly column names
-        sql_columns = make_cleaned_column_names(json_fields)
-
-        # after cleaning we may have duplicates
-        sql_columns = dedup_list(sql_columns)
+        json_fields = pg_get_json_colspec(SOURCE_SCHEMA, tablename, connection_info)
 
     if args.warehouse == "bigquery":
         # get the field names from the json objects
-        print("table", tablename)
-        query = bg_client.query(
-            f"""
-                SELECT * FROM `{SOURCE_SCHEMA}`.`{tablename}` LIMIT 1
-            """,
-            location="asia-south1",
-        )
+        json_fields = bg_get_json_columnspec(SOURCE_SCHEMA, tablename, {})
 
-        # fetch the col names
-        # convert to sql-friendly column names
-        sql_columns = []
-        json_fields = []
-        for row in query:
-            json_fields = json.loads(row["_airbyte_data"]).keys()
-            sql_columns = make_cleaned_column_names(json_fields)
+    # convert to sql-friendly column names
+    sql_columns = make_cleaned_column_names(json_fields)
+
+    # after cleaning we may have duplicates
+    sql_columns = dedup_list(sql_columns)
 
     # create the configuration
     model_config = mk_model_config(DEST_SCHEMA, modelname, sql_columns)
