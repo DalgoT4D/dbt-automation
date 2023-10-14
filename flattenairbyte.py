@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 from lib.sourceschemas import get_source
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import mk_model_config
-from lib.postgres import get_columnspec as db_get_colspec, make_cleaned_column_names
+from lib.postgres import get_columnspec as db_get_colspec
+from lib.columnutils import make_cleaned_column_names, dedup_list
 from lib.postgres import get_json_columnspec as db_get_json_colspec
-from lib.postgres import dedup_list
 
 basicConfig(level=INFO)
 logger = getLogger()
