@@ -45,24 +45,6 @@ connection_info = {
 }
 
 
-# def get_columnspec(schema: str, table: str):
-#     """get the column schema for this table"""
-#     return db_get_colspec(
-#         schema,
-#         table,
-#         connection_info,
-#     )
-
-
-# def get_json_columnspec(schema: str, table: str):
-#     """get the column schema for this table"""
-#     return db_get_json_colspec(
-#         schema,
-#         table,
-#         connection_info,
-#     )
-
-
 # ================================================================================
 def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: list):
     """create the .sql model for this table"""
@@ -131,7 +113,7 @@ for srctable in source["tables"]:
         # get the field names from the json objects
         json_fields = pg_get_json_colspec(SOURCE_SCHEMA, tablename, connection_info)
 
-    if args.warehouse == "bigquery":
+    elif args.warehouse == "bigquery":
         # get the field names from the json objects
         json_fields = bg_get_json_columnspec(SOURCE_SCHEMA, tablename, {})
 
