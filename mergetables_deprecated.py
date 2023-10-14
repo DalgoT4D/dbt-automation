@@ -10,7 +10,7 @@ import yaml
 
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import get_columns_from_model
-from lib.postgres import fmt_colname
+from lib.columnutils import fmt_colname
 
 basicConfig(level=INFO)
 logger = getLogger()
