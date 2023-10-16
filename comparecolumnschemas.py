@@ -22,6 +22,7 @@ parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery
 parser.add_argument("--mergespec", required=True)
 parser.add_argument("--working-dir", required=True)
 parser.add_argument("--threshold", default=0.7, type=float)
+parser.add_argument("-T", "--transpose", action="store_true")
 args = parser.parse_args()
 
 # ================================================================================
@@ -122,7 +123,9 @@ class Cluster:
         for tablename in self.members:
             table_columns = self.T2C[tablename]
             df[tablename] = df["columns"].apply(lambda x: x in table_columns)
-        print(df.T)
+        if args.transpose:
+            df = df.transpose()
+        print(df)
 
     def clustersize(self):
         """returns the number of members in this cluster"""
