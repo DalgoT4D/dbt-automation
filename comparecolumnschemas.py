@@ -6,6 +6,7 @@ from collections import defaultdict
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 import yaml
+import pandas as pd
 
 # from lib.dbtproject import dbtProject
 from lib.postgres import get_columnspec as pg_get_columnspec
@@ -74,44 +75,96 @@ def get_column_lists(
 class Cluster:
     """a set of tables whose columns are similar"""
 
-    def __init__(self, table_to_columns: dict, first_table: str):
+    def __init__(self, table_to_columns: dict, first_table: str, threshold: float):
         # pylint:disable=invalid-name
         self.T2C = table_to_columns
         self.all_columns = set()
         self.members = set()
+        self.threshold = threshold
         self.add_table(first_table)
+        self.first_table = first_table
 
     def add_table(self, tablename):
         """updates the cluster with the columns from the given table"""
         self.all_columns.update(self.T2C[tablename])
         self.members.add(tablename)
 
-    def overlap(self, tablename):
-        """computes the proportion of overlap between this table's columns and the current
-        cluster"""
-        these_columns = set(self.T2C[tablename])
-        all_columns = set(self.all_columns)
-        overlap = (
-            1.0 * len(these_columns & all_columns) / len(these_columns | all_columns)
+    def overlap_X(self, tablename):  # pylint:disable=invalid-name
+        """rerturns the proportion of the current column set that is in this table"""
+        columns_to_add = set(self.T2C[tablename])
+        current_columns = set(self.all_columns)
+        intersection = (
+            1.0 * len(columns_to_add & current_columns) / len(current_columns)
         )
-        return overlap
+        # print(f"table: {tablename} intersection: {intersection}")
+        return intersection
+
+    def overlap_U(self, tablename):  # pylint:disable=invalid-name
+        """how much would the cluster expand by if this table were added"""
+        columns_to_add = set(self.T2C[tablename])
+        current_columns = set(self.all_columns)
+        union = 1.0 * len(columns_to_add | current_columns) / len(current_columns) - 1
+        # print(f"table: {tablename} union: {union}")
+        return union
+
+    def can_add_to_cluster(self, tablename):
+        """returns whether this table can be added to the cluster"""
+        # intersection musn't be too small, union musn't be too big
+        return (
+            self.overlap_X(tablename) > self.threshold
+            and self.overlap_U(tablename) < 1 - self.threshold
+        )
 
     def print(self):
         """prints the cluster"""
+        df = pd.DataFrame({})
+        df["columns"] = list(self.all_columns)
         for tablename in self.members:
-            print(f"  {tablename:25}: {self.overlap(tablename):0.2f}")
+            table_columns = self.T2C[tablename]
+            df[tablename] = df["columns"].apply(lambda x: x in table_columns)
+        print(df.T)
+
+    def clustersize(self):
+        """returns the number of members in this cluster"""
+        return len(self.members)
+
+
+def get_largest_cluster(
+    p_t2c: dict,
+    p_mergespec: dict,
+):
+    """determine and return the largest cluster"""
+    # start with an arbitrary table
+    largest_cluster = None
+    for initial_table in p_mergespec["tables"]:
+        c1 = Cluster(p_t2c, initial_table["tablename"], args.threshold)
+
+        for table in p_mergespec["tables"][1:]:
+            if c1.can_add_to_cluster(table["tablename"]):
+                # print("adding table:", table["tablename"])
+                c1.add_table(table["tablename"])
+
+        if largest_cluster is None or c1.clustersize() > largest_cluster.clustersize():
+            largest_cluster = c1
+
+        # c1.print()
+
+    return largest_cluster
 
 
 # -- start
 # dbtproject = dbtProject(project_dir)
 # dbtproject.ensure_models_dir(mergespec["outputsschema"])
-
 t2c = get_column_lists(warehouse, mergespec, connection_info, working_dir)
-# start with an arbitrary table
-c1 = Cluster(t2c, mergespec["tables"][0]["tablename"])
 
-for table in mergespec["tables"][1:]:
-    if c1.overlap(table["tablename"]) > args.threshold:
-        c1.add_table(table["tablename"])
+while len(mergespec["tables"]) > 0:
+    this_cluster = get_largest_cluster(t2c, mergespec)
+    print(f"cluster: {this_cluster.first_table} {this_cluster.clustersize()}")
+    this_cluster.print()
 
-c1.print()
+    # -- remove the first cluster from the list of tables
+    for table_name in this_cluster.members:
+        for table in mergespec["tables"]:
+            if table["tablename"] == table_name:
+                mergespec["tables"].remove(table)
+                break
