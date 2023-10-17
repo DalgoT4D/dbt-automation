@@ -1,6 +1,4 @@
-import os
 import yaml
-from lib.postgres import get_connection
 
 
 # ================================================================================
