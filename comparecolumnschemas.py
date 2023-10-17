@@ -9,8 +9,8 @@ import yaml
 import pandas as pd
 
 # from lib.dbtproject import dbtProject
-from lib.postgres import get_columnspec as pg_get_columnspec
-from lib.bigquery import get_columnspec as bq_get_columnspec
+from lib.postgres import PostgresClient
+from lib.bigquery import BigQueryClient
 
 
 basicConfig(level=INFO)
@@ -31,20 +31,12 @@ project_dir = os.getenv("DBT_PROJECT_DIR")
 warehouse = args.warehouse
 working_dir = args.working_dir
 
-connection_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
-}
-
 with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
 
 
 def get_column_lists(
-    p_warehouse: str, p_mergespec: dict, p_connection_info: dict, p_working_dir: str
+    p_client: PostgresClient | BigQueryClient, p_mergespec: dict, p_working_dir: str
 ):
     """gets the column schemas for all tables in the mergespec"""
     column_lists_filename = os.path.join(p_working_dir, "column_lists.yaml")
@@ -55,16 +47,7 @@ def get_column_lists(
 
     column_lists = defaultdict(set)
     for table_iter in p_mergespec["tables"]:
-        if p_warehouse == "postgres":
-            columns = pg_get_columnspec(
-                table_iter["schema"], table_iter["tablename"], p_connection_info
-            )
-        elif p_warehouse == "bigquery":
-            columns = bq_get_columnspec(table_iter["schema"], table_iter["tablename"])
-
-        else:
-            raise ValueError("unknown warehouse")
-
+        columns = p_client.get_columnspec(table_iter["schema"], table_iter["tablename"])
         column_lists[table_iter["tablename"]] = columns
 
     with open(column_lists_filename, "w", encoding="utf-8") as column_lists_file:
@@ -142,10 +125,10 @@ def get_largest_cluster(
     for initial_table in p_mergespec["tables"]:
         c1 = Cluster(p_t2c, initial_table["tablename"], args.threshold)
 
-        for table in p_mergespec["tables"][1:]:
-            if c1.can_add_to_cluster(table["tablename"]):
+        for table_iter in p_mergespec["tables"][1:]:
+            if c1.can_add_to_cluster(table_iter["tablename"]):
                 # print("adding table:", table["tablename"])
-                c1.add_table(table["tablename"])
+                c1.add_table(table_iter["tablename"])
 
         if largest_cluster is None or c1.clustersize() > largest_cluster.clustersize():
             largest_cluster = c1
@@ -158,7 +141,14 @@ def get_largest_cluster(
 # -- start
 # dbtproject = dbtProject(project_dir)
 # dbtproject.ensure_models_dir(mergespec["outputsschema"])
-t2c = get_column_lists(warehouse, mergespec, connection_info, working_dir)
+if warehouse == "postgres":
+    client = PostgresClient()
+elif warehouse == "bigquery":
+    client = BigQueryClient()
+else:
+    raise ValueError("unknown warehouse")
+
+t2c = get_column_lists(client, mergespec, working_dir)
 
 while len(mergespec["tables"]) > 0:
     this_cluster = get_largest_cluster(t2c, mergespec)

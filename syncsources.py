@@ -4,21 +4,24 @@ import argparse
 from logging import basicConfig, getLogger, INFO
 from pathlib import Path
 import yaml
+
 from dotenv import load_dotenv
+
+load_dotenv("dbconnection.env")
+
+# pylint:disable=wrong-import-position
 from lib.sourceschemas import mksourcedefinition
-from lib.postgres import get_connection
+from lib.postgres import PostgresClient
+from lib.bigquery import BigQueryClient
 from lib.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
 )
 
-load_dotenv("dbconnection.env")
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
+#     os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+# )
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
-    os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-)
-
-from google.cloud import bigquery
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -47,36 +50,15 @@ def make_source_definitions(
     reads tables from the input_schema to create a dbt sources.yml
     uses the metadata from the existing source definitions, if any
     """
-    tablenames = []
-
     if warehouse == "postgres":
-        with get_connection(
-            os.getenv("DBHOST"),
-            os.getenv("DBPORT"),
-            os.getenv("DBUSER"),
-            os.getenv("DBPASSWORD"),
-            os.getenv("DBNAME"),
-        ) as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                f"""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = '{input_schema}'
-            """
-            )
-            resultset = cursor.fetchall()
-            tablenames = [x[0] for x in resultset]
+        client = PostgresClient()
 
-    if warehouse == "bigquery":
-        conn_client = bigquery.Client()
+    elif warehouse == "bigquery":
+        client = BigQueryClient()
 
-        # get all the table names
-        tables = conn_client.list_tables(input_schema)
-        tablenames = [x.table_id for x in tables]
-
-        dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
-        logger.info("read sources from database schema %s", input_schema)
+    tablenames = client.get_tables(input_schema)
+    dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
+    logger.info("read sources from database schema %s", input_schema)
 
     if Path(sources_file).exists():
         filesourcedefinitions = readsourcedefinitions(sources_file)

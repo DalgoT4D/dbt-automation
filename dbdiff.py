@@ -6,7 +6,7 @@ from logging import basicConfig, getLogger, INFO
 import subprocess
 import yaml
 
-from lib.postgres import get_connection
+from lib.postgres import PostgresClient
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -21,34 +21,6 @@ with open("connections.yaml", "r", encoding="utf-8") as connection_yaml:
     connection_info = yaml.safe_load(connection_yaml)
 
 working_dir = args.working_dir
-
-
-def get_tables(connection, schema: str):
-    """returns the list of table names in the given schema"""
-    cursor = connection.cursor()
-    cursor.execute(
-        f"""
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = '{schema}'
-    """
-    )
-    tablenames = [x[0] for x in cursor.fetchall()]
-    cursor.close()
-    return tablenames
-
-
-def get_columns_spec(conn, schema: str, table: str):
-    """returns the list of columns"""
-    cursor = conn.cursor()
-    cursor.execute(
-        f"""SELECT column_name
-            FROM information_schema.columns
-            WHERE table_schema = '{schema}'
-            AND table_name = '{table}'
-        """
-    )
-    return [x[0] for x in cursor.fetchall()]
 
 
 def db2csv(
@@ -96,59 +68,41 @@ def db2csv(
 ref_schema = args.ref_schema
 comp_schema = args.comp_schema
 
-with get_connection(
-    connection_info["ref"]["host"],
-    connection_info["ref"]["port"],
-    connection_info["ref"]["user"],
-    connection_info["ref"]["password"],
-    connection_info["ref"]["name"],
-) as conn_ref, get_connection(
-    connection_info["comp"]["host"],
-    connection_info["comp"]["port"],
-    connection_info["comp"]["user"],
-    connection_info["comp"]["password"],
-    connection_info["comp"]["name"],
-) as conn_comp:
-    ref_tables = get_tables(conn_ref, ref_schema)
-    comp_tables = get_tables(conn_comp, comp_schema)
+ref_client = PostgresClient(connection_info["ref"])
+comp_client = PostgresClient(connection_info["comp"])
 
-    if set(ref_tables) != set(comp_tables):
-        print("WARNING: not the same table sets")
-        if len(ref_tables) > len(comp_tables):
-            print("ref has more tables")
-            print(set(ref_tables) - set(comp_tables))
+ref_tables = ref_client.get_tables(ref_schema)
+comp_tables = comp_client.get_tables(comp_schema)
+
+if set(ref_tables) != set(comp_tables):
+    print("WARNING: not the same table sets")
+    if len(ref_tables) > len(comp_tables):
+        print("ref has more tables")
+        print(set(ref_tables) - set(comp_tables))
+    else:
+        print("comp has more tables")
+        print(set(comp_tables) - set(ref_tables))
+
+    ref_tables = set(ref_tables) & set(comp_tables)
+
+columns_specs = {}
+for tablename in ref_tables:
+    ref_columns = ref_client.get_columnspec(ref_schema, tablename)
+    comp_columns = comp_client.get_columnspec(comp_schema, tablename)
+    if set(ref_columns) != set(comp_columns):
+        print(f"columns for {tablename} are not the same")
+        if len(ref_columns) > len(comp_columns):
+            print("ref has more columns")
+            print(set(ref_columns) - set(comp_columns))
         else:
-            print("comp has more tables")
-            print(set(comp_tables) - set(ref_tables))
-
-        ref_tables = set(ref_tables) & set(comp_tables)
-
-    columns_specs = {}
-    for tablename in ref_tables:
-        ref_columns = get_columns_spec(conn_ref, ref_schema, tablename)
-        comp_columns = get_columns_spec(conn_comp, comp_schema, tablename)
-        if set(ref_columns) != set(comp_columns):
-            print(f"columns for {tablename} are not the same")
-            if len(ref_columns) > len(comp_columns):
-                print("ref has more columns")
-                print(set(ref_columns) - set(comp_columns))
-            else:
-                print("comp has more columns")
-                print(set(comp_columns) - set(ref_columns))
-            sys.exit(1)
-        columns_specs[tablename] = ref_columns
+            print("comp has more columns")
+            print(set(comp_columns) - set(ref_columns))
+        sys.exit(1)
+    columns_specs[tablename] = ref_columns
 
 os.makedirs(working_dir, exist_ok=True)
 os.makedirs(f"{working_dir}/{ref_schema}", exist_ok=True)
 os.makedirs(f"{working_dir}/{comp_schema}", exist_ok=True)
-
-ref_host = connection_info["ref"]["host"]
-ref_database = connection_info["ref"]["name"]
-ref_user = connection_info["ref"]["user"]
-
-comp_host = connection_info["comp"]["host"]
-comp_database = connection_info["comp"]["name"]
-comp_user = connection_info["comp"]["user"]
 
 for tablename in ref_tables:
     print(f"TABLE: {tablename}")
