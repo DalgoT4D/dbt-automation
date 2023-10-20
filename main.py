@@ -9,6 +9,7 @@ from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 from operations.flattenairbyte import flatten_operation
 from operations.mergetables import union_tables
+from operations.syncsources import sync_sources
 
 
 load_dotenv("dbconnection.env")
@@ -46,6 +47,7 @@ warehouse = config_data["warehouse"]
 for op_data in config_data["operations"]:
     op_type = op_data["type"]
     config = op_data["config"]
+
     if op_type == "flatten":
         logger.info("running the flatten operation")
         logger.info(f"using config {config}")
@@ -57,3 +59,9 @@ for op_data in config_data["operations"]:
         logger.info(f"using config {config}")
         union_tables(config=config, warehouse=warehouse, project_dir=project_dir)
         logger.info("finished running the union all operation")
+
+    if op_type == "syncsources":
+        logger.info("running the sync sources operation")
+        logger.info(f"using config {config}")
+        sync_sources(config=config, warehouse=warehouse, project_dir=project_dir)
+        logger.info("finished running the sync sources operation")
