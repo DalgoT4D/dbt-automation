@@ -1,0 +1,15 @@
+version: 1
+warehouse: bigquery
+operations:
+    - type: flatten
+      config:
+        source_schema: <source schema>
+        dest_schema: <destination schema>
+    - type: unionall
+      config:
+        output_name: <name of the output model>
+        dest_schema: <enter your destination/output schema>
+        tablenames:
+            - <name of the 1st intermediate table>
+            - <name of the 2nd intermediate table>
+            - <name of the 3rd intermediate table>

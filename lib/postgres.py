@@ -1,6 +1,10 @@
 """helpers for postgres"""
 import os
 import psycopg2
+from logging import basicConfig, getLogger, INFO
+
+basicConfig(level=INFO)
+logger = getLogger()
 
 
 class PostgresClient:
@@ -78,3 +82,11 @@ class PostgresClient:
             """
             )
         ]
+
+    def close(self):
+        try:
+            self.connection.close()
+        except Exception:
+            logger.error("something went wrong while closing the postgres connection")
+
+        return True
