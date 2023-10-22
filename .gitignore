@@ -3,7 +3,7 @@ venv/
 *.pyc
 workspace/
 *.yaml
-
+.venv
 # Distribution / packaging
 .Python
 build/
