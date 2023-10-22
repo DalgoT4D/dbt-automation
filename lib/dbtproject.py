@@ -31,6 +31,10 @@ class dbtProject:  # pylint:disable=invalid-name
     ) -> None:
         """writes a .sql model"""
         self.ensure_models_dir(schema, kwargs.get("subdir", ""))
+        model_sql = (
+            "--DBT AUTOMATION has generated this model, please DO NOT EDIT \n\n"
+            + model_sql
+        )
         model_filename = Path(self.models_dir(schema, kwargs.get("subdir", ""))) / (
             modelname + ".sql"
         )

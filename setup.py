@@ -1,3 +1,3 @@
 from setuptools import setup, find_packages
 
-setup(name="lib", packages=find_packages())
+setup(name="dbt_automation", packages=find_packages())

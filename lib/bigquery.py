@@ -1,6 +1,11 @@
 """utilities for working with bigquery"""
 
+from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
+
+
+basicConfig(level=INFO)
+logger = getLogger()
 
 
 class BigQueryClient:
@@ -56,3 +61,12 @@ class BigQueryClient:
             location="asia-south1",
         )
         return [json_field["k"] for json_field in query]
+
+    def close(self):
+        """closing the connection and releasing system resources"""
+        try:
+            self.bqclient.close()
+        except Exception:
+            logger.error("something went wrong while closing the bigquery connection")
+
+        return True

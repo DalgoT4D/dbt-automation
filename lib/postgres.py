@@ -1,6 +1,10 @@
 """helpers for postgres"""
 import os
 import psycopg2
+from logging import basicConfig, getLogger, INFO
+
+basicConfig(level=INFO)
+logger = getLogger()
 
 
 class PostgresClient:
@@ -18,15 +22,14 @@ class PostgresClient:
         )
         return connection
 
-    CONN_INFO = {
-        "DBHOST": os.getenv("DBHOST"),
-        "DBPORT": os.getenv("DBPORT"),
-        "DBUSER": os.getenv("DBUSER"),
-        "DBPASSWORD": os.getenv("DBPASSWORD"),
-        "DBNAME": os.getenv("DBNAME"),
-    }
-
     def __init__(self, conn_info: dict = None):
+        self.CONN_INFO = {
+            "DBHOST": os.getenv("DBHOST"),
+            "DBPORT": os.getenv("DBPORT"),
+            "DBUSER": os.getenv("DBUSER"),
+            "DBPASSWORD": os.getenv("DBPASSWORD"),
+            "DBNAME": os.getenv("DBNAME"),
+        }
         if conn_info is None:
             conn_info = self.CONN_INFO
         self.connection = PostgresClient.get_connection(
@@ -78,3 +81,11 @@ class PostgresClient:
             """
             )
         ]
+
+    def close(self):
+        try:
+            self.connection.close()
+        except Exception:
+            logger.error("something went wrong while closing the postgres connection")
+
+        return True
