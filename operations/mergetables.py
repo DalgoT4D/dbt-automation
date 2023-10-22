@@ -14,7 +14,9 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
+# pylint:disable=unused-argument
 def union_tables(config, warehouse, project_dir):
+    """generates a dbt model which uses the dbt_utils union_relations macro to union tables"""
     tablenames = config["tablenames"]
     dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
@@ -27,7 +29,7 @@ def union_tables(config, warehouse, project_dir):
             logger.error("table appears more than once in spec: %s", tablename)
             has_error = True
     if has_error:
-        sys.exit(1)
+        raise ValueError("duplicate table names found")
     logger.info("no duplicate table names found")
 
     dbtproject = dbtProject(project_dir)
@@ -69,7 +71,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     load_dotenv("dbconnection.env")
-    project_dir = os.getenv("DBT_PROJECT_DIR")
+    projectdir = os.getenv("DBT_PROJECT_DIR")
 
     union_tables(
         config={
@@ -78,5 +80,5 @@ if __name__ == "__main__":
             "tablenames": args.tablenames,
         },
         warehouse="",
-        project_dir=project_dir,
+        project_dir=projectdir,
     )
