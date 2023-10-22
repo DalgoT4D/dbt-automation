@@ -53,7 +53,7 @@ def union_tables(config, warehouse, project_dir):
         output_model_name,
         union_code,
     )
-    logger.info("dbt model successfully created")
+    logger.info(f"dbt model {output_model_name} successfully created")
 
 
 if __name__ == "__main__":
