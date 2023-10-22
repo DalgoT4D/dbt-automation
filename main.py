@@ -14,9 +14,6 @@ from operations.syncsources import sync_sources
 
 load_dotenv("dbconnection.env")
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
-    os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-)
 project_dir = os.getenv("DBT_PROJECT_DIR")
 
 basicConfig(level=INFO)
