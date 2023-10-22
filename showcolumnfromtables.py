@@ -3,12 +3,9 @@
 import argparse
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
+from lib.warehouseclient import get_client
 
 load_dotenv("dbconnection.env")
-
-# pylint:disable=wrong-import-position
-from lib.postgres import PostgresClient
-from lib.bigquery import BigQueryClient
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -25,12 +22,7 @@ schema = args.schema
 column = args.column
 
 # -- start
-if warehouse == "postgres":
-    client = PostgresClient()
-elif warehouse == "bigquery":
-    client = BigQueryClient()
-else:
-    raise ValueError("unknown warehouse")
+client = get_client(warehouse)
 
 for tablename in args.tables:
     QUERY = f"SELECT DISTINCT {column} FROM {schema}.{tablename}"
