@@ -1,0 +1,21 @@
+version: 1
+description: "Yaml template to get you started on automating your dbt work. DO NOT EDIT this, make a copy and use"
+warehouse: <bigquery or postgres>
+operations:
+    - type: flatten
+      config:
+        source_schema: <source schema>
+        dest_schema: <destination schema>
+    - type: unionall
+      config:
+        output_name: <name of the output model>
+        dest_schema: <enter your destination/output schema>
+        tablenames:
+            - <name of the 1st intermediate table>
+            - <name of the 2nd intermediate table>
+            - <name of the 3rd intermediate table>
+    - type: syncsources
+      config:
+        source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
+        source_schema: <schema of the source mentioned above>
+

@@ -11,56 +11,32 @@ load_dotenv("dbconnection.env")
 
 # pylint:disable=wrong-import-position
 from lib.sourceschemas import mksourcedefinition
-from lib.postgres import PostgresClient
-from lib.bigquery import BigQueryClient
+from lib.warehouseclient import get_client
 from lib.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
 )
 
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
-#     os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-# )
-
-
 basicConfig(level=INFO)
 logger = getLogger()
 
-parser = argparse.ArgumentParser(
-    """
-Generates a sources.yml configuration containing exactly one source
-That source will have one or more tables
-Ref: https://docs.getdbt.com/reference/source-properties
-Database connection parameters are read from syncsources.env
-"""
-)
-parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
-parser.add_argument("--source-name", required=True)
-parser.add_argument("--schema", default="staging", help="e.g. staging")
-args = parser.parse_args()
 
-project_dir = os.getenv("DBT_PROJECT_DIR")
-
-
-# ================================================================================
-def make_source_definitions(
-    warehouse: str, source_name: str, input_schema: str, sources_file: str
-):
+def sync_sources(config, warehouse, project_dir):
     """
     reads tables from the input_schema to create a dbt sources.yml
     uses the metadata from the existing source definitions, if any
     """
-    if warehouse == "postgres":
-        client = PostgresClient()
+    input_schema = config["source_schema"]
+    source_name = config["source_name"]
+    sources_file = Path(project_dir) / "models" / input_schema / "sources.yml"
 
-    elif warehouse == "bigquery":
-        client = BigQueryClient()
+    client = get_client(warehouse)
 
     tablenames = client.get_tables(input_schema)
     dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
     logger.info("read sources from database schema %s", input_schema)
 
-    if Path(sources_file).exists():
+    if sources_file.exists():
         filesourcedefinitions = readsourcedefinitions(sources_file)
         logger.info("read existing source defs from %s", sources_file)
 
@@ -75,10 +51,30 @@ def make_source_definitions(
         yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
         logger.info("wrote source definitions to %s", sources_file)
 
+    client.close()
 
-# ================================================================================
+
 if __name__ == "__main__":
-    sources_filename = Path(project_dir) / "models" / args.schema / "sources.yml"
-    make_source_definitions(
-        args.warehouse, args.source_name, args.schema, sources_filename
+    import os
+    from pathlib import Path
+    from dotenv import load_dotenv
+    import argparse
+
+    load_dotenv("dbconnection.env")
+
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    )
+    projectdir = os.getenv("DBT_PROJECT_DIR")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
+    parser.add_argument("--source-schema", required=True)
+    parser.add_argument("--source-name", required=True)
+    args = parser.parse_args()
+
+    sync_sources(
+        config={"source_schema": args.source_schema, "source_name": "Sheets"},
+        warehouse=args.warehouse,
+        project_dir=projectdir,
     )
