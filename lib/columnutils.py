@@ -47,3 +47,13 @@ def fmt_colname(colname: str, warehouse: str):
         return colname.lower()
     else:
         raise ValueError(f"unsupported warehouse: {warehouse}")
+
+
+def quote_columnname(colname: str, warehouse: str):
+    """encloses the column name within the appropriate quotes"""
+    if warehouse == "postgres":
+        return '"' + colname + '"'
+    elif warehouse == "bigquery":
+        return "`" + colname + "`"
+    else:
+        raise ValueError(f"unsupported warehouse: {warehouse}")

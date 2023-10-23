@@ -18,6 +18,7 @@ OPERATIONS_DICT = {
     "unionall": union_tables,
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
+    "coalescecolumns": coalesce_columns,
     "arithmetic": arithmetic,
 }
 
@@ -54,6 +55,7 @@ if config_data["warehouse"] not in ["postgres", "bigquery"]:
 warehouse = config_data["warehouse"]
 
 # run operations to generate dbt model(s)
+# pylint:disable=logging-fstring-interpolation
 for op_data in config_data["operations"]:
     op_type = op_data["type"]
     config = op_data["config"]
