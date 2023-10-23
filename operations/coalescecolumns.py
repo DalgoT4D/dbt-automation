@@ -1,4 +1,4 @@
-"""generates a model which casts columns to specified SQL data types"""
+"""generates a model which coalesces columns"""
 
 from logging import basicConfig, getLogger, INFO
 
@@ -8,15 +8,10 @@ from lib.columnutils import quote_columnname
 basicConfig(level=INFO)
 logger = getLogger()
 
-WAREHOUSE_COLUMN_TYPES = {
-    "postgres": {},
-    "bigquery": {},
-}
 
-
-# pylint:disable=logging-fstring-interpolation
-def cast_datatypes(config: dict, warehouse: str, project_dir: str):
-    """generates the model"""
+# pylint:disable=unused-argument,logging-fstring-interpolation
+def coalesce_columns(config: dict, warehouse: str, project_dir: str):
+    """coalesces columns"""
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
     input_name = config["input_name"]
@@ -32,18 +27,11 @@ def cast_datatypes(config: dict, warehouse: str, project_dir: str):
     union_code += ",".join([f'"{columnname}"' for columnname in columnnames])
     union_code += "])}}"
 
-    for column in columns:
-        warehouse_column_type = WAREHOUSE_COLUMN_TYPES[warehouse].get(
-            column["columntype"], column["columntype"]
-        )
-        union_code += (
-            ", CAST("
-            + quote_columnname(column["columnname"], warehouse)
-            + " AS "
-            + warehouse_column_type
-            + ") AS "
-            + quote_columnname(column["columnname"], warehouse)
-        )
+    union_code += ", COALESCE("
+
+    for column in config["columns"]:
+        union_code += quote_columnname(column["columnname"], warehouse) + ", "
+    union_code = union_code[:-2] + ") AS " + config["output_column_name"]
 
     union_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"
 

@@ -11,12 +11,14 @@ from operations.flattenairbyte import flatten_operation
 from operations.mergetables import union_tables
 from operations.syncsources import sync_sources
 from operations.castdatatypes import cast_datatypes
+from operations.coalescecolumns import coalesce_columns
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
     "unionall": union_tables,
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
+    "coalescecolumns": coalesce_columns,
 }
 
 load_dotenv("dbconnection.env")
@@ -52,6 +54,7 @@ if config_data["warehouse"] not in ["postgres", "bigquery"]:
 warehouse = config_data["warehouse"]
 
 # run operations to generate dbt model(s)
+# pylint:disable=logging-fstring-interpolation
 for op_data in config_data["operations"]:
     op_type = op_data["type"]
     config = op_data["config"]
