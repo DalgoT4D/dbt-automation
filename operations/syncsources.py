@@ -28,6 +28,7 @@ def sync_sources(config, warehouse, project_dir):
     """
     input_schema = config["source_schema"]
     source_name = config["source_name"]
+    source_dir = Path(project_dir) / "models" / input_schema
     sources_file = Path(project_dir) / "models" / input_schema / "sources.yml"
 
     client = get_client(warehouse)
@@ -35,6 +36,9 @@ def sync_sources(config, warehouse, project_dir):
     tablenames = client.get_tables(input_schema)
     dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
     logger.info("read sources from database schema %s", input_schema)
+
+    if source_dir.exists() is False:
+        os.mkdir(source_dir)
 
     if sources_file.exists():
         filesourcedefinitions = readsourcedefinitions(sources_file)
