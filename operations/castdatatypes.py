@@ -3,6 +3,7 @@
 from logging import basicConfig, getLogger, INFO
 
 from lib.dbtproject import dbtProject
+from lib.columnutils import quote_columnname
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -37,11 +38,11 @@ def cast_datatypes(config: dict, warehouse: str, project_dir: str):
         )
         union_code += (
             ", CAST("
-            + column["columnname"]
+            + quote_columnname(column["columnname"], warehouse)
             + " AS "
             + warehouse_column_type
             + ") AS "
-            + column["columnname"]
+            + quote_columnname(column["columnname"], warehouse)
         )
 
     union_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"
