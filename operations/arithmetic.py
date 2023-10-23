@@ -35,9 +35,10 @@ def arithmetic(config: dict, warehouse: str, project_dir: str):
 
     if operator == "add":
         dbt_code += "SELECT *,"
+        dbt_code += "{{dbt_utils.safe_add(["
         for operand in operands:
-            dbt_code += f"{operand} + "
-        dbt_code = dbt_code[:-2]
+            dbt_code += f"'{str(operand)}',"
+        dbt_code += "])}}"
         dbt_code += f" AS {output_name} "
 
     if operator == "mul":
@@ -49,9 +50,10 @@ def arithmetic(config: dict, warehouse: str, project_dir: str):
 
     if operator == "sub":
         dbt_code += "SELECT *,"
+        dbt_code += "{{dbt_utils.safe_subtract(["
         for operand in operands:
-            dbt_code += f"{operand} - "
-        dbt_code = dbt_code[:-2]
+            dbt_code += f"'{str(operand)}',"
+        dbt_code += "])}}"
         dbt_code += f" AS {output_name} "
 
     if operator == "div":

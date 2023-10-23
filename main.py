@@ -12,6 +12,7 @@ from operations.mergetables import union_tables
 from operations.syncsources import sync_sources
 from operations.castdatatypes import cast_datatypes
 from operations.arithmetic import arithmetic
+from operations.coalescecolumns import coalesce_columns
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
