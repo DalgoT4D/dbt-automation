@@ -13,7 +13,7 @@ logger = getLogger()
 
 def arithmetic(config: dict, warehouse: str, project_dir: str):
     output_name = config["output_name"]
-    input_model = config["input_model"]
+    input_model = config["input_name"]
     dest_schema = config["dest_schema"]
     operator = config["operator"]
     operands = config["operands"]

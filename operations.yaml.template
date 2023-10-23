@@ -40,7 +40,7 @@ operations:
     - type: airthmetic
       config:
         output_name: <enter the name of the output model>
-        input_model: <enter your input model(tablename) on which you want to run the operation>
+        input_name: <enter your input model(tablename) on which you want to run the operation>
         dest_schema: <enter your destination/output schema>
         operator: <can be "add", "sub", "mul", "div">
         operands:
