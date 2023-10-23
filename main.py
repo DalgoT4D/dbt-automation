@@ -12,6 +12,7 @@ from operations.mergetables import union_tables
 from operations.syncsources import sync_sources
 from operations.castdatatypes import cast_datatypes
 from operations.coalescecolumns import coalesce_columns
+from operations.concatcolumns import concat_columns
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -19,6 +20,7 @@ OPERATIONS_DICT = {
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
     "coalescecolumns": coalesce_columns,
+    "concat": concat_columns,
 }
 
 load_dotenv("dbconnection.env")

@@ -36,4 +36,14 @@ operations:
           - columnname: <second column>
           - ...
         output_column_name: <output column name>
+    - type: concat
+      config: 
+        dest_schema: <destination schema>
+        input_name: <name of the input model>
+        output_name: <name of the output model>
+        columns:
+          - <first column>
+          - <second column or string>
+          - <third column or string>
+        output_column_name: <output column name>
 
