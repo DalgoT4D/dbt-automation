@@ -27,7 +27,7 @@ def concat_columns(config: dict, warehouse: str, project_dir: str):
     concat_fields = ",".join(
         [
             quote_columnname(col["name"], warehouse)
-            if col["is_col"] == "yes"
+            if col["is_col"] in ["yes", True, "y"]
             else f"'{col['name']}'"
             for col in columns
         ]
