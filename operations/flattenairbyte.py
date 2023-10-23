@@ -6,8 +6,7 @@ from lib.sourceschemas import get_source
 from lib.dbtproject import dbtProject
 from lib.dbtconfigs import mk_model_config
 from lib.columnutils import make_cleaned_column_names, dedup_list
-from lib.postgres import PostgresClient
-from lib.bigquery import BigQueryClient
+from lib.warehouseclient import get_client
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -18,13 +17,7 @@ def flatten_operation(config, warehouse, project_dir):
     This function does the flatten operation for all sources (raw tables) in the sources.yml.
     By default, _airbyte_data field is used to flatten
     """
-    warehouse_client = None
-    if warehouse == "postgres":
-        warehouse_client = PostgresClient()
-    elif warehouse == "bigquery":
-        warehouse_client = BigQueryClient()
-    else:
-        raise ValueError("unknown warehouse")
+    warehouse_client = get_client(warehouse)
 
     dbtproject = dbtProject(project_dir)
     logger.info("created the dbt project object")

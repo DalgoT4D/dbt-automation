@@ -18,4 +18,22 @@ operations:
       config:
         source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
         source_schema: <schema of the source mentioned above>
+    - type: castdatatypes
+      config:
+        dest_schema: <destination schema>
+        input_name: <name of the input model>
+        output_name: <name of the output model>
+        columns:
+          - columnname: <column name>
+            columntype: <type to cast column to>
+    - type: coalescecolumns
+      config: 
+        dest_schema: <destination schema>
+        input_name: <name of the input model>
+        output_name: <name of the output model>
+        columns:
+          - columnname: <first column>
+          - columnname: <second column>
+          - ...
+        output_column_name: <output column name>
 
