@@ -77,7 +77,7 @@ class PostgresClient:
             for x in self.execute(
                 f"""SELECT DISTINCT 
                     jsonb_object_keys(_airbyte_data)
-                FROM {schema}.{table}
+                FROM "{schema}"."{table}"
             """
             )
         ]
