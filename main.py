@@ -7,6 +7,7 @@ import os
 from logging import basicConfig, getLogger, INFO
 import yaml
 from dotenv import load_dotenv
+from operations.droprenamecolumns import drop_columns, rename_columns
 from operations.flattenairbyte import flatten_operation
 from operations.mergetables import union_tables
 from operations.syncsources import sync_sources
@@ -19,6 +20,8 @@ OPERATIONS_DICT = {
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
     "coalescecolumns": coalesce_columns,
+    "dropcolumns": drop_columns,
+    "renamecolumns": rename_columns,
 }
 
 load_dotenv("dbconnection.env")
