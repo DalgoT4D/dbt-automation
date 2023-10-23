@@ -17,6 +17,7 @@ def arithmetic(config: dict, warehouse: str, project_dir: str):
     dest_schema = config["dest_schema"]
     operator = config["operator"]
     operands = config["operands"]
+    output_col_name = config["output_column_name"]
 
     if operator not in ["add", "sub", "mul", "div"]:
         raise ValueError("unknown operation")
@@ -39,14 +40,14 @@ def arithmetic(config: dict, warehouse: str, project_dir: str):
         for operand in operands:
             dbt_code += f"'{str(operand)}',"
         dbt_code += "])}}"
-        dbt_code += f" AS {output_name} "
+        dbt_code += f" AS {output_col_name} "
 
     if operator == "mul":
         dbt_code += "SELECT *,"
         for operand in operands:
             dbt_code += f"{operand} * "
         dbt_code = dbt_code[:-2]
-        dbt_code += f" AS {output_name} "
+        dbt_code += f" AS {output_col_name} "
 
     if operator == "sub":
         dbt_code += "SELECT *,"
@@ -54,7 +55,7 @@ def arithmetic(config: dict, warehouse: str, project_dir: str):
         for operand in operands:
             dbt_code += f"'{str(operand)}',"
         dbt_code += "])}}"
-        dbt_code += f" AS {output_name} "
+        dbt_code += f" AS {output_col_name} "
 
     if operator == "div":
         dbt_code += "SELECT *,"
@@ -62,7 +63,7 @@ def arithmetic(config: dict, warehouse: str, project_dir: str):
         for operand in operands:
             dbt_code += f"'{str(operand)}',"
         dbt_code += ")}}"
-        dbt_code += f" AS {output_name} "
+        dbt_code += f" AS {output_col_name} "
 
     dbt_code += " FROM " + "{{ref('" + input_model + "')}}" + "\n"
 

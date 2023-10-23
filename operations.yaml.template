@@ -47,3 +47,4 @@ operations:
           - <name of the 1st model>
           - <name of the 2nd model or a const value>
           - <name of the 3nd model or a const value>
+        output_column_name: <output column name>
