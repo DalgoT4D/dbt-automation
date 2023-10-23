@@ -11,6 +11,7 @@ from operations.flattenairbyte import flatten_operation
 from operations.mergetables import union_tables
 from operations.syncsources import sync_sources
 from operations.castdatatypes import cast_datatypes
+from operations.arithmetic import arithmetic
 from operations.coalescecolumns import coalesce_columns
 from operations.concatcolumns import concat_columns
 
@@ -20,6 +21,7 @@ OPERATIONS_DICT = {
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
     "coalescecolumns": coalesce_columns,
+    "arithmetic": arithmetic,
     "concat": concat_columns,
 }
 

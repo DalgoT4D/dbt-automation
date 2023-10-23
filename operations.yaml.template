@@ -50,3 +50,14 @@ operations:
             is_col: <yes or no>
         output_column_name: <output column name>
 
+    - type: arithmetic
+      config:
+        output_name: <enter the name of the output model>
+        input_name: <enter your input model(tablename) on which you want to run the operation>
+        dest_schema: <enter your destination/output schema>
+        operator: <can be "add", "sub", "mul", "div">
+        operands:
+          - <name of the 1st column>
+          - <name of the 2nd column or a const value>
+          - <name of the 3nd column or a const value>
+        output_column_name: <output column name>
