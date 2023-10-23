@@ -21,7 +21,13 @@ def coalesce_columns(config: dict, warehouse: str, project_dir: str):
 
     union_code = "{{ config(materialized='table',) }}\n"
 
-    union_code += "SELECT COALESCE("
+    columns = config["columns"]
+    columnnames = [c["columnname"] for c in columns]
+    union_code += "SELECT {{dbt_utils.star(from=ref('" + input_name + "'), except=["
+    union_code += ",".join([f'"{columnname}"' for columnname in columnnames])
+    union_code += "])}}"
+
+    union_code += ", COALESCE("
 
     for column in config["columns"]:
         union_code += quote_columnname(column["columnname"], warehouse) + ", "
