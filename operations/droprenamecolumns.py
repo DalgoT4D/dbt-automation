@@ -9,11 +9,11 @@ logger = getLogger()
 def drop_columns(config: dict, warehouse: str, project_dir: str):
     dest_schema = config["dest_schema"]
     input_name = config["input_name"]
-    columns_to_drop = config.get("columns_to_drop", [])
+    columns = config.get("columns", [])
 
     model_code = f'{{{{ config(materialized="table") }}}}\n'
-    columns_to_drop = ','.join(columns_to_drop)
-    model_code += f'SELECT {{{{ dbt_utils.star(from=ref({input_name}), except=[{columns_to_drop}]) }}}} FROM {{ref("{input_name}")}};\n'
+    columns = ','.join(columns)
+    model_code += f'SELECT {{{{ dbt_utils.star(from=ref({input_name}), except=[{columns}]) }}}} FROM {{ref("{input_name}")}};\n'
 
     model_name = f"drop_{input_name}_columns"
 
@@ -25,7 +25,7 @@ def drop_columns(config: dict, warehouse: str, project_dir: str):
 def rename_columns(config: dict, warehouse: str, project_dir: str):
     input_name = config["input_name"]
     dest_schema = config["dest_schema"]
-    columns_to_rename = config.get("columns_to_rename", {})
+    columns = config.get("columns", {})
     output_name = config.get("output_name", input_name)
 
     dbtproject = dbtProject(project_dir)
@@ -35,7 +35,7 @@ def rename_columns(config: dict, warehouse: str, project_dir: str):
     model_code += f'SELECT \n'
     model_code += f'  {{ dbt_utils.star(from=ref("{input_name}")) }}, \n'
     
-    for old_name, new_name in columns_to_rename.items():
+    for old_name, new_name in columns.items():
         model_code += f'  {old_name} AS "{new_name}", \n'
 
     model_code = model_code[:-3]  # Remove trailing comma and space
