@@ -31,7 +31,6 @@ def rename_columns(config: dict, warehouse: str, project_dir: str):
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    model_code = f'--DBT AUTOMATION has generated this model, please DO NOT EDIT\n'
     model_code += '{{ config(materialized="table") }}\n\n'
     model_code += f'SELECT \n'
     model_code += f'  {{ dbt_utils.star(from=ref("{input_name}")) }}, \n'
