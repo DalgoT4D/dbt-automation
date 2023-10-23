@@ -1,6 +1,7 @@
 from logging import basicConfig, getLogger, INFO
 
 from lib.dbtproject import dbtProject
+from lib.columnutils import quote_columnname
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -13,8 +14,8 @@ def drop_columns(config: dict, warehouse: str, project_dir: str):
     output_model_name = config["output_name"]
 
     model_code = f'{{{{ config(materialized="table", schema="{dest_schema}") }}}}\n'
-    columns = ",".join(columns)
-    model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"), except=[{columns}]) }}}} FROM {{{{ref("{input_name}")}}}};\n'
+    columns = ",".join([quote_columnname(col, warehouse) for col in columns])
+    model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"), except=[{columns}]) }}}} FROM {{{{ref("{input_name}")}}}}\n'
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
