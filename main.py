@@ -13,6 +13,7 @@ from operations.syncsources import sync_sources
 from operations.castdatatypes import cast_datatypes
 from operations.arithmetic import arithmetic
 from operations.coalescecolumns import coalesce_columns
+from operations.concatcolumns import concat_columns
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -21,6 +22,7 @@ OPERATIONS_DICT = {
     "castdatatypes": cast_datatypes,
     "coalescecolumns": coalesce_columns,
     "arithmetic": arithmetic,
+    "concat": concat_columns,
 }
 
 load_dotenv("dbconnection.env")
