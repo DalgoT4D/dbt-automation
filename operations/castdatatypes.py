@@ -3,7 +3,6 @@
 from logging import basicConfig, getLogger, INFO
 
 from lib.dbtproject import dbtProject
-from lib.warehouseclient import get_client
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -24,7 +23,6 @@ def cast_datatypes(config: dict, warehouse: str, project_dir: str):
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    # get the current column schema
     union_code = "{{ config(materialized='table',) }}\n"
 
     columns = config["columns"]
