@@ -11,8 +11,7 @@ load_dotenv("dbconnection.env")
 
 # pylint:disable=wrong-import-position
 from lib.sourceschemas import mksourcedefinition
-from lib.postgres import PostgresClient
-from lib.bigquery import BigQueryClient
+from lib.warehouseclient import get_client
 from lib.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
@@ -31,11 +30,7 @@ def sync_sources(config, warehouse, project_dir):
     source_name = config["source_name"]
     sources_file = Path(project_dir) / "models" / input_schema / "sources.yml"
 
-    if warehouse == "postgres":
-        client = PostgresClient()
-
-    elif warehouse == "bigquery":
-        client = BigQueryClient()
+    client = get_client(warehouse)
 
     tablenames = client.get_tables(input_schema)
     dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)

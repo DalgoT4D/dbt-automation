@@ -10,11 +10,13 @@ from dotenv import load_dotenv
 from operations.flattenairbyte import flatten_operation
 from operations.mergetables import union_tables
 from operations.syncsources import sync_sources
+from operations.castdatatypes import cast_datatypes
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
     "unionall": union_tables,
     "syncsources": sync_sources,
+    "castdatatypes": cast_datatypes,
 }
 
 load_dotenv("dbconnection.env")

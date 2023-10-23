@@ -9,8 +9,7 @@ import yaml
 import pandas as pd
 
 # from lib.dbtproject import dbtProject
-from lib.postgres import PostgresClient
-from lib.bigquery import BigQueryClient
+from lib.warehouseclient import get_client
 
 
 basicConfig(level=INFO)
@@ -35,9 +34,7 @@ with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
 
 
-def get_column_lists(
-    p_client: PostgresClient | BigQueryClient, p_mergespec: dict, p_working_dir: str
-):
+def get_column_lists(p_client, p_mergespec: dict, p_working_dir: str):
     """gets the column schemas for all tables in the mergespec"""
     column_lists_filename = os.path.join(p_working_dir, "column_lists.yaml")
     if os.path.exists(column_lists_filename):
@@ -141,12 +138,7 @@ def get_largest_cluster(
 # -- start
 # dbtproject = dbtProject(project_dir)
 # dbtproject.ensure_models_dir(mergespec["outputsschema"])
-if warehouse == "postgres":
-    client = PostgresClient()
-elif warehouse == "bigquery":
-    client = BigQueryClient()
-else:
-    raise ValueError("unknown warehouse")
+client = get_client(warehouse)
 
 t2c = get_column_lists(client, mergespec, working_dir)
 
