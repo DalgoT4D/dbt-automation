@@ -18,4 +18,13 @@ operations:
       config:
         source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
         source_schema: <schema of the source mentioned above>
-
+    - type: airthmetic
+      config:
+        output_name: <enter the name of the output model>
+        input_model: <enter your input model(tablename) on which you want to run the operation>
+        dest_schema: <enter your destination/output schema>
+        operator: <can be "add", "sub", "mul", "div">
+        operands:
+          - <name of the 1st model>
+          - <name of the 2nd model or a const value>
+          - <name of the 3nd model or a const value>
