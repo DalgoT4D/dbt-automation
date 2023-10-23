@@ -61,3 +61,17 @@ operations:
           - <name of the 2nd column or a const value>
           - <name of the 3nd column or a const value>
         output_column_name: <output column name>
+    - type: dropcolumns
+      config:
+        input_name: <name of the input model>
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+        columns:
+          - <column name>
+    - type: renamecolumns
+      config: 
+        input_name: <name of the input model>
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+        columns:
+          <old column name>: <new column name>
