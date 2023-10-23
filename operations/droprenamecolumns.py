@@ -14,7 +14,7 @@ def drop_columns(config: dict, warehouse: str, project_dir: str):
     output_model_name = config["output_name"]
 
     model_code = f'{{{{ config(materialized="table", schema="{dest_schema}") }}}}\n'
-    columns = ",".join([quote_columnname(col, warehouse) for col in columns])
+    columns = ",".join([f'"{col}"' for col in columns])
     model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"), except=[{columns}]) }}}} FROM {{{{ref("{input_name}")}}}}\n'
 
     dbtproject = dbtProject(project_dir)
@@ -32,13 +32,11 @@ def rename_columns(config: dict, warehouse: str, project_dir: str):
     dbtproject.ensure_models_dir(dest_schema)
 
     model_code = '{{ config(materialized="table") }}\n\n'
-    exclude_cols = ",".join(
-        [quote_columnname(col, warehouse) for col in columns.keys()]
-    )
+    exclude_cols = ",".join([f'"{col}"' for col in columns.keys()])
     model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"),except=[{exclude_cols}]) }}}}, '
 
     for old_name, new_name in columns.items():
-        model_code += f'{old_name} AS "{new_name}", '
+        model_code += f"{quote_columnname(old_name, warehouse)} AS {quote_columnname(new_name, warehouse)}, "
 
     model_code = model_code[:-2]  # Remove trailing comma and space
     model_code += f'\nFROM \n  {{{{ ref("{input_name}") }}}}'
