@@ -10,16 +10,15 @@ def drop_columns(config: dict, warehouse: str, project_dir: str):
     dest_schema = config["dest_schema"]
     input_name = config["input_name"]
     columns = config.get("columns", [])
+    output_model_name = config["output_name"]
 
-    model_code = f'{{{{ config(materialized="table") }}}}\n'
-    columns = ','.join(columns)
-    model_code += f'SELECT {{{{ dbt_utils.star(from=ref({input_name}), except=[{columns}]) }}}} FROM {{ref("{input_name}")}};\n'
-
-    model_name = f"drop_{input_name}_columns"
+    model_code = f'{{{{ config(materialized="table", schema="{dest_schema}") }}}}\n'
+    columns = ",".join(columns)
+    model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"), except=[{columns}]) }}}} FROM {{{{ref("{input_name}")}}}};\n'
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    dbtproject.write_model(dest_schema, model_name, model_code, subdir="staging")
+    dbtproject.write_model(dest_schema, output_model_name, model_code)
 
 
 def rename_columns(config: dict, warehouse: str, project_dir: str):
@@ -32,9 +31,9 @@ def rename_columns(config: dict, warehouse: str, project_dir: str):
     dbtproject.ensure_models_dir(dest_schema)
 
     model_code += '{{ config(materialized="table") }}\n\n'
-    model_code += f'SELECT \n'
+    model_code += f"SELECT \n"
     model_code += f'  {{ dbt_utils.star(from=ref("{input_name}")) }}, \n'
-    
+
     for old_name, new_name in columns.items():
         model_code += f'  {old_name} AS "{new_name}", \n'
 
