@@ -42,8 +42,11 @@ operations:
         input_name: <name of the input model>
         output_name: <name of the output model>
         columns:
-          - <first column>
-          - <second column or string>
-          - <third column or string>
+          - name: <string (column or const)>
+            is_col: <yes or no>
+          - name: <string (column or const)>
+            is_col: <yes or no>
+          - name: <string (column or const)>
+            is_col: <yes or no>
         output_column_name: <output column name>
 
