@@ -26,20 +26,21 @@ def rename_columns(config: dict, warehouse: str, project_dir: str):
     input_name = config["input_name"]
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
-    output_name = config.get("output_name", input_name)
+    output_model_name = config["output_name"]
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    model_code += '{{ config(materialized="table") }}\n\n'
-    model_code += f"SELECT \n"
-    model_code += f'  {{ dbt_utils.star(from=ref("{input_name}")) }}, \n'
+    model_code = '{{ config(materialized="table") }}\n\n'
+    exclude_cols = ",".join(
+        [quote_columnname(col, warehouse) for col in columns.keys()]
+    )
+    model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"),except=[{exclude_cols}]) }}}}, '
 
     for old_name, new_name in columns.items():
-        model_code += f'  {old_name} AS "{new_name}", \n'
+        model_code += f'{old_name} AS "{new_name}", '
 
-    model_code = model_code[:-3]  # Remove trailing comma and space
-    model_code += f'\nFROM \n  {{ ref("{input_name}") }}'
+    model_code = model_code[:-2]  # Remove trailing comma and space
+    model_code += f'\nFROM \n  {{{{ ref("{input_name}") }}}}'
 
-    model_name = f"rename_{output_name}_columns"
-    dbtproject.write_model(dest_schema, model_name, model_code, subdir="staging")
+    dbtproject.write_model(dest_schema, output_model_name, model_code)
