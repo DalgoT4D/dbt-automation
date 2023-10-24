@@ -22,16 +22,10 @@ class PostgresClient:
         )
         return connection
 
-    def __init__(self, conn_info: dict = None):
-        self.CONN_INFO = {
-            "DBHOST": os.getenv("DBHOST"),
-            "DBPORT": os.getenv("DBPORT"),
-            "DBUSER": os.getenv("DBUSER"),
-            "DBPASSWORD": os.getenv("DBPASSWORD"),
-            "DBNAME": os.getenv("DBNAME"),
-        }
+    def __init__(self, conn_info: dict):
         if conn_info is None:
-            conn_info = self.CONN_INFO
+            raise ValueError("connection info required")
+
         self.connection = PostgresClient.get_connection(
             conn_info.get("DBHOST", conn_info.get("host")),
             conn_info.get("DBPORT", conn_info.get("port")),
