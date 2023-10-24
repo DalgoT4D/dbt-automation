@@ -15,6 +15,7 @@ from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.mergetables import union_tables
 from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
+from dbt_automation.operations.regexextraction import regex_extraction
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -26,6 +27,7 @@ OPERATIONS_DICT = {
     "concat": concat_columns,
     "dropcolumns": drop_columns,
     "renamecolumns": rename_columns,
+    "regexextraction": regex_extraction,
 }
 
 load_dotenv("dbconnection.env")
@@ -48,7 +50,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Load the YAML file
-print(os.getcwd())
 config_data = None
 with open(args.yamlconfig, "r", encoding="utf-8") as yaml_file:
     config_data = yaml.safe_load(yaml_file)
