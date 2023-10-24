@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from operations.droprenamecolumns import drop_columns, rename_columns
 from operations.flattenairbyte import flatten_operation
 from operations.mergetables import union_tables
+from operations.regexextraction import regex_extraction
 from operations.syncsources import sync_sources
 from operations.castdatatypes import cast_datatypes
 from operations.arithmetic import arithmetic
@@ -26,6 +27,7 @@ OPERATIONS_DICT = {
     "concat": concat_columns,
     "dropcolumns": drop_columns,
     "renamecolumns": rename_columns,
+    "regexextraction": regex_extraction,
 }
 
 load_dotenv("dbconnection.env")
