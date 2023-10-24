@@ -5,7 +5,7 @@ This file contains the airthmetic operations for dbt automation
 
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
-from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.utils.dbtproject import dbtProject
 
 basicConfig(level=INFO)
 logger = getLogger()
