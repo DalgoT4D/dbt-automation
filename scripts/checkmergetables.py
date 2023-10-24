@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv("dbconnection.env")
 # pylint:disable=wrong-import-position
-from lib.postgres import PostgresClient
+from dbt_automation.lib.postgres import PostgresClient
 
 basicConfig(level=INFO)
 logger = getLogger()

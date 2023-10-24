@@ -7,7 +7,7 @@ from collections import Counter
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 
-from lib.dbtproject import dbtProject
+from dbt_automation.lib.dbtproject import dbtProject
 
 
 basicConfig(level=INFO)

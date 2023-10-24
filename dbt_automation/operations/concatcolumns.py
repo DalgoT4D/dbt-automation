@@ -3,8 +3,8 @@ This file takes care of dbt string concat operations
 """
 
 from logging import basicConfig, getLogger, INFO
-from lib.dbtproject import dbtProject
-from lib.columnutils import quote_columnname
+from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.lib.columnutils import quote_columnname
 
 
 basicConfig(level=INFO)
@@ -13,7 +13,8 @@ logger = getLogger()
 
 def concat_columns(config: dict, warehouse: str, project_dir: str):
     """This function generates dbt model to concat strings"""
-
+    logger.info("here in concat columns")
+    logger.info("testing")
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
     input_name = config["input_name"]

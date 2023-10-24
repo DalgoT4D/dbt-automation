@@ -1,7 +1,7 @@
 """constructs and returns an instance of the client for the right warehouse"""
 
-from lib.postgres import PostgresClient
-from lib.bigquery import BigQueryClient
+from dbt_automation.utils.postgres import PostgresClient
+from dbt_automation.utils.bigquery import BigQueryClient
 
 
 def get_client(warehouse: str):

@@ -2,8 +2,8 @@
 
 from logging import basicConfig, getLogger, INFO
 
-from lib.dbtproject import dbtProject
-from lib.columnutils import quote_columnname
+from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.lib.columnutils import quote_columnname
 
 basicConfig(level=INFO)
 logger = getLogger()

@@ -7,8 +7,7 @@ import os
 from logging import basicConfig, getLogger, INFO
 import yaml
 from dotenv import load_dotenv
-from operations.droprenamecolumns import drop_columns, rename_columns
-from operations.flattenairbyte import flatten_operation
+from dbt_automation.operations.droprenamecolumns import drop_columns, rename_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.operations.coalescecolumns import coalesce_columns
@@ -49,6 +48,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Load the YAML file
+print(os.getcwd())
 config_data = None
 with open(args.yamlconfig, "r", encoding="utf-8") as yaml_file:
     config_data = yaml.safe_load(yaml_file)

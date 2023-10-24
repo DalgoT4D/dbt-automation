@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 import yaml
 import pandas as pd
 
-# from lib.dbtproject import dbtProject
-from lib.warehouseclient import get_client
+# from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.lib.warehouseclient import get_client
 
 
 basicConfig(level=INFO)

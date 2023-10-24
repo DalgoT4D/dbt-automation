@@ -2,11 +2,11 @@
 import sys
 from logging import basicConfig, getLogger, INFO
 
-from lib.sourceschemas import get_source
-from lib.dbtproject import dbtProject
-from lib.dbtconfigs import mk_model_config
-from lib.columnutils import make_cleaned_column_names, dedup_list
-from lib.warehouseclient import get_client
+from dbt_automation.lib.sourceschemas import get_source
+from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.lib.dbtconfigs import mk_model_config
+from dbt_automation.lib.columnutils import make_cleaned_column_names, dedup_list
+from dbt_automation.lib.warehouseclient import get_client
 
 basicConfig(level=INFO)
 logger = getLogger()
