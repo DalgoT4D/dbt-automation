@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="dbt-automation",
-    packages=["dbt-automation"],
+    name="dbt_automation",
+    packages=["dbt_automation"],
     version=0.1,
     author="Dalgo",
     author_email="support@dalgo.in",
