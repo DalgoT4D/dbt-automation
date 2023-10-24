@@ -24,4 +24,5 @@ setup(
     package_data={
         "assets": ["dbt_automation.assets/*.sql"],
     },
+    include_package_data=True,
 )
