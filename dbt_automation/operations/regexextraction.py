@@ -1,6 +1,6 @@
 """extract from a regex"""
-from lib.columnutils import quote_columnname
-from lib.dbtproject import dbtProject
+from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.utils.dbtproject import dbtProject
 
 
 def regex_extraction(config: dict, warehouse: str, project_dir: str):

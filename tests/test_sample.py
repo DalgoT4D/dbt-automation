@@ -1,5 +1,5 @@
 import unittest
-from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.utils.dbtproject import dbtProject
 
 
 class TestSimple(unittest.TestCase):

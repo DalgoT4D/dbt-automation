@@ -3,7 +3,7 @@
 import argparse
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
-from dbt_automation.lib.warehouseclient import get_client
+from dbt_automation.utils.warehouseclient import get_client
 
 load_dotenv("dbconnection.env")
 

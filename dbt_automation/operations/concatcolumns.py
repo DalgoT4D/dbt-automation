@@ -3,8 +3,8 @@ This file takes care of dbt string concat operations
 """
 
 from logging import basicConfig, getLogger, INFO
-from dbt_automation.lib.dbtproject import dbtProject
-from dbt_automation.lib.columnutils import quote_columnname
+from dbt_automation.utils.dbtproject import dbtProject
+from dbt_automation.utils.columnutils import quote_columnname
 
 
 basicConfig(level=INFO)

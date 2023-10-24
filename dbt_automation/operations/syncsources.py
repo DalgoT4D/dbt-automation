@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 load_dotenv("dbconnection.env")
 
 # pylint:disable=wrong-import-position
-from dbt_automation.lib.sourceschemas import mksourcedefinition
-from dbt_automation.lib.warehouseclient import get_client
-from dbt_automation.lib.dbtsources import (
+from dbt_automation.utils.sourceschemas import mksourcedefinition
+from dbt_automation.utils.warehouseclient import get_client
+from dbt_automation.utils.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
 )

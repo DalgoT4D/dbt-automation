@@ -5,8 +5,8 @@ from logging import basicConfig, getLogger, INFO
 from string import Template
 from pathlib import Path
 import yaml
-from dbt_automation.lib.sourceschemas import get_source
-from dbt_automation.lib.dbtproject import dbtProject
+from dbt_automation.utils.sourceschemas import get_source
+from dbt_automation.utils.dbtproject import dbtProject
 
 basicConfig(level=INFO)
 logger = getLogger()
