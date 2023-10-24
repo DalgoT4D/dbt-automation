@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="dbt_automation",
+    name="dbt-automation",
     packages=["dbt-automation"],
     version=0.1,
     author="Dalgo",
