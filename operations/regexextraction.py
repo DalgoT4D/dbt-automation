@@ -1,7 +1,10 @@
+"""extract from a regex"""
 from lib.columnutils import quote_columnname
 from lib.dbtproject import dbtProject
 
+
 def regex_extraction(config: dict, warehouse: str, project_dir: str):
+    """given a regex and a column name, extract the regex from the column"""
     input_name = config["input_name"]
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
@@ -11,12 +14,23 @@ def regex_extraction(config: dict, warehouse: str, project_dir: str):
     dbtproject.ensure_models_dir(dest_schema)
 
     model_code = '{{ config(materialized="table") }}\n\nSELECT '
-    
-    for col_name, regex in columns.items():
-        model_code += f"substring({quote_columnname(col_name, warehouse)} from '{regex}') AS {quote_columnname(col_name, warehouse)}, "
 
-    model_code += '{{ dbt_utils.star(from=ref("' + input_name + '"), except=[' + ', '.join([f'"{col}"' for col in columns.keys()]) + ']) }}'
-    
+    for col_name, regex in columns.items():
+        if warehouse == "postgres":
+            model_code += f"""substring({quote_columnname(col_name, warehouse)}
+                            FROM '{regex}') AS {quote_columnname(col_name, warehouse)}, """
+        elif warehouse == "bigquery":
+            model_code += f"""REGEXP_EXTRACT({quote_columnname(col_name, warehouse)}, r'{regex}')
+                            AS {quote_columnname(col_name, warehouse)}, """
+
+    model_code += (
+        '{{ dbt_utils.star(from=ref("'
+        + input_name
+        + '"), except=['
+        + ", ".join([f'"{col}"' for col in columns.keys()])
+        + "]) }}"
+    )
+
     model_code += f'\nFROM \n  {{{{ ref("{input_name}") }}}}'
-    
+
     dbtproject.write_model(dest_schema, output_model_name, model_code)
