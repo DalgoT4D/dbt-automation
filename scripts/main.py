@@ -7,6 +7,7 @@ import os
 from logging import basicConfig, getLogger, INFO
 import yaml
 from dotenv import load_dotenv
+from operations.droprenamecolumns import drop_columns, rename_columns
 from operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
@@ -24,6 +25,8 @@ OPERATIONS_DICT = {
     "coalescecolumns": coalesce_columns,
     "arithmetic": arithmetic,
     "concat": concat_columns,
+    "dropcolumns": drop_columns,
+    "renamecolumns": rename_columns,
 }
 
 load_dotenv("dbconnection.env")
