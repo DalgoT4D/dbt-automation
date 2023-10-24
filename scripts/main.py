@@ -8,12 +8,13 @@ from logging import basicConfig, getLogger, INFO
 import yaml
 from dotenv import load_dotenv
 from operations.flattenairbyte import flatten_operation
-from operations.mergetables import union_tables
-from operations.syncsources import sync_sources
-from operations.castdatatypes import cast_datatypes
-from operations.arithmetic import arithmetic
-from operations.coalescecolumns import coalesce_columns
-from operations.concatcolumns import concat_columns
+from dbt_automation.operations.arithmetic import arithmetic
+from dbt_automation.operations.castdatatypes import cast_datatypes
+from dbt_automation.operations.coalescecolumns import coalesce_columns
+from dbt_automation.operations.concatcolumns import concat_columns
+from dbt_automation.operations.mergetables import union_tables
+from dbt_automation.operations.syncsources import sync_sources
+from dbt_automation.operations.flattenairbyte import flatten_operation
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
