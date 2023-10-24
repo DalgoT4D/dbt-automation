@@ -21,4 +21,7 @@ setup(
     long_description=long_description,
     python_requires=">=3.7",
     install_requires=["PyYAML", "requests", "google-cloud-bigquery", "psycopg2-binary"],
+    package_data={
+        "assets": ["dbt_automation.assets/*.sql"],
+    },
 )
