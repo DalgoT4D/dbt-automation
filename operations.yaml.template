@@ -75,3 +75,11 @@ operations:
         output_name: <name of the output model>
         columns:
           <old column name>: <new column name>
+    - type: regexextraction
+      config:
+        input_name: <name of the input model>
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+        columns:
+          column1: <regex operation>
+          column2: <regex operation>
