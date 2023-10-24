@@ -11,7 +11,7 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def concat_columns(config: dict, warehouse: str, project_dir: str):
+def concat_columns(config: dict, warehouse, project_dir: str):
     """This function generates dbt model to concat strings"""
     logger.info("here in concat columns")
     logger.info("testing")
@@ -27,7 +27,7 @@ def concat_columns(config: dict, warehouse: str, project_dir: str):
     dbt_code = "{{ config(materialized='table', schema='" + dest_schema + "') }}\n"
     concat_fields = ",".join(
         [
-            quote_columnname(col["name"], warehouse)
+            quote_columnname(col["name"], warehouse.name)
             if col["is_col"] in ["yes", True, "y"]
             else f"'{col['name']}'"
             for col in columns

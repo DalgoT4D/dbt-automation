@@ -1,3 +1,4 @@
+"""drop and rename columns"""
 from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
@@ -7,7 +8,9 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def drop_columns(config: dict, warehouse: str, project_dir: str):
+# pylint:disable=unused-argument,logging-fstring-interpolation
+def drop_columns(config: dict, warehouse, project_dir: str):
+    """drops columns from a model"""
     dest_schema = config["dest_schema"]
     input_name = config["input_name"]
     columns = config.get("columns", [])
@@ -22,7 +25,8 @@ def drop_columns(config: dict, warehouse: str, project_dir: str):
     dbtproject.write_model(dest_schema, output_model_name, model_code)
 
 
-def rename_columns(config: dict, warehouse: str, project_dir: str):
+def rename_columns(config: dict, warehouse, project_dir: str):
+    """renames columns in a model"""
     input_name = config["input_name"]
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
@@ -33,10 +37,11 @@ def rename_columns(config: dict, warehouse: str, project_dir: str):
 
     model_code = '{{ config(materialized="table") }}\n\n'
     exclude_cols = ",".join([f'"{col}"' for col in columns.keys()])
-    model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"),except=[{exclude_cols}]) }}}}, '
+    model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"), except=[{exclude_cols}]) }}}}, '
 
     for old_name, new_name in columns.items():
-        model_code += f"{quote_columnname(old_name, warehouse)} AS {quote_columnname(new_name, warehouse)}, "
+        model_code += f"""{quote_columnname(old_name, warehouse.name)}
+                    AS {quote_columnname(new_name, warehouse.name)}, """
 
     model_code = model_code[:-2]  # Remove trailing comma and space
     model_code += f'\nFROM \n  {{{{ ref("{input_name}") }}}}'

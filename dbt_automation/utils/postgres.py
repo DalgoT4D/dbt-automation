@@ -1,7 +1,6 @@
 """helpers for postgres"""
-import os
-import psycopg2
 from logging import basicConfig, getLogger, INFO
+import psycopg2
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -23,6 +22,7 @@ class PostgresClient:
         return connection
 
     def __init__(self, conn_info: dict):
+        self.name = "postgres"
         if conn_info is None:
             raise ValueError("connection info required")
 

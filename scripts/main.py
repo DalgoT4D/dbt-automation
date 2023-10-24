@@ -7,6 +7,7 @@ import os
 from logging import basicConfig, getLogger, INFO
 import yaml
 from dotenv import load_dotenv
+from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.droprenamecolumns import drop_columns, rename_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
@@ -60,7 +61,15 @@ if config_data is None:
 # TODO: Add stronger validations for each operation here
 if config_data["warehouse"] not in ["postgres", "bigquery"]:
     raise ValueError("unknown warehouse")
-warehouse = config_data["warehouse"]
+
+conn_info = {
+    "DBHOST": os.getenv("DBHOST"),
+    "DBPORT": os.getenv("DBPORT"),
+    "DBUSER": os.getenv("DBUSER"),
+    "DBPASSWORD": os.getenv("DBPASSWORD"),
+    "DBNAME": os.getenv("DBNAME"),
+}
+warehouse = get_client(config_data["warehouse"], conn_info)
 
 # run operations to generate dbt model(s)
 # pylint:disable=logging-fstring-interpolation

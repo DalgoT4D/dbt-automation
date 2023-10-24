@@ -1,6 +1,5 @@
 """takes a list of tables and a common column spec and creates a dbt model to merge them"""
 import os
-import sys
 
 import argparse
 from collections import Counter
@@ -14,7 +13,7 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-# pylint:disable=unused-argument
+# pylint:disable=unused-argument,logging-fstring-interpolation
 def union_tables(config, warehouse, project_dir):
     """generates a dbt model which uses the dbt_utils union_relations macro to union tables"""
     tablenames = config["tablenames"]
@@ -59,9 +58,9 @@ def union_tables(config, warehouse, project_dir):
 
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-
-    def list_of_strings(arg):
+    # pylint:disable=invalid-name
+    def list_of_strings(arg: str):
+        """converts a comma separated string into a list of strings"""
         return arg.split(",")
 
     parser = argparse.ArgumentParser()

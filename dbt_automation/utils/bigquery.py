@@ -13,6 +13,7 @@ class BigQueryClient:
 
     def __init__(self):
         self.bqclient = bigquery.Client()
+        self.name = "bigquery"
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""

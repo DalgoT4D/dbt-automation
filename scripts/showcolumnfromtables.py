@@ -1,5 +1,6 @@
 """given a list of tables, show the unique values of the specified column"""
 
+import os
 import argparse
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
@@ -22,7 +23,14 @@ schema = args.schema
 column = args.column
 
 # -- start
-client = get_client(warehouse)
+conn_info = {
+    "DBHOST": os.getenv("DBHOST"),
+    "DBPORT": os.getenv("DBPORT"),
+    "DBUSER": os.getenv("DBUSER"),
+    "DBPASSWORD": os.getenv("DBPASSWORD"),
+    "DBNAME": os.getenv("DBNAME"),
+}
+client = get_client(warehouse, conn_info)
 
 for tablename in args.tables:
     QUERY = f"SELECT DISTINCT {column} FROM {schema}.{tablename}"

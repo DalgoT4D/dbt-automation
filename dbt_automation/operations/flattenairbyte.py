@@ -12,12 +12,12 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def flatten_operation(config, warehouse, project_dir):
+# pylint:disable=logging-fstring-interpolation,unused-argument
+def flatten_operation(config: dict, warehouse, project_dir: str):
     """
     This function does the flatten operation for all sources (raw tables) in the sources.yml.
     By default, _airbyte_data field is used to flatten
     """
-    warehouse_client = get_client(warehouse)
 
     dbtproject = dbtProject(project_dir)
     logger.info("created the dbt project object")
@@ -50,7 +50,7 @@ def flatten_operation(config, warehouse, project_dir):
         sql_columns = []
         json_fields = []
         # get the field names from the json objects
-        json_fields = warehouse_client.get_json_columnspec(
+        json_fields = warehouse.get_json_columnspec(
             SOURCE_SCHEMA,
             tablename,
         )
@@ -67,7 +67,7 @@ def flatten_operation(config, warehouse, project_dir):
 
         # and the .sql model
         model_sql = mk_dbtmodel(
-            warehouse,
+            warehouse.name,
             source["name"],  # pass the source in the yaml file
             modelname,
             zip(json_fields, sql_columns),
@@ -80,7 +80,7 @@ def flatten_operation(config, warehouse, project_dir):
     dbtproject.write_model_config(DEST_SCHEMA, models, logger=logger)
 
     # close the client
-    warehouse_client.close()
+    warehouse.close()
 
 
 # ================================================================================
@@ -123,7 +123,6 @@ def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: lis
 # ================================================================================
 if __name__ == "__main__":
     import os
-    from pathlib import Path
     from dotenv import load_dotenv
     import argparse
 
@@ -132,7 +131,7 @@ if __name__ == "__main__":
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
         os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     )
-    project_dir = os.getenv("DBT_PROJECT_DIR")
+    projectdir = os.getenv("DBT_PROJECT_DIR")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery"])
@@ -140,8 +139,17 @@ if __name__ == "__main__":
     parser.add_argument("--dest-schema", default="staging", help="e.g. staging")
     args = parser.parse_args()
 
+    conn_info = {
+        "DBHOST": os.getenv("DBHOST"),
+        "DBPORT": os.getenv("DBPORT"),
+        "DBUSER": os.getenv("DBUSER"),
+        "DBPASSWORD": os.getenv("DBPASSWORD"),
+        "DBNAME": os.getenv("DBNAME"),
+    }
+    warehouse_client = get_client(args.warehouse, conn_info)
+
     flatten_operation(
         config={"source_schema": args.source_schema, "dest_schema": args.dest_schema},
-        warehouse=args.warehouse,
-        project_dir=project_dir,
+        warehouse=warehouse_client,
+        project_dir=projectdir,
     )

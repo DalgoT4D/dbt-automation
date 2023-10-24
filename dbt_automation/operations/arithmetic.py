@@ -2,16 +2,16 @@
 This file contains the airthmetic operations for dbt automation
 """
 
-
 from logging import basicConfig, getLogger, INFO
-from dotenv import load_dotenv
 from dbt_automation.utils.dbtproject import dbtProject
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
-def arithmetic(config: dict, warehouse: str, project_dir: str):
+# pylint:disable=unused-argument,logging-fstring-interpolation
+def arithmetic(config: dict, warehouse, project_dir: str):
+    """performs arithmetic operations: +/-/*//"""
     output_name = config["output_name"]
     input_model = config["input_name"]
     dest_schema = config["dest_schema"]

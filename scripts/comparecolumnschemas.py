@@ -138,7 +138,14 @@ def get_largest_cluster(
 # -- start
 # dbtproject = dbtProject(project_dir)
 # dbtproject.ensure_models_dir(mergespec["outputsschema"])
-client = get_client(warehouse)
+conn_info = {
+    "DBHOST": os.getenv("DBHOST"),
+    "DBPORT": os.getenv("DBPORT"),
+    "DBUSER": os.getenv("DBUSER"),
+    "DBPASSWORD": os.getenv("DBPASSWORD"),
+    "DBNAME": os.getenv("DBNAME"),
+}
+client = get_client(warehouse, conn_info)
 
 t2c = get_column_lists(client, mergespec, working_dir)
 

@@ -31,9 +31,7 @@ def sync_sources(config, warehouse, project_dir):
     source_dir = Path(project_dir) / "models" / input_schema
     sources_file = Path(project_dir) / "models" / input_schema / "sources.yml"
 
-    client = get_client(warehouse)
-
-    tablenames = client.get_tables(input_schema)
+    tablenames = warehouse.get_tables(input_schema)
     dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
     logger.info("read sources from database schema %s", input_schema)
 
@@ -55,15 +53,10 @@ def sync_sources(config, warehouse, project_dir):
         yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
         logger.info("wrote source definitions to %s", sources_file)
 
-    client.close()
+    warehouse.close()
 
 
 if __name__ == "__main__":
-    import os
-    from pathlib import Path
-    from dotenv import load_dotenv
-    import argparse
-
     load_dotenv("dbconnection.env")
 
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
@@ -77,8 +70,17 @@ if __name__ == "__main__":
     parser.add_argument("--source-name", required=True)
     args = parser.parse_args()
 
+    conn_info = {
+        "DBHOST": os.getenv("DBHOST"),
+        "DBPORT": os.getenv("DBPORT"),
+        "DBUSER": os.getenv("DBUSER"),
+        "DBPASSWORD": os.getenv("DBPASSWORD"),
+        "DBNAME": os.getenv("DBNAME"),
+    }
+    warehouse_client = get_client(args.warehouse, conn_info)
+
     sync_sources(
         config={"source_schema": args.source_schema, "source_name": "Sheets"},
-        warehouse=args.warehouse,
+        warehouse=warehouse_client,
         project_dir=projectdir,
     )
