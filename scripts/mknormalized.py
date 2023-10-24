@@ -4,9 +4,8 @@ import argparse
 from logging import basicConfig, getLogger, INFO
 from string import Template
 from pathlib import Path
-import yaml
-from lib.sourceschemas import get_source
-from lib.dbtproject import dbtProject
+from dbt_automation.utils.sourceschemas import get_source
+from dbt_automation.utils.dbtproject import dbtProject
 
 basicConfig(level=INFO)
 logger = getLogger()

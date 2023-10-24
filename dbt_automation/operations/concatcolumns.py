@@ -3,17 +3,18 @@ This file takes care of dbt string concat operations
 """
 
 from logging import basicConfig, getLogger, INFO
-from lib.dbtproject import dbtProject
-from lib.columnutils import quote_columnname
+from dbt_automation.utils.dbtproject import dbtProject
+from dbt_automation.utils.columnutils import quote_columnname
 
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
-def concat_columns(config: dict, warehouse: str, project_dir: str):
+def concat_columns(config: dict, warehouse, project_dir: str):
     """This function generates dbt model to concat strings"""
-
+    logger.info("here in concat columns")
+    logger.info("testing")
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
     input_name = config["input_name"]
@@ -26,7 +27,7 @@ def concat_columns(config: dict, warehouse: str, project_dir: str):
     dbt_code = "{{ config(materialized='table', schema='" + dest_schema + "') }}\n"
     concat_fields = ",".join(
         [
-            quote_columnname(col["name"], warehouse)
+            quote_columnname(col["name"], warehouse.name)
             if col["is_col"] in ["yes", True, "y"]
             else f"'{col['name']}'"
             for col in columns

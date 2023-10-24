@@ -5,7 +5,7 @@ from logging import basicConfig, getLogger, INFO
 import json
 import yaml
 
-from lib.postgres import PostgresClient
+from dbt_automation.utils.postgres import PostgresClient
 
 basicConfig(level=INFO)
 logger = getLogger()

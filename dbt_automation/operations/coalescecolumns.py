@@ -2,15 +2,15 @@
 
 from logging import basicConfig, getLogger, INFO
 
-from lib.dbtproject import dbtProject
-from lib.columnutils import quote_columnname
+from dbt_automation.utils.dbtproject import dbtProject
+from dbt_automation.utils.columnutils import quote_columnname
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def coalesce_columns(config: dict, warehouse: str, project_dir: str):
+def coalesce_columns(config: dict, warehouse, project_dir: str):
     """coalesces columns"""
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
@@ -30,7 +30,7 @@ def coalesce_columns(config: dict, warehouse: str, project_dir: str):
     union_code += ", COALESCE("
 
     for column in config["columns"]:
-        union_code += quote_columnname(column["columnname"], warehouse) + ", "
+        union_code += quote_columnname(column["columnname"], warehouse.name) + ", "
     union_code = union_code[:-2] + ") AS " + config["output_column_name"]
 
     union_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"

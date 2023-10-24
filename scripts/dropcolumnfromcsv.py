@@ -1,8 +1,8 @@
 """drops a column from a CSV file"""
 #!env python
 
-import pandas as pd
 import argparse
+import pandas as pd
 
 parser = argparse.ArgumentParser(description="Drop a column from a CSV file")
 parser.add_argument("inputcsvfile", help="CSV file to drop column from")

@@ -7,15 +7,16 @@ import os
 from logging import basicConfig, getLogger, INFO
 import yaml
 from dotenv import load_dotenv
-from operations.droprenamecolumns import drop_columns, rename_columns
-from operations.flattenairbyte import flatten_operation
-from operations.mergetables import union_tables
-from operations.regexextraction import regex_extraction
-from operations.syncsources import sync_sources
-from operations.castdatatypes import cast_datatypes
-from operations.arithmetic import arithmetic
-from operations.coalescecolumns import coalesce_columns
-from operations.concatcolumns import concat_columns
+from dbt_automation.utils.warehouseclient import get_client
+from dbt_automation.operations.droprenamecolumns import drop_columns, rename_columns
+from dbt_automation.operations.arithmetic import arithmetic
+from dbt_automation.operations.castdatatypes import cast_datatypes
+from dbt_automation.operations.coalescecolumns import coalesce_columns
+from dbt_automation.operations.concatcolumns import concat_columns
+from dbt_automation.operations.mergetables import union_tables
+from dbt_automation.operations.syncsources import sync_sources
+from dbt_automation.operations.flattenairbyte import flatten_operation
+from dbt_automation.operations.regexextraction import regex_extraction
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -60,7 +61,15 @@ if config_data is None:
 # TODO: Add stronger validations for each operation here
 if config_data["warehouse"] not in ["postgres", "bigquery"]:
     raise ValueError("unknown warehouse")
-warehouse = config_data["warehouse"]
+
+conn_info = {
+    "DBHOST": os.getenv("DBHOST"),
+    "DBPORT": os.getenv("DBPORT"),
+    "DBUSER": os.getenv("DBUSER"),
+    "DBPASSWORD": os.getenv("DBPASSWORD"),
+    "DBNAME": os.getenv("DBNAME"),
+}
+warehouse = get_client(config_data["warehouse"], conn_info)
 
 # run operations to generate dbt model(s)
 # pylint:disable=logging-fstring-interpolation

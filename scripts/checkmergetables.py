@@ -1,5 +1,6 @@
 """takes a list of tables and a common column spec and creates a dbt model to merge them"""
 
+import os
 import sys
 import argparse
 from logging import basicConfig, getLogger, INFO
@@ -7,10 +8,9 @@ import yaml
 from tqdm import tqdm
 
 from dotenv import load_dotenv
+from dbt_automation.utils.postgres import PostgresClient
 
 load_dotenv("dbconnection.env")
-# pylint:disable=wrong-import-position
-from lib.postgres import PostgresClient
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -25,7 +25,15 @@ args = parser.parse_args()
 with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
 
-client = PostgresClient()
+conn_info = {
+    "DBHOST": os.getenv("DBHOST"),
+    "DBPORT": os.getenv("DBPORT"),
+    "DBUSER": os.getenv("DBUSER"),
+    "DBPASSWORD": os.getenv("DBPASSWORD"),
+    "DBNAME": os.getenv("DBNAME"),
+}
+
+client = PostgresClient(conn_info)
 for table in mergespec["tables"]:
     logger.info("table=%s.%s", table["schema"], table["tablename"])
     columns = client.get_columnspec(table["schema"], table["tablename"])
