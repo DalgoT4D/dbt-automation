@@ -36,6 +36,17 @@ class BigQueryClient:
         table: bigquery.Table = self.bqclient.get_table(table_ref)
         column_names = [field.name for field in table.schema]
         return column_names
+    
+    # def get_table_data(self, schema: str, table: str, limit: int) -> list:
+    #     """returns limited rows from the specified table in the given schema"""
+    #     resultset = self.execute(
+    #         f"""
+    #         SELECT * 
+    #         FROM {schema}.{table}
+    #         LIMIT {limit};
+    #         """
+    #     )
+    #     return resultset
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""

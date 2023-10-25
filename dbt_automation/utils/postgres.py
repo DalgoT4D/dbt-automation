@@ -61,6 +61,17 @@ class PostgresClient:
             """
         )
         return [x[0] for x in resultset]
+    
+    def get_table_data(self, schema: str, table: str, limit: int) -> list:
+        """returns limited rows from the specified table in the given schema"""
+        resultset = self.execute(
+            f"""
+            SELECT * 
+            FROM {schema}.{table}
+            LIMIT {limit};
+            """
+        )
+        return resultset
 
     def get_columnspec(self, schema: str, table: str):
         """get the column schema for this table"""
