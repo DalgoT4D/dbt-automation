@@ -51,6 +51,17 @@ class PostgresClient:
         )
         return [x[0] for x in resultset]
 
+    def get_schemas(self) -> list:
+        """returns the list of schema names in the given database connection"""
+        resultset = self.execute(
+            f"""
+            SELECT nspname
+            FROM pg_namespace
+            WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema';
+            """
+        )
+        return [x[0] for x in resultset]
+
     def get_columnspec(self, schema: str, table: str):
         """get the column schema for this table"""
         return [
