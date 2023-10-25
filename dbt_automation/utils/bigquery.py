@@ -25,6 +25,11 @@ class BigQueryClient:
         tables = self.bqclient.list_tables(schema)
         return [x.table_id for x in tables]
 
+    def get_schemas(self) -> list:
+        """returns the list of schema names in the given connection"""
+        datasets = self.bqclient.list_datasets()
+        return [x.dataset_id for x in datasets]
+
     def get_table_columns(self, schema: str, table: str) -> list:
         """fetch the list of columns from a BigQuery table."""
         table_ref = f"{schema}.{table}"
