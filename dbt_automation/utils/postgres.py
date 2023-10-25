@@ -72,6 +72,18 @@ class PostgresClient:
             """
         )
         return resultset
+    
+    def get_table_columns(self, schema: str, table: str) -> list:
+        """returns the column names of the specified table in the given schema"""
+        resultset = self.execute(
+            f"""
+            SELECT column_name 
+            FROM information_schema.columns
+            WHERE table_schema = '{schema}' AND table_name = '{table}';
+            """
+        )
+        return [x[0] for x in resultset]
+
 
     def get_columnspec(self, schema: str, table: str):
         """get the column schema for this table"""

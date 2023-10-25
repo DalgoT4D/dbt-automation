@@ -2,6 +2,7 @@
 
 from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -11,8 +12,8 @@ class BigQueryClient:
     """a bigquery client that can be used as a context manager"""
 
     def __init__(self, conn_info=None):
-        self.bqclient = bigquery.Client()
-        self.conn_info = conn_info
+        creds1 = service_account.Credentials.from_service_account_info(conn_info)
+        self.bqclient = bigquery.Client(credentials=creds1, project=creds1.project_id)
         self.name = "bigquery"
 
     def execute(self, statement: str, **kwargs) -> list:
@@ -39,14 +40,17 @@ class BigQueryClient:
     
     def get_table_data(self, schema: str, table: str, limit: int) -> list:
         """returns limited rows from the specified table in the given schema"""
-        resultset = self.execute(
-            f"""
+        query = f"""
             SELECT * 
-            FROM {schema}.{table}
+            FROM `{schema}.{table}`
             LIMIT {limit};
             """
-        )
+        query_job = self.bqclient.query(query)
+        rows = query_job.result()
+
+        resultset = [dict(row) for row in rows]
         return resultset
+
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""
