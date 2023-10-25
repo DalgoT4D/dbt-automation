@@ -9,7 +9,7 @@ def get_client(warehouse: str, conn_info: dict = None):
     if warehouse == "postgres":
         client = PostgresClient(conn_info)
     elif warehouse == "bigquery":
-        client = BigQueryClient()
+        client = BigQueryClient(conn_info)
     else:
         raise ValueError("unknown warehouse")
     return client

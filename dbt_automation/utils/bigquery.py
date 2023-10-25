@@ -3,7 +3,6 @@
 from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
 
-
 basicConfig(level=INFO)
 logger = getLogger()
 
@@ -11,8 +10,9 @@ logger = getLogger()
 class BigQueryClient:
     """a bigquery client that can be used as a context manager"""
 
-    def __init__(self):
+    def __init__(self, conn_info=None):
         self.bqclient = bigquery.Client()
+        self.conn_info = conn_info
         self.name = "bigquery"
 
     def execute(self, statement: str, **kwargs) -> list:
@@ -37,16 +37,16 @@ class BigQueryClient:
         column_names = [field.name for field in table.schema]
         return column_names
     
-    # def get_table_data(self, schema: str, table: str, limit: int) -> list:
-    #     """returns limited rows from the specified table in the given schema"""
-    #     resultset = self.execute(
-    #         f"""
-    #         SELECT * 
-    #         FROM {schema}.{table}
-    #         LIMIT {limit};
-    #         """
-    #     )
-    #     return resultset
+    def get_table_data(self, schema: str, table: str, limit: int) -> list:
+        """returns limited rows from the specified table in the given schema"""
+        resultset = self.execute(
+            f"""
+            SELECT * 
+            FROM {schema}.{table}
+            LIMIT {limit};
+            """
+        )
+        return resultset
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""
