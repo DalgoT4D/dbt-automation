@@ -8,7 +8,7 @@ import yaml
 from tqdm import tqdm
 
 from dotenv import load_dotenv
-from dbt_automation.utils.postgres import PostgresClient
+from dbt_automation.utils.warehouseclient import get_client
 
 load_dotenv("dbconnection.env")
 
@@ -33,7 +33,9 @@ conn_info = {
     "database": os.getenv("DBNAME"),
 }
 
-client = PostgresClient(conn_info)
+client = get_client("postgres", conn_info)
+# client = get_client("bigquery", None)  # set json account creds in the env
+
 for table in mergespec["tables"]:
     logger.info("table=%s.%s", table["schema"], table["tablename"])
     columns = client.get_columnspec(table["schema"], table["tablename"])

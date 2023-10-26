@@ -13,11 +13,14 @@ class BigQueryClient:
 
     def __init__(self, conn_info=None):
         self.name = "bigquery"
-        if conn_info is None:
-            raise ValueError("Connection info must be provided")
-
-        creds1 = service_account.Credentials.from_service_account_info(conn_info)
-        self.bqclient = bigquery.Client(credentials=creds1, project=creds1.project_id)
+        self.bqclient = None
+        if conn_info is None:  # take creds from env
+            self.bqclient = bigquery.Client()
+        else:
+            creds1 = service_account.Credentials.from_service_account_info(conn_info)
+            self.bqclient = bigquery.Client(
+                credentials=creds1, project=creds1.project_id
+            )
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""

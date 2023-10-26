@@ -145,7 +145,11 @@ conn_info = {
     "password": os.getenv("DBPASSWORD"),
     "database": os.getenv("DBNAME"),
 }
-client = get_client(warehouse, conn_info)
+client = None
+if warehouse == "postgres":
+    client = get_client(warehouse, conn_info)
+elif warehouse == "bigquery":
+    client = get_client(warehouse, None)  # set json account creds in the env
 
 t2c = get_column_lists(client, mergespec, working_dir)
 
