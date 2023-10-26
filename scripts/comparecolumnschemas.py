@@ -139,13 +139,17 @@ def get_largest_cluster(
 # dbtproject = dbtProject(project_dir)
 # dbtproject.ensure_models_dir(mergespec["outputsschema"])
 conn_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
+    "host": os.getenv("DBHOST"),
+    "port": os.getenv("DBPORT"),
+    "username": os.getenv("DBUSER"),
+    "password": os.getenv("DBPASSWORD"),
+    "database": os.getenv("DBNAME"),
 }
-client = get_client(warehouse, conn_info)
+client = None
+if warehouse == "postgres":
+    client = get_client(warehouse, conn_info)
+elif warehouse == "bigquery":
+    client = get_client(warehouse, None)  # set json account creds in the env
 
 t2c = get_column_lists(client, mergespec, working_dir)
 

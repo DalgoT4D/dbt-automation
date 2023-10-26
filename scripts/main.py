@@ -63,11 +63,11 @@ if config_data["warehouse"] not in ["postgres", "bigquery"]:
     raise ValueError("unknown warehouse")
 
 conn_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
+    "host": os.getenv("DBHOST"),
+    "port": os.getenv("DBPORT"),
+    "username": os.getenv("DBUSER"),
+    "password": os.getenv("DBPASSWORD"),
+    "database": os.getenv("DBNAME"),
 }
 warehouse = get_client(config_data["warehouse"], conn_info)
 

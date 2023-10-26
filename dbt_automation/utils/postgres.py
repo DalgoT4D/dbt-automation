@@ -27,18 +27,19 @@ class PostgresClient:
             raise ValueError("connection info required")
 
         self.connection = PostgresClient.get_connection(
-            conn_info.get("DBHOST", conn_info.get("host")),
-            conn_info.get("DBPORT", conn_info.get("port")),
-            conn_info.get("DBUSER", conn_info.get("user")),
-            conn_info.get("DBPASSWORD", conn_info.get("password")),
-            conn_info.get("DBNAME", conn_info.get("name")),
+            conn_info.get("host"),
+            conn_info.get("port"),
+            conn_info.get("username"),
+            conn_info.get("password"),
+            conn_info.get("database"),
         )
+        self.cursor = None
 
     def execute(self, statement: str) -> list:
         """run a query and return the results"""
-        cursor = self.connection.cursor()
-        cursor.execute(statement)
-        return cursor.fetchall()
+        self.cursor = self.connection.cursor()
+        self.cursor.execute(statement)
+        return self.cursor.fetchall()
 
     def get_tables(self, schema: str) -> list:
         """returns the list of table names in the given schema"""
@@ -58,6 +59,32 @@ class PostgresClient:
             SELECT nspname
             FROM pg_namespace
             WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema';
+            """
+        )
+        return [x[0] for x in resultset]
+
+    def get_table_data(self, schema: str, table: str, limit: int) -> list:
+        """returns limited rows from the specified table in the given schema"""
+
+        resultset = self.execute(
+            f"""
+            SELECT * 
+            FROM {schema}.{table}
+            LIMIT {limit};
+            """
+        )  # returns an array of tuples of values
+        col_names = [desc[0] for desc in self.cursor.description]
+        rows = [dict(zip(col_names, row)) for row in resultset]
+
+        return rows
+
+    def get_table_columns(self, schema: str, table: str) -> list:
+        """returns the column names of the specified table in the given schema"""
+        resultset = self.execute(
+            f"""
+            SELECT column_name 
+            FROM information_schema.columns
+            WHERE table_schema = '{schema}' AND table_name = '{table}';
             """
         )
         return [x[0] for x in resultset]

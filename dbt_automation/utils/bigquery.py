@@ -2,7 +2,7 @@
 
 from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
-
+from google.oauth2 import service_account
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -11,9 +11,16 @@ logger = getLogger()
 class BigQueryClient:
     """a bigquery client that can be used as a context manager"""
 
-    def __init__(self):
-        self.bqclient = bigquery.Client()
+    def __init__(self, conn_info=None):
         self.name = "bigquery"
+        self.bqclient = None
+        if conn_info is None:  # take creds from env
+            self.bqclient = bigquery.Client()
+        else:
+            creds1 = service_account.Credentials.from_service_account_info(conn_info)
+            self.bqclient = bigquery.Client(
+                credentials=creds1, project=creds1.project_id
+            )
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""
@@ -36,6 +43,15 @@ class BigQueryClient:
         table: bigquery.Table = self.bqclient.get_table(table_ref)
         column_names = [field.name for field in table.schema]
         return column_names
+
+    def get_table_data(self, schema: str, table: str, limit: int) -> list:
+        """returns limited rows from the specified table in the given schema"""
+        table_ref = f"{schema}.{table}"
+        table: bigquery.Table = self.bqclient.get_table(table_ref)
+        records = self.bqclient.list_rows(table=table, max_results=limit)
+        rows = [dict(record) for record in records]
+
+        return rows
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""

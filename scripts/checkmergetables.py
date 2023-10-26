@@ -8,7 +8,7 @@ import yaml
 from tqdm import tqdm
 
 from dotenv import load_dotenv
-from dbt_automation.utils.postgres import PostgresClient
+from dbt_automation.utils.warehouseclient import get_client
 
 load_dotenv("dbconnection.env")
 
@@ -26,14 +26,16 @@ with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
 
 conn_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
+    "host": os.getenv("DBHOST"),
+    "port": os.getenv("DBPORT"),
+    "username": os.getenv("DBUSER"),
+    "password": os.getenv("DBPASSWORD"),
+    "database": os.getenv("DBNAME"),
 }
 
-client = PostgresClient(conn_info)
+client = get_client("postgres", conn_info)
+# client = get_client("bigquery", None)  # set json account creds in the env
+
 for table in mergespec["tables"]:
     logger.info("table=%s.%s", table["schema"], table["tablename"])
     columns = client.get_columnspec(table["schema"], table["tablename"])
