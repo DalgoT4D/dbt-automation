@@ -33,12 +33,13 @@ class PostgresClient:
             conn_info.get("DBPASSWORD", conn_info.get("password")),
             conn_info.get("DBNAME", conn_info.get("database")),
         )
+        self.cursor = None
 
     def execute(self, statement: str) -> list:
         """run a query and return the results"""
-        cursor = self.connection.cursor()
-        cursor.execute(statement)
-        return cursor.fetchall()
+        self.cursor = self.connection.cursor()
+        self.cursor.execute(statement)
+        return self.cursor.fetchall()
 
     def get_tables(self, schema: str) -> list:
         """returns the list of table names in the given schema"""
@@ -61,18 +62,22 @@ class PostgresClient:
             """
         )
         return [x[0] for x in resultset]
-    
+
     def get_table_data(self, schema: str, table: str, limit: int) -> list:
         """returns limited rows from the specified table in the given schema"""
+
         resultset = self.execute(
             f"""
             SELECT * 
             FROM {schema}.{table}
             LIMIT {limit};
             """
-        )
-        return resultset
-    
+        )  # returns an array of tuples of values
+        col_names = [desc[0] for desc in self.cursor.description]
+        rows = [dict(zip(col_names, row)) for row in resultset]
+
+        return rows
+
     def get_table_columns(self, schema: str, table: str) -> list:
         """returns the column names of the specified table in the given schema"""
         resultset = self.execute(
@@ -83,7 +88,6 @@ class PostgresClient:
             """
         )
         return [x[0] for x in resultset]
-
 
     def get_columnspec(self, schema: str, table: str):
         """get the column schema for this table"""
