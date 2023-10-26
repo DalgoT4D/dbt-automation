@@ -15,7 +15,7 @@ class BigQueryClient:
         self.name = "bigquery"
         if conn_info is None:
             raise ValueError("Connection info must be provided")
-        
+
         creds1 = service_account.Credentials.from_service_account_info(conn_info)
         self.bqclient = bigquery.Client(credentials=creds1, project=creds1.project_id)
 
@@ -40,20 +40,15 @@ class BigQueryClient:
         table: bigquery.Table = self.bqclient.get_table(table_ref)
         column_names = [field.name for field in table.schema]
         return column_names
-    
+
     def get_table_data(self, schema: str, table: str, limit: int) -> list:
         """returns limited rows from the specified table in the given schema"""
-        query = f"""
-            SELECT * 
-            FROM `{schema}.{table}`
-            LIMIT {limit};
-            """
-        query_job = self.bqclient.query(query)
-        rows = query_job.result()
+        table_ref = f"{schema}.{table}"
+        table: bigquery.Table = self.bqclient.get_table(table_ref)
+        records = self.bqclient.list_rows(table=table, max_results=limit)
+        rows = [dict(record) for record in records]
 
-        resultset = [dict(row) for row in rows]
-        return resultset
-
+        return rows
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""
