@@ -71,11 +71,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     conn_info = {
-        "DBHOST": os.getenv("DBHOST"),
-        "DBPORT": os.getenv("DBPORT"),
-        "DBUSER": os.getenv("DBUSER"),
-        "DBPASSWORD": os.getenv("DBPASSWORD"),
-        "DBNAME": os.getenv("DBNAME"),
+        "host": os.getenv("DBHOST"),
+        "port": os.getenv("DBPORT"),
+        "username": os.getenv("DBUSER"),
+        "password": os.getenv("DBPASSWORD"),
+        "database": os.getenv("DBNAME"),
     }
     warehouse_client = get_client(args.warehouse, conn_info)
 

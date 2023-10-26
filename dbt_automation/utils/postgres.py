@@ -27,11 +27,11 @@ class PostgresClient:
             raise ValueError("connection info required")
 
         self.connection = PostgresClient.get_connection(
-            conn_info.get("DBHOST", conn_info.get("host")),
-            conn_info.get("DBPORT", conn_info.get("port")),
-            conn_info.get("DBUSER", conn_info.get("username")),
-            conn_info.get("DBPASSWORD", conn_info.get("password")),
-            conn_info.get("DBNAME", conn_info.get("database")),
+            conn_info.get("host"),
+            conn_info.get("port"),
+            conn_info.get("username"),
+            conn_info.get("password"),
+            conn_info.get("database"),
         )
         self.cursor = None
 

@@ -26,11 +26,11 @@ with open(args.mergespec, "r", encoding="utf-8") as mergespecfile:
     mergespec = yaml.safe_load(mergespecfile)
 
 conn_info = {
-    "DBHOST": os.getenv("DBHOST"),
-    "DBPORT": os.getenv("DBPORT"),
-    "DBUSER": os.getenv("DBUSER"),
-    "DBPASSWORD": os.getenv("DBPASSWORD"),
-    "DBNAME": os.getenv("DBNAME"),
+    "host": os.getenv("DBHOST"),
+    "port": os.getenv("DBPORT"),
+    "username": os.getenv("DBUSER"),
+    "password": os.getenv("DBPASSWORD"),
+    "database": os.getenv("DBNAME"),
 }
 
 client = PostgresClient(conn_info)
