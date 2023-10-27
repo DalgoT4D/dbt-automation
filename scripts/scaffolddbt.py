@@ -48,9 +48,8 @@ for subdir in [
 
 flatten_json_target = Path(project_dir) / "macros" / "flatten_json.sql"
 custom_schema_target = Path(project_dir) / "macros" / "generate_schema_name.sql"
-shutil.copy("assets/flatten_json.sql", flatten_json_target)
 logger.info("created %s", flatten_json_target)
-shutil.copy("assets/generate_schema_name.sql", custom_schema_target)
+shutil.copy("dbt_automation/assets/generate_schema_name.sql", custom_schema_target)
 logger.info("created %s", custom_schema_target)
 
 dbtproject_filename = Path(project_dir) / "dbt_project.yml"

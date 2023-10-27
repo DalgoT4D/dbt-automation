@@ -86,3 +86,5 @@ for op_data in config_data["operations"]:
         config=config, warehouse=warehouse, project_dir=project_dir
     )
     logger.info(f"finished running the {op_type} operation")
+
+warehouse.close()
