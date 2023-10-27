@@ -53,8 +53,6 @@ def sync_sources(config, warehouse, project_dir):
         yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
         logger.info("wrote source definitions to %s", sources_file)
 
-    warehouse.close()
-
 
 if __name__ == "__main__":
     load_dotenv("dbconnection.env")

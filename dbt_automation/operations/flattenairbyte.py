@@ -79,9 +79,6 @@ def flatten_operation(config: dict, warehouse, project_dir: str):
     # finally write the yml with the models configuration
     dbtproject.write_model_config(DEST_SCHEMA, models, logger=logger)
 
-    # close the client
-    warehouse.close()
-
 
 # ================================================================================
 def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: list):
