@@ -102,17 +102,21 @@ class PostgresClient:
             )
         ]
 
-    def get_json_columnspec(self, schema: str, table: str):
-        """get the column schema from the _airbyte_data json field for this table"""
+    def get_json_columnspec(self, schema: str, table: str, column: str):
+        """get the column schema from the specified json field for this table"""
         return [
             x[0]
             for x in self.execute(
                 f"""SELECT DISTINCT 
-                    jsonb_object_keys(_airbyte_data)
+                    jsonb_object_keys({column})
                 FROM "{schema}"."{table}"
             """
             )
         ]
+
+    def json_extract_op(self, json_column: str, json_field: str, sql_column: str):
+        """outputs a sql query snippet for extracting a json field"""
+        return f"{json_column}->>'{json_field}' as \"{sql_column}\""
 
     def close(self):
         try:
