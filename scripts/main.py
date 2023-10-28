@@ -17,10 +17,12 @@ from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.mergetables import union_tables
 from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
+from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
+    "flattenjson": flattenjson,
     "unionall": union_tables,
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
