@@ -21,7 +21,6 @@ def flattenjson(config: dict, warehouse, project_dir: str):
     json_columns_to_copy: list of columns to copy from the json_column
     """
 
-    source_schema = config["source_schema"]
     input_name = config["input_name"]
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
@@ -34,7 +33,7 @@ def flattenjson(config: dict, warehouse, project_dir: str):
     if columns_to_copy == "*":
         model_code += "SELECT *\n"
     else:
-        model_code += f"SELECT {', '.join(columns_to_copy)}\n"
+        model_code += f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in columns_to_copy])}\n"
 
     # json_columns = warehouse.get_json_columnspec(source_schema, input_name, json_column)
 
