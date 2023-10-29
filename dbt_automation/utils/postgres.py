@@ -116,7 +116,7 @@ class PostgresClient:
             x[0]
             for x in self.execute(
                 f"""SELECT DISTINCT 
-                    jsonb_object_keys({column})
+                    jsonb_object_keys({column}::jsonb)
                 FROM "{schema}"."{table}"
             """
             )
