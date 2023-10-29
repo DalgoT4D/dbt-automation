@@ -35,9 +35,17 @@ class PostgresClient:
         )
         self.cursor = None
 
+    def runcmd(self, statement: str):
+        """runs a command"""
+        if self.cursor is None:
+            self.cursor = self.connection.cursor()
+        self.cursor.execute(statement)
+        self.connection.commit()
+
     def execute(self, statement: str) -> list:
         """run a query and return the results"""
-        self.cursor = self.connection.cursor()
+        if self.cursor is None:
+            self.cursor = self.connection.cursor()
         self.cursor.execute(statement)
         return self.cursor.fetchall()
 
@@ -113,6 +121,36 @@ class PostgresClient:
             """
             )
         ]
+
+    def ensure_schema(self, schema: str):
+        """creates the schema if it doesn't exist"""
+        self.runcmd(f"CREATE SCHEMA IF NOT EXISTS {schema};")
+
+    def ensure_table(self, schema: str, table: str, columns: list):
+        """creates the table if it doesn't exist. all columns are TEXT"""
+        column_defs = [f"{column} TEXT" for column in columns]
+        self.runcmd(
+            f"""
+            CREATE TABLE IF NOT EXISTS {schema}.{table} (
+                {','.join(column_defs)}
+            );
+            """
+        )
+
+    def drop_table(self, schema: str, table: str):
+        """drops the table if it exists"""
+        self.runcmd(f"DROP TABLE IF EXISTS {schema}.{table};")
+
+    def insert_row(self, schema: str, table: str, row: dict):
+        """inserts a row into the table"""
+        columns = ",".join(row.keys())
+        values = ",".join([f"'{x}'" for x in row.values()])
+        self.runcmd(
+            f"""
+            INSERT INTO {schema}.{table} ({columns})
+            VALUES ({values});
+            """
+        )
 
     def close(self):
         try:

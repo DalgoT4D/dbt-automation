@@ -2,6 +2,7 @@
 
 from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
+from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 
 basicConfig(level=INFO)
@@ -84,11 +85,59 @@ class BigQueryClient:
         )
         return [json_field["k"] for json_field in query]
 
+    def schema_exists_(self, schema: str) -> bool:
+        """checks if the schema exists"""
+        try:
+            self.bqclient.get_dataset(schema)
+            return True
+        except NotFound:
+            return False
+
+    def ensure_schema(self, schema: str):
+        """creates the schema if it doesn't exist"""
+        if not self.schema_exists_(schema):
+            self.bqclient.create_dataset(schema)
+            logger.info("created schema %s", schema)
+
+    def ensure_table(self, schema: str, table: str, columns: list):
+        """creates the table if it doesn't exist"""
+        if not self.table_exists_(schema, table):
+            table_ref = f"{self.bqclient.project}.{schema}.{table}"
+            bqtable = bigquery.Table(table_ref)
+            bqtable.schema = [bigquery.SchemaField(col, "STRING") for col in columns]
+            self.bqclient.create_table(bqtable)
+            logger.info("created table %s.%s", schema, table)
+
+    def table_exists_(self, schema: str, table: str) -> bool:
+        """checks if the table exists"""
+        table_ref = f"{self.bqclient.project}.{schema}.{table}"
+        try:
+            self.bqclient.get_table(table_ref)
+            return True
+        except NotFound:
+            return False
+
+    def drop_table(self, schema: str, table: str):
+        """drops the table if it exists"""
+        if self.table_exists_(schema, table):
+            logger.info("dropping table %s.%s", schema, table)
+            table_ref = f"{self.bqclient.project}.{schema}.{table}"
+            self.bqclient.delete_table(table_ref)
+
+    def insert_row(self, schema: str, table: str, row: dict):
+        """inserts a row into the table"""
+        table_ref = f"{self.bqclient.project}.{schema}.{table}"
+        bqtable = self.bqclient.get_table(table_ref)
+        errors = self.bqclient.insert_rows(bqtable, [row])
+        if errors:
+            # pylint:disable=logging-fstring-interpolation
+            logger.error(f"row insertion failed: {errors}")
+
     def close(self):
         """closing the connection and releasing system resources"""
         try:
             self.bqclient.close()
-        except Exception:
+        except Exception:  # pylint:disable=broad-except
             logger.error("something went wrong while closing the bigquery connection")
 
         return True
