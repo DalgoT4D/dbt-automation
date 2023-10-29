@@ -18,6 +18,19 @@ operations:
       config:
         source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
         source_schema: <schema of the source mentioned above>
+    - type: flattenjson
+      config:
+        source_schema: <source schema>
+        input_name: <name of the input model>
+        dest_schema: <destination schema>
+        output_name: <name of the output model>
+        columns_to_copy:
+          - [columns to copy over from the source model]
+        json_column: <name of the json column, strings are okay>
+        json_columns_to_copy:
+          - <json field 1>
+          - <json field 2>
+
     - type: castdatatypes
       config:
         dest_schema: <destination schema>

@@ -59,9 +59,9 @@ class BigQueryClient:
         return self.get_table_columns(schema, table_id)
 
     def get_json_columnspec(
-        self, schema: str, table: str, *args
+        self, schema: str, table: str, column: str, *args
     ):  # pylint:disable=unused-argument
-        """get the column schema from the _airbyte_data json field for this table"""
+        """get the column schema from the specified json field for this table"""
         query = self.execute(
             f'''
                     CREATE TEMP FUNCTION jsonObjectKeys(input STRING)
@@ -71,10 +71,10 @@ class BigQueryClient:
                     """;
                     WITH keys AS (
                     SELECT
-                        jsonObjectKeys(_airbyte_data) AS keys
+                        jsonObjectKeys({column}) AS keys
                     FROM
                         `{schema}`.`{table}`
-                    WHERE _airbyte_data IS NOT NULL
+                    WHERE {column} IS NOT NULL
                     )
                     SELECT
                     DISTINCT k
@@ -132,6 +132,11 @@ class BigQueryClient:
         if errors:
             # pylint:disable=logging-fstring-interpolation
             logger.error(f"row insertion failed: {errors}")
+
+    def json_extract_op(self, json_column: str, json_field: str, sql_column: str):
+        """outputs a sql query snippet for extracting a json field"""
+        json_field = json_field.replace("'", "\\'")
+        return f"json_value({json_column}, '$.\"{json_field}\"') as `{sql_column}`"
 
     def close(self):
         """closing the connection and releasing system resources"""

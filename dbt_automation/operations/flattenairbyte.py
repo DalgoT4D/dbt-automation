@@ -51,8 +51,7 @@ def flatten_operation(config: dict, warehouse, project_dir: str):
         json_fields = []
         # get the field names from the json objects
         json_fields = warehouse.get_json_columnspec(
-            SOURCE_SCHEMA,
-            tablename,
+            SOURCE_SCHEMA, tablename, "_airbyte_data"
         )
 
         # convert to sql-friendly column names
@@ -67,7 +66,7 @@ def flatten_operation(config: dict, warehouse, project_dir: str):
 
         # and the .sql model
         model_sql = mk_dbtmodel(
-            warehouse.name,
+            warehouse,
             source["name"],  # pass the source in the yaml file
             modelname,
             zip(json_fields, sql_columns),
@@ -97,23 +96,15 @@ def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: lis
     dbtmodel += "SELECT _airbyte_ab_id "
     dbtmodel += "\n"
 
-    if warehouse == "bigquery":
-        for json_field, sql_column in columntuples:
-            json_field = json_field.replace("'", "\\'")
-            dbtmodel += (
-                f", json_value(_airbyte_data, '$.\"{json_field}\"') as `{sql_column}`"
-            )
-            dbtmodel += "\n"
+    for json_field, sql_column in columntuples:
+        dbtmodel += (
+            ","
+            + warehouse.json_extract_op("_airbyte_data", json_field, sql_column)
+            + "\n"
+        )
 
-        dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
-
-    if warehouse == "postgres":
-        for json_field, sql_column in columntuples:
-            dbtmodel += f", _airbyte_data->>'{json_field}' as \"{sql_column}\""
-            dbtmodel += "\n"
-
-        dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
-
+    dbtmodel += f"FROM {{{{source('{sourcename}','{srctablename}')}}}}"
+    dbtmodel += "\n"
     return dbtmodel
 
 

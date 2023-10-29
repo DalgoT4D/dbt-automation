@@ -5,6 +5,7 @@ This file runs all the operations from the yaml file
 import argparse
 import os
 from logging import basicConfig, getLogger, INFO
+import json
 import yaml
 from dotenv import load_dotenv
 from dbt_automation.utils.warehouseclient import get_client
@@ -16,10 +17,12 @@ from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.mergetables import union_tables
 from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
+from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
+    "flattenjson": flattenjson,
     "unionall": union_tables,
     "syncsources": sync_sources,
     "castdatatypes": cast_datatypes,
@@ -62,13 +65,19 @@ if config_data is None:
 if config_data["warehouse"] not in ["postgres", "bigquery"]:
     raise ValueError("unknown warehouse")
 
-conn_info = {
-    "host": os.getenv("DBHOST"),
-    "port": os.getenv("DBPORT"),
-    "username": os.getenv("DBUSER"),
-    "password": os.getenv("DBPASSWORD"),
-    "database": os.getenv("DBNAME"),
-}
+if config_data["warehouse"] == "postgres":
+    conn_info = {
+        "host": os.getenv("DBHOST"),
+        "port": os.getenv("DBPORT"),
+        "username": os.getenv("DBUSER"),
+        "password": os.getenv("DBPASSWORD"),
+        "database": os.getenv("DBNAME"),
+    }
+else:
+    with open(
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), "r", encoding="utf-8"
+    ) as gcp_creds:
+        conn_info = json.loads(gcp_creds.read())
 warehouse = get_client(config_data["warehouse"], conn_info)
 
 # run operations to generate dbt model(s)
@@ -78,7 +87,8 @@ for op_data in config_data["operations"]:
     config = op_data["config"]
 
     if op_type not in OPERATIONS_DICT:
-        raise ValueError("unknown operation")
+        # ignore, rename operations to easily disable them
+        continue
 
     logger.info(f"running the {op_type} operation")
     logger.info(f"using config {config}")
