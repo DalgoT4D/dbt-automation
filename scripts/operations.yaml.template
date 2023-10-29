@@ -20,7 +20,6 @@ operations:
         source_schema: <schema of the source mentioned above>
     - type: flattenjson
       config:
-        source_schema: <source schema>
         input_name: <name of the input model>
         dest_schema: <destination schema>
         output_name: <name of the output model>
