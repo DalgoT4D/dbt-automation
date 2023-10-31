@@ -1,4 +1,0 @@
-_airbyte_ab_id,_airbyte_emitted_at,_airbyte_data
-"de8a0cae-5406-42cb-a496-43fae6bc1359","2023-10-01T12:01:11","{""data"": {""Name"": ""flum"", ""Age"": ""33""}}"
-"b3d98f22-179f-4cbd-a4bf-9934f273d88c","2023-10-01T12:01:12","{""data"": {""Name"": ""hum"", ""Age"": ""40""}}"
-
