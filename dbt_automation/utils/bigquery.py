@@ -1,9 +1,11 @@
 """utilities for working with bigquery"""
 
 from logging import basicConfig, getLogger, INFO
+import os
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
+import json
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -16,12 +18,11 @@ class BigQueryClient:
         self.name = "bigquery"
         self.bqclient = None
         if conn_info is None:  # take creds from env
-            self.bqclient = bigquery.Client()
-        else:
-            creds1 = service_account.Credentials.from_service_account_info(conn_info)
-            self.bqclient = bigquery.Client(
-                credentials=creds1, project=creds1.project_id
-            )
+            creds_file = open(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+            conn_info = json.load(creds_file)
+
+        creds1 = service_account.Credentials.from_service_account_info(conn_info)
+        self.bqclient = bigquery.Client(credentials=creds1, project=creds1.project_id)
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""
