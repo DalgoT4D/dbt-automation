@@ -200,7 +200,7 @@ class PostgresClient:
                         "dbname": self.conn_info["database"],
                         "host": self.conn_info["host"],
                         "password": self.conn_info["password"],
-                        "port": self.conn_info["port"],
+                        "port": int(self.conn_info["port"]),
                         "user": self.conn_info["username"],
                         "schema": default_schema,
                         "threads": 4,
