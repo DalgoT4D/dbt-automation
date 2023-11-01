@@ -14,16 +14,18 @@ logger = getLogger()
 class BigQueryClient:
     """a bigquery client that can be used as a context manager"""
 
-    def __init__(self, conn_info=None):
+    def __init__(self, conn_info=None, location=None):
         self.name = "bigquery"
         self.bqclient = None
         if conn_info is None:  # take creds from env
             creds_file = open(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
             conn_info = json.load(creds_file)
+            location = os.getenv("BIQUERY_LOCATION")
 
         creds1 = service_account.Credentials.from_service_account_info(conn_info)
         self.bqclient = bigquery.Client(credentials=creds1, project=creds1.project_id)
         self.conn_info = conn_info
+        self.location = location or "asia-south1"
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""
@@ -83,7 +85,7 @@ class BigQueryClient:
                     FROM keys
                     CROSS JOIN UNNEST(keys.keys) AS k
                 ''',
-            location="asia-south1",
+            location=self.location,
         )
         return [json_field["k"] for json_field in query]
 
@@ -149,7 +151,42 @@ class BigQueryClient:
 
         return True
 
-    def generate_profiles_yaml_dbt(self, default_schema, location=None):
+    def generate_profiles_yaml_dbt(self, project_name, default_schema):
         """Generates the profiles.yml dictionary object for dbt"""
+        if project_name is None or default_schema is None:
+            raise ValueError("project_name and default_schema are required")
 
-        return {}
+        target = "prod"
+
+        """
+        <project_name>: 
+            outputs:
+                prod: 
+                    keyfile_json: 
+                    location: 
+                    method: service-account-json
+                    project: 
+                    schema: 
+                    threads: 4
+                    type: bigquery
+            target: prod
+        """
+        profiles_yml = {
+            f"{project_name}": {
+                "outputs": {
+                    f"{target}": {
+                        "keyfile_json": self.conn_info,
+                        "location": self.location,
+                        "method": "service-account-json",
+                        "project": self.conn_info["project_id"],
+                        "method": "service-account-json",
+                        "schema": default_schema,
+                        "threads": 4,
+                        "type": "bigquery",
+                    }
+                },
+                "target": target,
+            },
+        }
+
+        return profiles_yml

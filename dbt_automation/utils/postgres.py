@@ -172,7 +172,43 @@ class PostgresClient:
 
         return True
 
-    def generate_profiles_yaml_dbt(self, default_schema, location=None):
+    def generate_profiles_yaml_dbt(self, project_name, default_schema):
         """Generates the profiles.yml dictionary object for dbt"""
+        if project_name is None or default_schema is None:
+            raise ValueError("project_name and default_schema are required")
 
-        return {}
+        target = "prod"
+
+        """
+        <project_name>: 
+            outputs:
+                prod: 
+                    dbname: 
+                    host: 
+                    password: 
+                    port: 5432
+                    user: airbyte_user
+                    schema: 
+                    threads: 4
+                    type: postgres
+            target: prod
+        """
+        profiles_yml = {
+            f"{project_name}": {
+                "outputs": {
+                    f"{target}": {
+                        "dbname": self.conn_info["database"],
+                        "host": self.conn_info["host"],
+                        "password": self.conn_info["password"],
+                        "port": self.conn_info["port"],
+                        "user": self.conn_info["username"],
+                        "schema": default_schema,
+                        "threads": 4,
+                        "type": "postgres",
+                    }
+                },
+                "target": target,
+            },
+        }
+
+        return profiles_yml
