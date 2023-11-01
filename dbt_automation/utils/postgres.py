@@ -1,6 +1,7 @@
 """helpers for postgres"""
 from logging import basicConfig, getLogger, INFO
 import psycopg2
+import os
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -23,8 +24,14 @@ class PostgresClient:
 
     def __init__(self, conn_info: dict):
         self.name = "postgres"
-        if conn_info is None:
-            raise ValueError("connection info required")
+        if conn_info is None:  # take creds from env
+            conn_info = {
+                "host": os.getenv("DBHOST"),
+                "port": os.getenv("DBPORT"),
+                "username": os.getenv("DBUSER"),
+                "password": os.getenv("DBPASSWORD"),
+                "database": os.getenv("DBNAME"),
+            }
 
         self.connection = PostgresClient.get_connection(
             conn_info.get("host"),
@@ -34,6 +41,7 @@ class PostgresClient:
             conn_info.get("database"),
         )
         self.cursor = None
+        self.conn_info = conn_info
 
     def runcmd(self, statement: str):
         """runs a command"""
@@ -163,3 +171,8 @@ class PostgresClient:
             logger.error("something went wrong while closing the postgres connection")
 
         return True
+
+    def generate_profiles_yaml_dbt(self, default_schema, location=None):
+        """Generates the profiles.yml dictionary object for dbt"""
+
+        return {}

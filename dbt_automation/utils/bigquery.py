@@ -23,6 +23,7 @@ class BigQueryClient:
 
         creds1 = service_account.Credentials.from_service_account_info(conn_info)
         self.bqclient = bigquery.Client(credentials=creds1, project=creds1.project_id)
+        self.conn_info = conn_info
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""
@@ -147,3 +148,8 @@ class BigQueryClient:
             logger.error("something went wrong while closing the bigquery connection")
 
         return True
+
+    def generate_profiles_yaml_dbt(self, default_schema, location=None):
+        """Generates the profiles.yml dictionary object for dbt"""
+
+        return {}
