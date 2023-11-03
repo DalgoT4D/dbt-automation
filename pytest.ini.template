@@ -1,0 +1,12 @@
+[pytest]
+env =
+    TEST_PG_DBHOST=
+    TEST_PG_DBPORT=
+    TEST_PG_DBUSER=
+    TEST_PG_DBPASSWORD=
+    TEST_PG_DBNAME=
+    TEST_PG_DBSCHEMA_SRC=
+
+    R:TEST_BG_SERVICEJSON='<wrap service account json in single quotes>'
+    TEST_BG_LOCATION=
+    TEST_BG_DATASET_SRC=

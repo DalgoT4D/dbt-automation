@@ -5,6 +5,7 @@ workspace/
 *.yaml
 .venv
 .vscode
+logs/
 
 # Distribution / packaging
 .Python
@@ -40,3 +41,4 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+pytest.ini
