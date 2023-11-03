@@ -46,7 +46,7 @@ if args.warehouse == "postgres":
         "database": os.getenv("TEST_PG_DBNAME"),
         "password": os.getenv("TEST_PG_DBPASSWORD"),
     }
-    schema = os.getenv("TEST_PG_DBSCHEMA")
+    schema = os.getenv("TEST_PG_DBSCHEMA_SRC")
 
     wc_client = get_client(args.warehouse, conn_info)
 
@@ -85,7 +85,7 @@ if args.warehouse == "bigquery":
     logger.info("Found bigquery warehouse")
     conn_info = json.loads(os.getenv("TEST_BG_SERVICEJSON"))
     location = os.getenv("TEST_BG_LOCATION")
-    test_dataset = os.getenv("TEST_BG_DATASET")
+    test_dataset = os.getenv("TEST_BG_DATASET_SRC")
 
     wc_client = get_client(args.warehouse, conn_info)
 
