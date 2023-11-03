@@ -4,6 +4,7 @@ venv/
 workspace/
 *.yaml
 .venv
+.vscode
 
 # Distribution / packaging
 .Python
