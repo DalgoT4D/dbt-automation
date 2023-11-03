@@ -99,6 +99,9 @@ class TestPostgresOperations:
         )
         print("inside test flatten")
         print(f"inside project directory : {TestPostgresOperations.test_project_dir}")
+        assert "Sheet1" in TestPostgresOperations.wc_client.get_tables(
+            "pytest_intermediate"
+        )
 
     # def test_rename_columns(self):
     #     """test rename_columns for sample seed data"""
