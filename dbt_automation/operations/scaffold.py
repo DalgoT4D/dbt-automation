@@ -48,19 +48,25 @@ def scaffold(config: dict, warehouse, project_dir: str):
     logger.info("created %s", custom_schema_target)
 
     dbtproject_filename = Path(project_dir) / "dbt_project.yml"
-    project_template = {
-        "name": project_name,
-        "version": "1.0.0",
-        "config-version": 2,
-        "profile": project_name,
-        "model-paths": ["models"],
-        "test-paths": ["tests"],
-        "macro-paths": ["macros"],
-        "target-path": "target",
-        "clean-targets": ["target", "dbt_packages"],
-    }
+    PROJECT_TEMPLATE = Template(
+        """
+name: '$project_name'
+version: '1.0.0'
+config-version: 2
+profile: '$project_name'
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+    - "target"
+    - "dbt_packages"
+"""
+    )
+    dbtproject_template = PROJECT_TEMPLATE.substitute({"project_name": project_name})
     with open(dbtproject_filename, "w", encoding="utf-8") as dbtprojectfile:
-        yaml.safe_dump(project_template, dbtprojectfile)
+        dbtprojectfile.write(dbtproject_template)
         logger.info("wrote %s", dbtproject_filename)
 
     dbtpackages_filename = Path(project_dir) / "packages.yml"
@@ -106,13 +112,13 @@ def scaffold(config: dict, warehouse, project_dir: str):
     try:
         subprocess.check_call(
             [
-                "cd",
-                project_dir,
-                "&&",
-                Path(project_dir) / "venv" / "bin" / "dbt",
+                Path(project_dir) / "venv/bin/dbt",
                 "debug",
+                "--project-dir",
+                project_dir,
+                "--profiles-dir",
+                project_dir,
             ],
-            cwd=project_dir,
         )
 
     except subprocess.CalledProcessError as e:
