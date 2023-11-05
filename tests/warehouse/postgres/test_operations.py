@@ -9,6 +9,7 @@ from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.coalescecolumns import coalesce_columns
+from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.utils.columnutils import quote_columnname
 
 basicConfig(level=INFO)
@@ -192,4 +193,46 @@ class TestPostgresOperations:
             col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
             if col_data_original[0]["NGO"] is not None
             else col_data_original[0]["SPOC"]
+        )
+
+    def test_concatcolumns(self):
+        """test concatcolumns"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "concat"
+
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": [
+                {
+                    "name": "NGO",
+                    "is_col": "yes",
+                },
+                {
+                    "name": "SPOC",
+                    "is_col": "yes",
+                },
+                {
+                    "name": "test",
+                    "is_col": "no",
+                },
+            ],
+            "output_column_name": "concat_col",
+        }
+
+        concat_columns(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "concat_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["concat_col"]
+            == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
         )
