@@ -32,12 +32,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python setup.py install
-
       - name: Create known_hosts file
         run: |
           mkdir -p ~/.ssh
@@ -51,7 +45,17 @@ jobs:
           eval `ssh-agent -s`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           ssh -L 5432:${{ secrets.SSH_HOST }}:5432 -f -N ddp@${{ secrets.SSH_SERVERIP }} 
-    
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python setup.py install
+
+      - name: Seed data in test warehouse
+        run: |
+          python seeds/seed.py --warehouse postgres
+
       - name: Run tests and collect coverage
         run: |
           pytest -s --cov=.
