@@ -8,7 +8,8 @@ from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
-
+from dbt_automation.operations.coalescecolumns import coalesce_columns
+from dbt_automation.utils.columnutils import quote_columnname
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -152,3 +153,43 @@ class TestPostgresOperations:
 
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
         assert "MONTH" not in cols
+
+    def test_coalescecolumns(self):
+        """test coalescecolumns"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "coalesce"
+
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": [
+                {
+                    "columnname": "NGO",
+                },
+                {
+                    "columnname": "SPOC",
+                },
+            ],
+            "output_column_name": "ngo_spoc",
+        }
+
+        coalesce_columns(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "ngo_spoc" in cols
+        col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        col_data_original = wc_client.get_table_data(
+            "pytest_intermediate", quote_columnname("Sheet1")
+        )
+        assert (
+            col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
+            if col_data_original[0]["NGO"] is not None
+            else col_data_original[0]["SPOC"]
+        )
