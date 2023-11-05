@@ -186,7 +186,7 @@ class TestPostgresOperations:
         assert "ngo_spoc" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         col_data_original = wc_client.get_table_data(
-            "pytest_intermediate", quote_columnname("Sheet1")
+            "pytest_intermediate", quote_columnname("Sheet1", "postgres"), 1
         )
         assert (
             col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
