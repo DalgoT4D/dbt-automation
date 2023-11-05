@@ -26,39 +26,39 @@ jobs:
         python-version: ["3.10"]
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Create known_hosts file
-      run: |
-        mkdir -p ~/.ssh
-        touch ~/.ssh/known_hosts
+      - name: Create known_hosts file
+        run: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
 
-    - name: Add remote host key to known_hosts
-      run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-   
-    - name: Port forward to the jump server to connect to the postgres warehouse
-      run: |
-        eval `ssh-agent -s`
-        ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-        ssh 5432:${{ secrets.SSH_HOST }}:5432 ddp@${{ secrets.SSH_SERVERIP }} -f -N
+      - name: Add remote host key to known_hosts
+        run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+    
+      - name: Port forward to the jump server to connect to the postgres warehouse
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+          ssh 5432:${{ secrets.SSH_HOST }}:5432 ddp@${{ secrets.SSH_SERVERIP }} -f -N
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        python setup.py install
-  
-    - name: Run tests and collect coverage
-      run: |
-        pytest -s --cov=.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python setup.py install
+    
+      - name: Run tests and collect coverage
+        run: |
+          pytest -s --cov=.
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
-        verbose: true
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
