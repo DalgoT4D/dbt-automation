@@ -15,6 +15,7 @@ from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.operations.regexextraction import regex_extraction
+from dbt_automation.operations.mergetables import union_tables
 
 
 basicConfig(level=INFO)
@@ -443,3 +444,30 @@ class TestBigqueryOperations:
                 if org["NGO"].startswith("C")
                 else (regex["NGO"] is None)
             )
+
+    def test_mergetables(self):
+        """test merge tables"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "union"
+
+        config = {
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "tablenames": ["Sheet1", "Sheet2"],
+        }
+
+        union_tables(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        table_data1 = wc_client.get_table_data("pytest_intermediate", "Sheet1", 10)
+        table_data2 = wc_client.get_table_data("pytest_intermediate", "Sheet2", 10)
+        table_data_union = wc_client.get_table_data(
+            "pytest_intermediate", output_name, 10
+        )
+
+        assert len(table_data1) + len(table_data2) == len(table_data_union)
