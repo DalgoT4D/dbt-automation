@@ -407,11 +407,10 @@ class TestBigqueryOperations:
             math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
             if table_data[0]["measure2"] != 0
             else None
-            == (
-                math.ceil(table_data[0]["div_col"])
-                if table_data[0]["div_col"] is not None
-                else None
-            )
+        ) == (
+            math.ceil(table_data[0]["div_col"])
+            if table_data[0]["div_col"] is not None
+            else None
         )
 
     def test_regexextract(self):
