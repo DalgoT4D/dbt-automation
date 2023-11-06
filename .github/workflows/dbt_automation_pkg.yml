@@ -7,7 +7,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main", "39-test-cases-for-dbt-automation" ] # TODO: remove once the PR is approved
+    branches: [ "main" ] 
 
 jobs:
   tests:
