@@ -10,7 +10,10 @@ from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.coalescecolumns import coalesce_columns
 from dbt_automation.operations.concatcolumns import concat_columns
+from dbt_automation.operations.arithmetic import arithmetic
+from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.utils.columnutils import quote_columnname
+
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -235,4 +238,71 @@ class TestPostgresOperations:
         assert (
             table_data[0]["concat_col"]
             == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
+        )
+
+    def test_castdatatypes(self):
+        """test castdatatypes"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "cast"
+
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": [
+                {
+                    "columnname": "measure1",
+                    "columntype": "int",
+                },
+                {
+                    "columnname": "measure2",
+                    "columntype": "int",
+                },
+            ],
+        }
+
+        cast_datatypes(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "measure1" in cols
+        assert "measure2" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        # TODO: do stronger check here; fetch datatype from warehouse and then compare/assert
+        assert type(table_data[0]["measure1"]) == int
+        assert type(table_data[0]["measure2"]) == int
+
+    def test_arithmetic_add(self):
+        """test arithmetic"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "arithmetic_add"
+
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "add",
+            "operands": ["Measure1", "Measure2"],
+            "output_column_name": "add_col",
+        }
+
+        arithmetic(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "add_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["add_col"]
+            == table_data[0]["measure1"] + table_data[0]["measure2"]
         )
