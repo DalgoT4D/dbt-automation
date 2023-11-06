@@ -13,7 +13,6 @@ from dbt_automation.operations.coalescecolumns import coalesce_columns
 from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
-from dbt_automation.utils.columnutils import quote_columnname
 
 
 basicConfig(level=INFO)
@@ -185,10 +184,11 @@ class TestBigqueryOperations:
 
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
         assert "ngo_spoc" in cols
-        col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        col_data_original = wc_client.get_table_data(
-            "pytest_intermediate", quote_columnname("Sheet1", "bigquery"), 1
-        )
+        col_data = wc_client.get_table_data("pytest_intermediate", output_name, 5)
+        col_data_original = wc_client.get_table_data("pytest_intermediate", "Sheet1", 5)
+        col_data_original.sort(key=lambda x: x["_airbyte_ab_id"])
+        col_data.sort(key=lambda x: x["_airbyte_ab_id"])
+        # TODO: can do a stronger check here; by checking on rows in a loop
         assert (
             col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
             if col_data_original[0]["NGO"] is not None
