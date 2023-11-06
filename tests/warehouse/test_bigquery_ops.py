@@ -14,6 +14,7 @@ from dbt_automation.operations.coalescecolumns import coalesce_columns
 from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
+from dbt_automation.operations.regexextraction import regex_extraction
 
 
 basicConfig(level=INFO)
@@ -114,136 +115,136 @@ class TestBigqueryOperations:
             "pytest_intermediate"
         )
 
-    # def test_rename_columns(self):
-    #     """test rename_columns for sample seed data"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "rename"
-    #     config = {
-    #         "input_name": "Sheet1",
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "columns": {"NGO": "ngo", "Month": "month"},
-    #     }
+    def test_rename_columns(self):
+        """test rename_columns for sample seed data"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "rename"
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": {"NGO": "ngo", "Month": "month"},
+        }
 
-    #     rename_columns(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        rename_columns(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "ngo" in cols
-    #     assert "month" in cols
-    #     assert "NGO" not in cols
-    #     assert "MONTH" not in cols
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "ngo" in cols
+        assert "month" in cols
+        assert "NGO" not in cols
+        assert "MONTH" not in cols
 
-    # def test_drop_columns(self):
-    #     """test drop_columns"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "drop"
+    def test_drop_columns(self):
+        """test drop_columns"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "drop"
 
-    #     config = {
-    #         "input_name": "Sheet1",
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "columns": ["MONTH"],
-    #     }
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": ["MONTH"],
+        }
 
-    #     drop_columns(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        drop_columns(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "MONTH" not in cols
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "MONTH" not in cols
 
-    # def test_coalescecolumns(self):
-    #     """test coalescecolumns"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "coalesce"
+    def test_coalescecolumns(self):
+        """test coalescecolumns"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "coalesce"
 
-    #     config = {
-    #         "input_name": "Sheet1",
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "columns": [
-    #             {
-    #                 "columnname": "NGO",
-    #             },
-    #             {
-    #                 "columnname": "SPOC",
-    #             },
-    #         ],
-    #         "output_column_name": "ngo_spoc",
-    #     }
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": [
+                {
+                    "columnname": "NGO",
+                },
+                {
+                    "columnname": "SPOC",
+                },
+            ],
+            "output_column_name": "ngo_spoc",
+        }
 
-    #     coalesce_columns(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        coalesce_columns(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "ngo_spoc" in cols
-    #     col_data = wc_client.get_table_data("pytest_intermediate", output_name, 5)
-    #     col_data_original = wc_client.get_table_data("pytest_intermediate", "Sheet1", 5)
-    #     col_data_original.sort(key=lambda x: x["_airbyte_ab_id"])
-    #     col_data.sort(key=lambda x: x["_airbyte_ab_id"])
-    #     # TODO: can do a stronger check here; by checking on rows in a loop
-    #     assert (
-    #         col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
-    #         if col_data_original[0]["NGO"] is not None
-    #         else col_data_original[0]["SPOC"]
-    #     )
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "ngo_spoc" in cols
+        col_data = wc_client.get_table_data("pytest_intermediate", output_name, 5)
+        col_data_original = wc_client.get_table_data("pytest_intermediate", "Sheet1", 5)
+        col_data_original.sort(key=lambda x: x["_airbyte_ab_id"])
+        col_data.sort(key=lambda x: x["_airbyte_ab_id"])
+        # TODO: can do a stronger check here; by checking on rows in a loop
+        assert (
+            col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
+            if col_data_original[0]["NGO"] is not None
+            else col_data_original[0]["SPOC"]
+        )
 
-    # def test_concatcolumns(self):
-    #     """test concatcolumns"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "concat"
+    def test_concatcolumns(self):
+        """test concatcolumns"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "concat"
 
-    #     config = {
-    #         "input_name": "Sheet1",
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "columns": [
-    #             {
-    #                 "name": "NGO",
-    #                 "is_col": "yes",
-    #             },
-    #             {
-    #                 "name": "SPOC",
-    #                 "is_col": "yes",
-    #             },
-    #             {
-    #                 "name": "test",
-    #                 "is_col": "no",
-    #             },
-    #         ],
-    #         "output_column_name": "concat_col",
-    #     }
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": [
+                {
+                    "name": "NGO",
+                    "is_col": "yes",
+                },
+                {
+                    "name": "SPOC",
+                    "is_col": "yes",
+                },
+                {
+                    "name": "test",
+                    "is_col": "no",
+                },
+            ],
+            "output_column_name": "concat_col",
+        }
 
-    #     concat_columns(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        concat_columns(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "concat_col" in cols
-    #     table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-    #     assert (
-    #         table_data[0]["concat_col"]
-    #         == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
-    #     )
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "concat_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["concat_col"]
+            == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
+        )
 
     def test_castdatatypes(self):
         """test castdatatypes"""
@@ -282,95 +283,95 @@ class TestBigqueryOperations:
         assert type(table_data[0]["measure1"]) == int
         assert type(table_data[0]["measure2"]) == int
 
-    # def test_arithmetic_add(self):
-    #     """test arithmetic addition"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "arithmetic_add"
+    def test_arithmetic_add(self):
+        """test arithmetic addition"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "arithmetic_add"
 
-    #     config = {
-    #         "input_name": "cast",  # from previous operation
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "operator": "add",
-    #         "operands": ["measure1", "measure2"],
-    #         "output_column_name": "add_col",
-    #     }
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "add",
+            "operands": ["measure1", "measure2"],
+            "output_column_name": "add_col",
+        }
 
-    #     arithmetic(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        arithmetic(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "add_col" in cols
-    #     table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-    #     assert (
-    #         table_data[0]["add_col"]
-    #         == table_data[0]["measure1"] + table_data[0]["measure2"]
-    #     )
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "add_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["add_col"]
+            == table_data[0]["measure1"] + table_data[0]["measure2"]
+        )
 
-    # def test_arithmetic_sub(self):
-    #     """test arithmetic subtraction"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "arithmetic_sub"
+    def test_arithmetic_sub(self):
+        """test arithmetic subtraction"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "arithmetic_sub"
 
-    #     config = {
-    #         "input_name": "cast",  # from previous operation
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "operator": "sub",
-    #         "operands": ["measure1", "measure2"],
-    #         "output_column_name": "sub_col",
-    #     }
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "sub",
+            "operands": ["measure1", "measure2"],
+            "output_column_name": "sub_col",
+        }
 
-    #     arithmetic(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        arithmetic(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "sub_col" in cols
-    #     table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-    #     assert (
-    #         table_data[0]["sub_col"]
-    #         == table_data[0]["measure1"] - table_data[0]["measure2"]
-    #     )
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "sub_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["sub_col"]
+            == table_data[0]["measure1"] - table_data[0]["measure2"]
+        )
 
-    # def test_arithmetic_mul(self):
-    #     """test arithmetic multiplication"""
-    #     wc_client = TestBigqueryOperations.wc_client
-    #     output_name = "arithmetic_mul"
+    def test_arithmetic_mul(self):
+        """test arithmetic multiplication"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "arithmetic_mul"
 
-    #     config = {
-    #         "input_name": "cast",  # from previous operation
-    #         "dest_schema": "pytest_intermediate",
-    #         "output_name": output_name,
-    #         "operator": "mul",
-    #         "operands": ["measure1", "measure2"],
-    #         "output_column_name": "mul_col",
-    #     }
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "mul",
+            "operands": ["measure1", "measure2"],
+            "output_column_name": "mul_col",
+        }
 
-    #     arithmetic(
-    #         config,
-    #         wc_client,
-    #         TestBigqueryOperations.test_project_dir,
-    #     )
+        arithmetic(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
 
-    #     TestBigqueryOperations.execute_dbt("run", output_name)
+        TestBigqueryOperations.execute_dbt("run", output_name)
 
-    #     cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-    #     assert "mul_col" in cols
-    #     table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-    #     assert (
-    #         table_data[0]["mul_col"]
-    #         == table_data[0]["measure1"] * table_data[0]["measure2"]
-    #     )
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "mul_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["mul_col"]
+            == table_data[0]["measure1"] * table_data[0]["measure2"]
+        )
 
     def test_arithmetic_div(self):
         """test arithmetic division"""
@@ -398,8 +399,47 @@ class TestBigqueryOperations:
         assert "div_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
-            math.ceil(table_data[0]["div_col"])
-            == math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
+            math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
             if table_data[0]["measure2"] != 0
             else None
+            == (
+                math.ceil(table_data[0]["div_col"])
+                if table_data[0]["div_col"] is not None
+                else None
+            )
         )
+
+    def test_regexextract(self):
+        """test regex extraction"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "regex_ext"
+
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": {"NGO": "^[C].*"},
+        }
+
+        regex_extraction(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "NGO" in cols
+        table_data_org = wc_client.get_table_data("pytest_intermediate", "Sheet1", 10)
+        table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_regex = wc_client.get_table_data(
+            "pytest_intermediate", output_name, 10
+        )
+        table_data_regex.sort(key=lambda x: x["_airbyte_ab_id"])
+        for regex, org in zip(table_data_regex, table_data_org):
+            assert (
+                regex["NGO"] == org["NGO"]
+                if org["NGO"].startswith("C")
+                else (regex["NGO"] is None)
+            )

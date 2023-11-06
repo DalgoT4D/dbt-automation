@@ -14,6 +14,7 @@ from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.operations.regexextraction import regex_extraction
 
 
 basicConfig(level=INFO)
@@ -401,8 +402,49 @@ class TestPostgresOperations:
         assert "div_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
-            math.ceil(table_data[0]["div_col"])
-            == math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
+            math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
             if table_data[0]["measure2"] != 0
             else None
+            == (
+                math.ceil(table_data[0]["div_col"])
+                if table_data[0]["div_col"] is not None
+                else None
+            )
         )
+
+    def test_regexextract(self):
+        """test regex extraction"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "regex_ext"
+
+        config = {
+            "input_name": "Sheet1",
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "columns": {"NGO": "^[C].*"},
+        }
+
+        regex_extraction(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "NGO" in cols
+        table_data_org = wc_client.get_table_data(
+            "pytest_intermediate", quote_columnname("Sheet1", "postgres"), 10
+        )
+        table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_regex = wc_client.get_table_data(
+            "pytest_intermediate", output_name, 10
+        )
+        table_data_regex.sort(key=lambda x: x["_airbyte_ab_id"])
+        for regex, org in zip(table_data_regex, table_data_org):
+            assert (
+                regex["NGO"] == org["NGO"]
+                if org["NGO"].startswith("C")
+                else (regex["NGO"] is None)
+            )
