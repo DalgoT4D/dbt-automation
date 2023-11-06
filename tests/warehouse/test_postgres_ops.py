@@ -41,20 +41,27 @@ class TestPostgresOperations:
 
     @staticmethod
     def execute_dbt(cmd: str, select_model: str = None):
-        select_cli = ["--select", select_model] if select_model is not None else []
-        subprocess.call(
-            [
-                Path(TestPostgresOperations.test_project_dir) / "venv" / "bin" / "dbt",
-                cmd,
-            ]
-            + select_cli
-            + [
-                "--project-dir",
-                TestPostgresOperations.test_project_dir,
-                "--profiles-dir",
-                TestPostgresOperations.test_project_dir,
-            ],
-        )
+        try:
+            select_cli = ["--select", select_model] if select_model is not None else []
+            subprocess.check_call(
+                [
+                    Path(TestPostgresOperations.test_project_dir)
+                    / "venv"
+                    / "bin"
+                    / "dbt",
+                    cmd,
+                ]
+                + select_cli
+                + [
+                    "--project-dir",
+                    TestPostgresOperations.test_project_dir,
+                    "--profiles-dir",
+                    TestPostgresOperations.test_project_dir,
+                ],
+            )
+        except subprocess.CalledProcessError as e:
+            logger.error(f"dbt {cmd} failed with {e.returncode}")
+            raise Exception(f"Something went wrong while running dbt {cmd}")
 
     def test_scaffold(self, tmpdir):
         """This will setup the dbt repo to run dbt commands after running a test operation"""
@@ -393,6 +400,9 @@ class TestPostgresOperations:
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
         assert "div_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        assert math.ceil(table_data[0]["div_col"]) == math.ceil(
-            table_data[0]["measure1"] / table_data[0]["measure2"]
+        assert (
+            math.ceil(table_data[0]["div_col"])
+            == math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
+            if table_data[0]["measure2"] != 0
+            else None
         )
