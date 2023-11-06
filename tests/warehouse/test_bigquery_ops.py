@@ -1,6 +1,7 @@
 import pytest
 import os
 from pathlib import Path
+import math
 import json
 import subprocess, sys
 from logging import basicConfig, getLogger, INFO
@@ -275,7 +276,7 @@ class TestBigqueryOperations:
         assert type(table_data[0]["measure2"]) == int
 
     def test_arithmetic_add(self):
-        """test arithmetic"""
+        """test arithmetic addition"""
         wc_client = TestBigqueryOperations.wc_client
         output_name = "arithmetic_add"
 
@@ -284,7 +285,7 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "add",
-            "operands": ["Measure1", "Measure2"],
+            "operands": ["measure1", "measure2"],
             "output_column_name": "add_col",
         }
 
@@ -302,4 +303,93 @@ class TestBigqueryOperations:
         assert (
             table_data[0]["add_col"]
             == table_data[0]["measure1"] + table_data[0]["measure2"]
+        )
+
+    def test_arithmetic_sub(self):
+        """test arithmetic subtraction"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "arithmetic_sub"
+
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "sub",
+            "operands": ["measure1", "measure2"],
+            "output_column_name": "sub_col",
+        }
+
+        arithmetic(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "sub_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["sub_col"]
+            == table_data[0]["measure1"] - table_data[0]["measure2"]
+        )
+
+    def test_arithmetic_mul(self):
+        """test arithmetic multiplication"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "arithmetic_mul"
+
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "mul",
+            "operands": ["measure1", "measure2"],
+            "output_column_name": "mul_col",
+        }
+
+        arithmetic(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "mul_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert (
+            table_data[0]["mul_col"]
+            == table_data[0]["measure1"] * table_data[0]["measure2"]
+        )
+
+    def test_arithmetic_div(self):
+        """test arithmetic division"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "arithmetic_div"
+
+        config = {
+            "input_name": "cast",  # from previous operation
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "operator": "div",
+            "operands": ["measure1", "measure2"],
+            "output_column_name": "div_col",
+        }
+
+        arithmetic(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "div_col" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert math.ceil(table_data[0]["div_col"]) == math.ceil(
+            table_data[0]["measure1"] / table_data[0]["measure2"]
         )
