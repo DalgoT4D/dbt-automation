@@ -2,6 +2,10 @@ version: 1
 description: "Yaml template to get you started on automating your dbt work. DO NOT EDIT this, make a copy and use"
 warehouse: <bigquery or postgres>
 operations:
+    - type: scaffold
+      config:
+        project_name: <name of the dbt project>
+        default_schema: <this is the schema where dbt will write models if nothing is specified>
     - type: flatten
       config:
         source_schema: <source schema>

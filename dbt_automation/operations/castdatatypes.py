@@ -24,7 +24,7 @@ def cast_datatypes(config: dict, warehouse, project_dir: str):
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    union_code = "{{ config(materialized='table',) }}\n"
+    union_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
     columns = config["columns"]
     columnnames = [c["columnname"] for c in columns]

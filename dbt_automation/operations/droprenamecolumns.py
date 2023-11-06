@@ -35,7 +35,7 @@ def rename_columns(config: dict, warehouse, project_dir: str):
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    model_code = '{{ config(materialized="table") }}\n\n'
+    model_code = '{{ config(materialized="table", schema="' + dest_schema + '") }}\n\n'
     exclude_cols = ",".join([f'"{col}"' for col in columns.keys()])
     model_code += f'SELECT {{{{ dbt_utils.star(from=ref("{input_name}"), except=[{exclude_cols}]) }}}}, '
 

@@ -39,6 +39,7 @@ def arithmetic(config: dict, warehouse, project_dir: str):
         dbt_code += "{{dbt_utils.safe_add(["
         for operand in operands:
             dbt_code += f"'{str(operand)}',"
+        dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {output_col_name} "
 
@@ -54,6 +55,7 @@ def arithmetic(config: dict, warehouse, project_dir: str):
         dbt_code += "{{dbt_utils.safe_subtract(["
         for operand in operands:
             dbt_code += f"'{str(operand)}',"
+        dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {output_col_name} "
 

@@ -1,0 +1,25 @@
+version: 1
+description: "Yaml template to get you started on automating your dbt work. DO NOT EDIT this, make a copy and use"
+warehouse: postgres
+
+operations:
+  - type: syncsources
+    config:
+      source_schema: tests_001
+      source_name: tests_001
+  - type: flatten
+    config:
+      source_schema: tests_001
+      dest_schema: tests_001_1
+  - type: flattenjson
+    config:
+      source_schema: tests_001
+      input_name: model_001
+      dest_schema: tests_001_2
+      output_name: model_001_2
+      columns_to_copy:
+        - _airbyte_ab_id
+      json_column: data
+      json_columns_to_copy:
+        - Name
+        - Age

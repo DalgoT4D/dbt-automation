@@ -1,6 +1,9 @@
 import yaml
 
 
+# TODO: need to take into account the multiple schemas in a single source file
+
+
 # ================================================================================
 def readsourcedefinitions(sourcefilename: str):
     """read the source definitions from a dbt sources.yml"""

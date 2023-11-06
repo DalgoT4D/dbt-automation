@@ -42,7 +42,7 @@ def union_tables(config, warehouse, project_dir):
         relations += f"ref('{tablename}'),"
     relations = relations[:-1]
     relations += "]"
-    union_code = "{{ config(materialized='table',) }}\n"
+    union_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
     # pylint:disable=consider-using-f-string
     union_code += "{{ dbt_utils.union_relations("
     union_code += f"relations={relations}"

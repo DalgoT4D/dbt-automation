@@ -67,6 +67,7 @@ def flatten_operation(config: dict, warehouse, project_dir: str):
         # and the .sql model
         model_sql = mk_dbtmodel(
             warehouse,
+            DEST_SCHEMA,
             source["name"],  # pass the source in the yaml file
             modelname,
             zip(json_fields, sql_columns),
@@ -80,18 +81,21 @@ def flatten_operation(config: dict, warehouse, project_dir: str):
 
 
 # ================================================================================
-def mk_dbtmodel(warehouse, sourcename: str, srctablename: str, columntuples: list):
+def mk_dbtmodel(
+    warehouse, dest_schema: str, sourcename: str, srctablename: str, columntuples: list
+):
     """create the .sql model for this table"""
 
-    dbtmodel = """
-{{ 
+    dbtmodel = f"""
+{{{{ 
   config(
     materialized='table',
+    schema='{dest_schema}',
     indexes=[
-      {'columns': ['_airbyte_ab_id'], 'type': 'hash'}
+      {{'columns': ['_airbyte_ab_id'], 'type': 'hash'}}
     ]
   ) 
-}}
+}}}}
     """
     dbtmodel += "SELECT _airbyte_ab_id "
     dbtmodel += "\n"

@@ -13,7 +13,9 @@ def regex_extraction(config: dict, warehouse, project_dir: str):
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    model_code = '{{ config(materialized="table") }}\n\nSELECT '
+    model_code = (
+        f"{{{{ config(materialized='table', schema='{dest_schema}') }}}}\n\nSELECT "
+    )
 
     for col_name, regex in columns.items():
         if warehouse.name == "postgres":
