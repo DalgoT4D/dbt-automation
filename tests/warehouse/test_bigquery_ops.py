@@ -108,11 +108,15 @@ class TestBigqueryOperations:
             TestBigqueryOperations.test_project_dir,
         )
         TestBigqueryOperations.execute_dbt("run", "Sheet1")
+        TestBigqueryOperations.execute_dbt("run", "Sheet2")
         logger.info("inside test flatten")
         logger.info(
             f"inside project directory : {TestBigqueryOperations.test_project_dir}"
         )
         assert "Sheet1" in TestBigqueryOperations.wc_client.get_tables(
+            "pytest_intermediate"
+        )
+        assert "Sheet2" in TestBigqueryOperations.wc_client.get_tables(
             "pytest_intermediate"
         )
 
