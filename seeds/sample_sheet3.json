@@ -1,0 +1,7 @@
+[
+  {
+    "_airbyte_ab_id": "006b18b2-cccd-47f1-a9dc-5638d2d1abc7",
+    "_airbyte_data": "[{\"NGO\": \"IMAGE\", \"SPOC\": \"SPOC C\"}, {\"NGO\": \"FDSR\", \"SPOC\": \"SPOC B\"}, {\"NGO\": \"CRC\", \"SPOC\": \"SPOC A\"}]",
+    "_airbyte_emitted_at": "2023-09-28 08:50:17+00"
+  }
+]

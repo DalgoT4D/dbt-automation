@@ -1,12 +1,10 @@
 """This script seeds airbyte's raw data into test warehouse"""
-
-import argparse, os
+import os
+import argparse
+import json
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.warehouseclient import get_client
 from dotenv import load_dotenv
-import csv
-from pathlib import Path
-import json
 from google.cloud import bigquery
 
 
@@ -21,29 +19,29 @@ warehouse = args.warehouse
 
 load_dotenv("dbconnection.env")
 
-tablename = "_airbyte_raw_Sheet1"
-json_file = "seeds/sample_sheet1.json"
-
 for json_file, tablename in zip(
-    ["seeds/sample_sheet1.json", "seeds/sample_sheet2.json"],
-    ["_airbyte_raw_Sheet1", "_airbyte_raw_Sheet2"],
+    [
+        "seeds/sample_sheet1.json",
+        "seeds/sample_sheet2.json",
+        "seeds/sample_sheet3.json",
+    ],
+    ["_airbyte_raw_Sheet1", "_airbyte_raw_Sheet2", "_airbyte_raw_Sheet3"],
 ):
     logger.info("seeding %s into %s", json_file, tablename)
 
     data = []
-    with open(json_file, "r") as file:
+    with open(json_file, "r", encoding="utf-8") as file:
         data = json.load(file)
 
     columns = ["_airbyte_ab_id", "_airbyte_data", "_airbyte_emitted_at"]
 
     # schema check; expecting only airbyte raw data
     for row in data:
-        schema_check = [True if key in columns else False for key in row.keys()]
+        schema_check = [key in columns for key in row.keys()]
         if all(schema_check) is False:
-            raise Exception("Schema mismatch")
+            raise Exception("Schema mismatch")  # pylint:disable=broad-exception-raised
 
     if args.warehouse == "postgres":
-        logger.info("Found postgres warehouse")
         conn_info = {
             "host": os.getenv("TEST_PG_DBHOST"),
             "port": os.getenv("TEST_PG_DBPORT"),
@@ -52,6 +50,12 @@ for json_file, tablename in zip(
             "password": os.getenv("TEST_PG_DBPASSWORD"),
         }
         schema = os.getenv("TEST_PG_DBSCHEMA_SRC")
+        logger.info(
+            "Found postgres warehouse %s/%s/%s",
+            conn_info["host"],
+            conn_info["database"],
+            schema,
+        )
 
         wc_client = get_client(args.warehouse, conn_info)
 
@@ -74,22 +78,25 @@ for json_file, tablename in zip(
         wc_client.runcmd(create_table_query)
         wc_client.runcmd(truncate_table_query)
 
-        """
-        INSERT INTO your_table_name (column1, column2, column3, ...)
-        VALUES ({}, {}, {}, ...);
-        """
         # seed sample json data into the newly table created
+        # INSERT INTO your_table_name (column1, column2, column3, ...)
+        # VALUES ({}, {}, {}, ...);
         logger.info("seeding sample json data")
         for row in data:
             # Execute the insert query with the data from the CSV
-            insert_query = f"""INSERT INTO {schema}."{tablename}" ({', '.join(columns)}) VALUES ('{row['_airbyte_ab_id']}', JSON '{row['_airbyte_data']}', '{row['_airbyte_emitted_at']}')"""
+            insert_query = f"""
+                INSERT INTO {schema}."{tablename}" 
+                    ({', '.join(columns)}) 
+                VALUES 
+                    ('{row['_airbyte_ab_id']}', JSON '{row['_airbyte_data']}', '{row['_airbyte_emitted_at']}')
+            """
             wc_client.runcmd(insert_query)
 
-    if args.warehouse == "bigquery":
-        logger.info("Found bigquery warehouse")
+    elif args.warehouse == "bigquery":
         conn_info = json.loads(os.getenv("TEST_BG_SERVICEJSON"))
         location = os.getenv("TEST_BG_LOCATION")
         test_dataset = os.getenv("TEST_BG_DATASET_SRC")
+        logger.info("Found bigquery warehouse %s", test_dataset)
 
         wc_client = get_client(args.warehouse, conn_info)
 
@@ -99,7 +106,7 @@ for json_file, tablename in zip(
 
         logger.info("creating the dataset")
         dataset = wc_client.bqclient.create_dataset(dataset, timeout=30, exists_ok=True)
-        logger.info("created dataset : {}".format(dataset.dataset_id))
+        logger.info("created dataset : %s", dataset.dataset_id)
 
         # create the staging table if its does not exist
         table_schema = [
@@ -123,10 +130,10 @@ for json_file, tablename in zip(
 
         # seed data
         insert_query = f"""
-        INSERT INTO `{conn_info['project_id']}.{dataset.dataset_id}.{tablename}` (_airbyte_ab_id, _airbyte_data, _airbyte_emitted_at)
-        VALUES 
+            INSERT INTO `{conn_info['project_id']}.{dataset.dataset_id}.{tablename}` (_airbyte_ab_id, _airbyte_data, _airbyte_emitted_at)
+            VALUES 
         """
-        insert_query_values = ",".join(
+        insert_query_values = ",".join(  # pylint:disable=invalid-name
             [
                 f"""('{row["_airbyte_ab_id"]}', '{row["_airbyte_data"]}', '{row["_airbyte_emitted_at"]}')"""
                 for row in data
