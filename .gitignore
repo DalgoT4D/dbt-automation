@@ -28,6 +28,7 @@ MANIFEST
 *.json
 !sample_sheet1.json
 !sample_sheet2.json
+!sample_sheet3.json
 
 # Unit test / coverage reports
 htmlcov/
