@@ -176,6 +176,12 @@ class PostgresClient:
         """outputs a sql query snippet for extracting a json field"""
         return f"{json_column}::json->>'{json_field}' as \"{sql_column}\""
 
+    def json_extract_from_array_op(
+        self, json_column: str, json_field: str, sql_column: str
+    ):
+        """outputs a sql query snippet for extracting a json field"""
+        return f"jsonb_array_elements({json_column}::jsonb)->>'{json_field}' as \"{sql_column}\""
+
     def close(self):
         """closes the connection"""
         try:
