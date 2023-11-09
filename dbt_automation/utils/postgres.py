@@ -1,7 +1,7 @@
 """helpers for postgres"""
+import os
 from logging import basicConfig, getLogger, INFO
 import psycopg2
-import os
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -71,7 +71,7 @@ class PostgresClient:
     def get_schemas(self) -> list:
         """returns the list of schema names in the given database connection"""
         resultset = self.execute(
-            f"""
+            """
             SELECT nspname
             FROM pg_namespace
             WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema';
@@ -130,6 +130,18 @@ class PostgresClient:
             )
         ]
 
+    def get_json_columnspec_from_array(self, schema: str, table: str, column: str):
+        """get the column schema from the elements of the specified json array for this table"""
+        return [
+            x[0]
+            for x in self.execute(
+                f"""SELECT DISTINCT 
+                    jsonb_object_keys(jsonb_array_elements({column}::jsonb)) AS key
+                FROM "{schema}"."{table}"
+            """
+            )
+        ]
+
     def ensure_schema(self, schema: str):
         """creates the schema if it doesn't exist"""
         self.runcmd(f"CREATE SCHEMA IF NOT EXISTS {schema};")
@@ -165,34 +177,35 @@ class PostgresClient:
         return f"{json_column}::json->>'{json_field}' as \"{sql_column}\""
 
     def close(self):
+        """closes the connection"""
         try:
             self.connection.close()
-        except Exception:
+        except Exception:  # pylint:disable=broad-except
             logger.error("something went wrong while closing the postgres connection")
 
         return True
 
     def generate_profiles_yaml_dbt(self, project_name, default_schema):
-        """Generates the profiles.yml dictionary object for dbt"""
+        """
+        Generates the profiles.yml dictionary object for dbt
+        <project_name>:
+            outputs:
+                prod:
+                    dbname:
+                    host:
+                    password:
+                    port: 5432
+                    user: airbyte_user
+                    schema:
+                    threads: 4
+                    type: postgres
+            target: prod
+        """
         if project_name is None or default_schema is None:
             raise ValueError("project_name and default_schema are required")
 
         target = "prod"
 
-        """
-        <project_name>: 
-            outputs:
-                prod: 
-                    dbname: 
-                    host: 
-                    password: 
-                    port: 5432
-                    user: airbyte_user
-                    schema: 
-                    threads: 4
-                    type: postgres
-            target: prod
-        """
         profiles_yml = {
             f"{project_name}": {
                 "outputs": {
