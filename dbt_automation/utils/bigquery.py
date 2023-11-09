@@ -175,7 +175,7 @@ class BigQueryClient:
     def json_extract_op(self, json_column: str, json_field: str, sql_column: str):
         """outputs a sql query snippet for extracting a json field"""
         json_field = json_field.replace("'", "\\'")
-        return f"json_value({json_column}, '$.\"{json_field}\"') as `{sql_column}`"
+        return f"json_value(`{json_column}`, '$.\"{json_field}\"') as `{sql_column}`"
 
     def close(self):
         """closing the connection and releasing system resources"""
