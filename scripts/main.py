@@ -20,6 +20,7 @@ from dbt_automation.operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.scaffold import scaffold
+from dbt_automation.operations.explodejsonarray import explodejsonarray
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -34,6 +35,7 @@ OPERATIONS_DICT = {
     "renamecolumns": rename_columns,
     "regexextraction": regex_extraction,
     "scaffold": scaffold,
+    "explodejsonarray": explodejsonarray,
 }
 
 load_dotenv("./../dbconnection.env")
