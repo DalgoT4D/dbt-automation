@@ -1,11 +1,11 @@
 """utilities for working with bigquery"""
 
-from logging import basicConfig, getLogger, INFO
 import os
+import json
+from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
-import json
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -18,8 +18,10 @@ class BigQueryClient:
         self.name = "bigquery"
         self.bqclient = None
         if conn_info is None:  # take creds from env
-            creds_file = open(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-            conn_info = json.load(creds_file)
+            with open(
+                os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), "r", encoding="utf-8"
+            ) as creds_file:
+                conn_info = json.load(creds_file)
             location = os.getenv("BIQUERY_LOCATION")
 
         creds1 = service_account.Credentials.from_service_account_info(conn_info)
@@ -185,25 +187,25 @@ class BigQueryClient:
         return True
 
     def generate_profiles_yaml_dbt(self, project_name, default_schema):
-        """Generates the profiles.yml dictionary object for dbt"""
+        """
+        Generates the profiles.yml dictionary object for dbt
+        <project_name>:
+            outputs:
+                prod:
+                    keyfile_json:
+                    location:
+                    method: service-account-json
+                    project:
+                    schema:
+                    threads: 4
+                    type: bigquery
+            target: prod
+        """
         if project_name is None or default_schema is None:
             raise ValueError("project_name and default_schema are required")
 
         target = "prod"
 
-        """
-        <project_name>: 
-            outputs:
-                prod: 
-                    keyfile_json: 
-                    location: 
-                    method: service-account-json
-                    project: 
-                    schema: 
-                    threads: 4
-                    type: bigquery
-            target: prod
-        """
         profiles_yml = {
             f"{project_name}": {
                 "outputs": {
@@ -212,7 +214,6 @@ class BigQueryClient:
                         "location": self.location,
                         "method": "service-account-json",
                         "project": self.conn_info["project_id"],
-                        "method": "service-account-json",
                         "schema": default_schema,
                         "threads": 4,
                         "type": "bigquery",
