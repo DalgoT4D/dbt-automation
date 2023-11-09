@@ -179,7 +179,7 @@ class PostgresClient:
     def json_extract_from_array_op(
         self, json_column: str, json_field: str, sql_column: str
     ):
-        """outputs a sql query snippet for extracting a json field"""
+        """outputs a sql query snippet for extracting a json field from elements of a list into several rows"""
         return f"jsonb_array_elements({json_column}::jsonb)->>'{json_field}' as \"{sql_column}\""
 
     def close(self):
