@@ -69,10 +69,10 @@ class BigQueryClient:
         query = self.execute(
             f'''
                     CREATE TEMP FUNCTION jsonObjectKeys(input STRING)
-                    RETURNS Array<String>
-                    LANGUAGE js AS """
-                    return Object.keys(JSON.parse(input));
-                    """;
+                        RETURNS Array<String>
+                        LANGUAGE js AS """
+                        return Object.keys(JSON.parse(input));
+                        """;
                     WITH keys AS (
                     SELECT
                         jsonObjectKeys({column}) AS keys
@@ -84,6 +84,39 @@ class BigQueryClient:
                     DISTINCT k
                     FROM keys
                     CROSS JOIN UNNEST(keys.keys) AS k
+                ''',
+            location=self.location,
+        )
+        return [json_field["k"] for json_field in query]
+
+    def get_json_columnspec_from_array(self, schema: str, table: str, column: str):
+        """get the column schema from the elements of the specified json array for this table"""
+        query = self.execute(
+            f'''
+                    CREATE TEMP FUNCTION jsonObjectKeys(input STRING)
+                        RETURNS Array<String>
+                        LANGUAGE js AS """
+                        return Object.keys(JSON.parse(input));
+                        """;
+
+                    WITH keys as (
+                        WITH key_rows AS (
+                            WITH `json_data` as (
+                                SELECT JSON_EXTRACT_ARRAY(`{column}`, '$') 
+                                FROM `{schema}`.`{table}`
+                            )
+                            SELECT * FROM UNNEST(
+                                (SELECT * FROM `json_data`)
+                            ) as key
+                        )
+                        SELECT jsonObjectKeys(`key`) 
+                        AS key 
+                        FROM key_rows
+                    )
+                    SELECT DISTINCT k 
+                    FROM keys 
+                    CROSS JOIN UNNEST(keys.key) 
+                    AS k
                 ''',
             location=self.location,
         )
