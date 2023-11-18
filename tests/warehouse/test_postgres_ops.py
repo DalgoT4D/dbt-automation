@@ -1,8 +1,8 @@
-import pytest
+"""tests for dbt operations using a postgres warehouse"""
 import os
 from pathlib import Path
 import math
-import subprocess, sys
+import subprocess
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
 from dbt_automation.utils.warehouseclient import get_client
@@ -43,6 +43,7 @@ class TestPostgresOperations:
 
     @staticmethod
     def execute_dbt(cmd: str, select_model: str = None):
+        """runs a dbt command"""
         try:
             select_cli = ["--select", select_model] if select_model is not None else []
             subprocess.check_call(
@@ -62,8 +63,12 @@ class TestPostgresOperations:
                 ],
             )
         except subprocess.CalledProcessError as e:
-            logger.error(f"dbt {cmd} failed with {e.returncode}")
-            raise Exception(f"Something went wrong while running dbt {cmd}")
+            logger.error(  # pylint:disable=logging-fstring-interpolation
+                f"dbt {cmd} failed with {e.returncode}"
+            )
+            raise Exception(  # pylint:disable=logging-fstring-interpolation, broad-exception-raised, raise-missing-from
+                f"Something went wrong while running dbt {cmd}"
+            )
 
     def test_scaffold(self, tmpdir):
         """This will setup the dbt repo to run dbt commands after running a test operation"""
@@ -114,7 +119,7 @@ class TestPostgresOperations:
         TestPostgresOperations.execute_dbt("run", "Sheet1")
         TestPostgresOperations.execute_dbt("run", "Sheet2")
         logger.info("inside test flatten")
-        logger.info(
+        logger.info(  # pylint:disable=logging-fstring-interpolation
             f"inside project directory : {TestPostgresOperations.test_project_dir}"
         )
         assert "Sheet1" in TestPostgresOperations.wc_client.get_tables(
@@ -288,8 +293,8 @@ class TestPostgresOperations:
         assert "measure2" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         # TODO: do stronger check here; fetch datatype from warehouse and then compare/assert
-        assert type(table_data[0]["measure1"]) == int
-        assert type(table_data[0]["measure2"]) == int
+        assert isinstance(table_data[0]["measure1"], int)
+        assert isinstance(table_data[0]["measure2"], int)
 
     def test_arithmetic_add(self):
         """test arithmetic addition"""
@@ -409,11 +414,11 @@ class TestPostgresOperations:
         assert (
             math.ceil(table_data[0]["measure1"] / table_data[0]["measure2"])
             if table_data[0]["measure2"] != 0
-            else None
+            else "div-0"
             == (
                 math.ceil(table_data[0]["div_col"])
                 if table_data[0]["div_col"] is not None
-                else None
+                else "div-0"
             )
         )
 

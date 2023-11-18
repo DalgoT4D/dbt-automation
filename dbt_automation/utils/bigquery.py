@@ -1,11 +1,11 @@
 """utilities for working with bigquery"""
 
-from logging import basicConfig, getLogger, INFO
 import os
+import json
+from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
-import json
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -18,8 +18,10 @@ class BigQueryClient:
         self.name = "bigquery"
         self.bqclient = None
         if conn_info is None:  # take creds from env
-            creds_file = open(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-            conn_info = json.load(creds_file)
+            with open(
+                os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), "r", encoding="utf-8"
+            ) as creds_file:
+                conn_info = json.load(creds_file)
             location = os.getenv("BIQUERY_LOCATION")
 
         creds1 = service_account.Credentials.from_service_account_info(conn_info)
@@ -69,10 +71,10 @@ class BigQueryClient:
         query = self.execute(
             f'''
                     CREATE TEMP FUNCTION jsonObjectKeys(input STRING)
-                    RETURNS Array<String>
-                    LANGUAGE js AS """
-                    return Object.keys(JSON.parse(input));
-                    """;
+                        RETURNS Array<String>
+                        LANGUAGE js AS """
+                        return Object.keys(JSON.parse(input));
+                        """;
                     WITH keys AS (
                     SELECT
                         jsonObjectKeys({column}) AS keys
@@ -84,6 +86,39 @@ class BigQueryClient:
                     DISTINCT k
                     FROM keys
                     CROSS JOIN UNNEST(keys.keys) AS k
+                ''',
+            location=self.location,
+        )
+        return [json_field["k"] for json_field in query]
+
+    def get_json_columnspec_from_array(self, schema: str, table: str, column: str):
+        """get the column schema from the elements of the specified json array for this table"""
+        query = self.execute(
+            f'''
+                    CREATE TEMP FUNCTION jsonObjectKeys(input STRING)
+                        RETURNS Array<String>
+                        LANGUAGE js AS """
+                        return Object.keys(JSON.parse(input));
+                        """;
+
+                    WITH keys as (
+                        WITH key_rows AS (
+                            WITH `json_data` as (
+                                SELECT JSON_EXTRACT_ARRAY(`{column}`, '$') 
+                                FROM `{schema}`.`{table}`
+                            )
+                            SELECT * FROM UNNEST(
+                                (SELECT * FROM `json_data`)
+                            ) as key
+                        )
+                        SELECT jsonObjectKeys(`key`) 
+                        AS key 
+                        FROM key_rows
+                    )
+                    SELECT DISTINCT k 
+                    FROM keys 
+                    CROSS JOIN UNNEST(keys.key) 
+                    AS k
                 ''',
             location=self.location,
         )
@@ -140,7 +175,7 @@ class BigQueryClient:
     def json_extract_op(self, json_column: str, json_field: str, sql_column: str):
         """outputs a sql query snippet for extracting a json field"""
         json_field = json_field.replace("'", "\\'")
-        return f"json_value({json_column}, '$.\"{json_field}\"') as `{sql_column}`"
+        return f"json_value(`{json_column}`, '$.\"{json_field}\"') as `{sql_column}`"
 
     def close(self):
         """closing the connection and releasing system resources"""
@@ -152,25 +187,25 @@ class BigQueryClient:
         return True
 
     def generate_profiles_yaml_dbt(self, project_name, default_schema):
-        """Generates the profiles.yml dictionary object for dbt"""
+        """
+        Generates the profiles.yml dictionary object for dbt
+        <project_name>:
+            outputs:
+                prod:
+                    keyfile_json:
+                    location:
+                    method: service-account-json
+                    project:
+                    schema:
+                    threads: 4
+                    type: bigquery
+            target: prod
+        """
         if project_name is None or default_schema is None:
             raise ValueError("project_name and default_schema are required")
 
         target = "prod"
 
-        """
-        <project_name>: 
-            outputs:
-                prod: 
-                    keyfile_json: 
-                    location: 
-                    method: service-account-json
-                    project: 
-                    schema: 
-                    threads: 4
-                    type: bigquery
-            target: prod
-        """
         profiles_yml = {
             f"{project_name}": {
                 "outputs": {
@@ -179,7 +214,6 @@ class BigQueryClient:
                         "location": self.location,
                         "method": "service-account-json",
                         "project": self.conn_info["project_id"],
-                        "method": "service-account-json",
                         "schema": default_schema,
                         "threads": 4,
                         "type": "bigquery",
