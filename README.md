@@ -2,6 +2,7 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Code coverage badge](https://img.shields.io/codecov/c/github/DalgoT4D/dbt-automation/main.svg)](https://codecov.io/gh/DalgoT4D/dbt-automation/branch/main)
+
 Documentation can be found [here](https://github.com/DalgoT4D/dbt-automation/wiki)
 
 # Setting up the test environment
