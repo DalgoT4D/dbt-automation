@@ -15,9 +15,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--ref-schema", required=True)
 parser.add_argument("--comp-schema", required=True)
 parser.add_argument("--working-dir", required=True)
+parser.add_argument("--config-yaml", default="connections.yaml")
 args = parser.parse_args()
 
-with open("connections.yaml", "r", encoding="utf-8") as connection_yaml:
+with open(args.config_yaml, "r", encoding="utf-8") as connection_yaml:
     connection_info = yaml.safe_load(connection_yaml)
 
 working_dir = args.working_dir
@@ -46,11 +47,11 @@ def db2csv(
             "-h",
             connection["host"],
             "-p",
-            connection.get("port", "5432"),
+            str(connection.get("port", "5432")),
             "-d",
-            connection["name"],
+            connection["database"],
             "-U",
-            connection["user"],
+            connection["username"],
             "-f",
             cmdfile,
         ]
