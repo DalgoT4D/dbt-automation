@@ -114,7 +114,7 @@ for tablename in ref_tables:
         ref_schema,
         tablename,
         columns_specs[tablename],
-        ["_airbyte_ab_id"],
+        ["_airbyte_ab_id", "_airbyte_emitted_at"],
         ref_csvfile,
     )
 
@@ -125,7 +125,7 @@ for tablename in ref_tables:
         comp_schema,
         tablename,
         columns_specs[tablename],
-        ["_airbyte_ab_id"],
+        ["_airbyte_ab_id", "_airbyte_emitted_at"],
         comp_csvfile,
     )
 
