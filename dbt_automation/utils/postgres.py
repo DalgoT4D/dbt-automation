@@ -2,12 +2,14 @@
 from logging import basicConfig, getLogger, INFO
 import psycopg2
 import os
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
-class PostgresClient:
+class PostgresClient(WarehouseInterface):
     """a postgres client that can be used as a context manager"""
 
     @staticmethod

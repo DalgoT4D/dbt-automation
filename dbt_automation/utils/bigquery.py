@@ -6,12 +6,13 @@ from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 import json
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
-class BigQueryClient:
+class BigQueryClient(WarehouseInterface):
     """a bigquery client that can be used as a context manager"""
 
     def __init__(self, conn_info=None, location=None):
