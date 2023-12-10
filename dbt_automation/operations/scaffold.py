@@ -6,13 +6,14 @@ from logging import basicConfig, getLogger, INFO
 import subprocess, sys
 
 from dbt_automation.utils.warehouseclient import get_client
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
-def scaffold(config: dict, warehouse, project_dir: str):
+def scaffold(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """scaffolds a dbt project"""
     project_name = config["project_name"]
     default_schema = config["default_schema"]

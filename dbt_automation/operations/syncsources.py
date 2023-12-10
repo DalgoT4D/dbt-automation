@@ -12,6 +12,7 @@ load_dotenv("dbconnection.env")
 # pylint:disable=wrong-import-position
 from dbt_automation.utils.sourceschemas import mksourcedefinition
 from dbt_automation.utils.warehouseclient import get_client
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.utils.dbtsources import (
     readsourcedefinitions,
     merge_sourcedefinitions,
@@ -21,7 +22,7 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def sync_sources(config, warehouse, project_dir):
+def sync_sources(config, warehouse: WarehouseInterface, project_dir):
     """
     reads tables from the input_schema to create a dbt sources.yml
     uses the metadata from the existing source definitions, if any

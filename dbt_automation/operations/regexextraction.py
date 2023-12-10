@@ -1,9 +1,10 @@
 """extract from a regex"""
 from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.dbtproject import dbtProject
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 
-def regex_extraction(config: dict, warehouse, project_dir: str):
+def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """given a regex and a column name, extract the regex from the column"""
     input_name = config["input_name"]
     dest_schema = config["dest_schema"]

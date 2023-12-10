@@ -5,13 +5,14 @@ This file takes care of dbt string concat operations
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
-def concat_columns(config: dict, warehouse, project_dir: str):
+def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """This function generates dbt model to concat strings"""
     logger.info("here in concat columns")
     logger.info("testing")

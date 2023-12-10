@@ -3,13 +3,15 @@ from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def drop_columns(config: dict, warehouse, project_dir: str):
+def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """drops columns from a model"""
     dest_schema = config["dest_schema"]
     input_name = config["input_name"]
