@@ -4,13 +4,15 @@ This file contains the airthmetic operations for dbt automation
 
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.dbtproject import dbtProject
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def arithmetic(config: dict, warehouse, project_dir: str):
+def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """performs arithmetic operations: +/-/*//"""
     output_name = config["output_name"]
     input_model = config["input_name"]

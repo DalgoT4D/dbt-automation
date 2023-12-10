@@ -7,6 +7,7 @@ from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 
 from dbt_automation.utils.dbtproject import dbtProject
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 
 basicConfig(level=INFO)
@@ -14,7 +15,7 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def union_tables(config, warehouse, project_dir):
+def union_tables(config, warehouse: WarehouseInterface, project_dir):
     """generates a dbt model which uses the dbt_utils union_relations macro to union tables"""
     tablenames = config["tablenames"]
     dest_schema = config["dest_schema"]

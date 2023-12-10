@@ -4,6 +4,8 @@ from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -15,7 +17,7 @@ WAREHOUSE_COLUMN_TYPES = {
 
 
 # pylint:disable=logging-fstring-interpolation
-def cast_datatypes(config: dict, warehouse, project_dir: str):
+def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """generates the model"""
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]

@@ -7,13 +7,15 @@ from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.dbtconfigs import mk_model_config
 from dbt_automation.utils.columnutils import make_cleaned_column_names, dedup_list
 from dbt_automation.utils.warehouseclient import get_client
+from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+
 
 basicConfig(level=INFO)
 logger = getLogger()
 
 
 # pylint:disable=logging-fstring-interpolation,unused-argument
-def flatten_operation(config: dict, warehouse, project_dir: str):
+def flatten_operation(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     This function does the flatten operation for all sources (raw tables) in the sources.yml.
     By default, _airbyte_data field is used to flatten
