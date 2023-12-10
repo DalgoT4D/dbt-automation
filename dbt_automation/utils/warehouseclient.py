@@ -2,7 +2,6 @@
 
 from dbt_automation.utils.postgres import PostgresClient
 from dbt_automation.utils.bigquery import BigQueryClient
-from abc import ABC, abstractmethod
 
 
 def get_client(warehouse: str, conn_info: dict = None, location: str = None):
