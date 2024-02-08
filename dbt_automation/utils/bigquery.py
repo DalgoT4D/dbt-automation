@@ -117,7 +117,6 @@ class BigQueryClient(WarehouseInterface):
                     FROM keys
                     CROSS JOIN UNNEST(keys.keys) AS k
                 ''',
-            location=self.location,
         )
         return [json_field["k"] for json_field in query]
 
