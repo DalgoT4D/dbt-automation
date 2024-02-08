@@ -6,6 +6,7 @@ from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 import json
+from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 basicConfig(level=INFO)
@@ -30,7 +31,7 @@ class BigQueryClient(WarehouseInterface):
 
     def execute(self, statement: str, **kwargs) -> list:
         """run a query and return the results"""
-        query_job = self.bqclient.query(statement, **kwargs)
+        query_job = self.bqclient.query(statement, location=self.location, **kwargs)
         return query_job.result()
 
     def get_tables(self, schema: str) -> list:
@@ -51,20 +52,45 @@ class BigQueryClient(WarehouseInterface):
         return column_names
 
     def get_table_data(
-        self, schema: str, table: str, limit: int, page: int = 1, page_token: str = None
+        self,
+        schema: str,
+        table: str,
+        limit: int,
+        page: int = 1,
+        order_by: str = None,
+        order: int = 1,  # ASC
     ) -> dict:
         """returns limited rows from the specified table in the given schema"""
-        table_ref = f"{schema}.{table}"
-        table: bigquery.Table = self.bqclient.get_table(table_ref)
-        records = self.bqclient.list_rows(
-            table=table, max_results=limit, page_token=page_token
+
+        offset = (page - 1) * limit
+        total_rows = self.execute(
+            f"SELECT COUNT(*) as total_rows FROM `{schema}`.`{table}`"
         )
-        rows = [dict(record) for record in records]
+        total_rows = next(total_rows).total_rows
+
+        # select
+        query = f"""
+            SELECT * 
+            FROM `{schema}`.`{table}`
+            """
+
+        # order
+        if order_by:
+            query += f"""
+            ORDER BY {quote_columnname(order_by)} {"ASC" if order == 1 else "DESC"}
+            """
+
+        # offset, limit
+        query += f"""
+            LIMIT {limit} OFFSET {offset}
+            """
+
+        result = self.execute(query)
 
         return {
-            "total_rows": records.total_rows,
-            "next_page": records.next_page_token,
-            "rows": rows,
+            "total_rows": total_rows,
+            "next_page": (page + 1) if (page * limit) < total_rows else None,
+            "rows": [dict(record) for record in result],
         }
 
     def get_columnspec(self, schema: str, table_id: str):
