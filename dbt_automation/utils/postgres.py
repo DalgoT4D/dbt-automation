@@ -1,7 +1,9 @@
 """helpers for postgres"""
+
 from logging import basicConfig, getLogger, INFO
 import psycopg2
 import os
+from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
 
@@ -81,16 +83,39 @@ class PostgresClient(WarehouseInterface):
         )
         return [x[0] for x in resultset]
 
-    def get_table_data(self, schema: str, table: str, limit: int) -> list:
-        """returns limited rows from the specified table in the given schema"""
+    def get_table_data(
+        self,
+        schema: str,
+        table: str,
+        limit: int,
+        page: int = 1,
+        order_by: str = None,
+        order: int = 1,  # ASC
+    ) -> list:
+        """
+        returns limited rows from the specified table in the given schema
+        """
+        offset = (page - 1) * limit
+        # total_rows = self.execute(f"SELECT COUNT(*) FROM {schema}.{table}")[0][0]
 
-        resultset = self.execute(
-            f"""
-            SELECT * 
-            FROM {schema}.{table}
-            LIMIT {limit};
+        # select
+        query = f"""
+        SELECT * 
+        FROM {schema}.{table}
+        """
+
+        # order
+        if order_by:
+            query += f"""
+            ORDER BY {quote_columnname(order_by)} {"ASC" if order == 1 else "DESC"}
             """
-        )  # returns an array of tuples of values
+
+        # offset, limit
+        query += f"""
+        OFFSET {offset} LIMIT {limit};
+        """
+
+        resultset = self.execute(query)  # returns an array of tuples of values
         col_names = [desc[0] for desc in self.cursor.description]
         rows = [dict(zip(col_names, row)) for row in resultset]
 

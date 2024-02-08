@@ -15,7 +15,15 @@ class WarehouseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_table_data(self, schema: str, table: str, limit: int):
+    def get_table_data(
+        self,
+        schema: str,
+        table: str,
+        limit: int,
+        page: int = 1,
+        order_by: str = None,
+        order: int = 1,  # ASC
+    ):
         pass
 
     @abstractmethod
