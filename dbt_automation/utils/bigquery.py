@@ -59,14 +59,14 @@ class BigQueryClient(WarehouseInterface):
         page: int = 1,
         order_by: str = None,
         order: int = 1,  # ASC
-    ) -> dict:
+    ) -> list:
         """returns limited rows from the specified table in the given schema"""
 
         offset = (page - 1) * limit
-        total_rows = self.execute(
-            f"SELECT COUNT(*) as total_rows FROM `{schema}`.`{table}`"
-        )
-        total_rows = next(total_rows).total_rows
+        # total_rows = self.execute(
+        #     f"SELECT COUNT(*) as total_rows FROM `{schema}`.`{table}`"
+        # )
+        # total_rows = next(total_rows).total_rows
 
         # select
         query = f"""
@@ -86,12 +86,9 @@ class BigQueryClient(WarehouseInterface):
             """
 
         result = self.execute(query)
+        rows = [dict(record) for record in result]
 
-        return {
-            "total_rows": total_rows,
-            "next_page": (page + 1) if (page * limit) < total_rows else None,
-            "rows": [dict(record) for record in result],
-        }
+        return rows
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""

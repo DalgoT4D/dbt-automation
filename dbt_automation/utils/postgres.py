@@ -91,12 +91,12 @@ class PostgresClient(WarehouseInterface):
         page: int = 1,
         order_by: str = None,
         order: int = 1,  # ASC
-    ) -> dict:
+    ) -> list:
         """
         returns limited rows from the specified table in the given schema
         """
         offset = (page - 1) * limit
-        total_rows = self.execute(f"SELECT COUNT(*) FROM {schema}.{table}")[0][0]
+        # total_rows = self.execute(f"SELECT COUNT(*) FROM {schema}.{table}")[0][0]
 
         # select
         query = f"""
@@ -119,11 +119,7 @@ class PostgresClient(WarehouseInterface):
         col_names = [desc[0] for desc in self.cursor.description]
         rows = [dict(zip(col_names, row)) for row in resultset]
 
-        return {
-            "total_rows": total_rows,
-            "next_page": page + 1 if (page * limit) < total_rows else None,
-            "rows": rows,
-        }
+        return rows
 
     def get_table_columns(self, schema: str, table: str) -> list:
         """returns the column names of the specified table in the given schema"""
