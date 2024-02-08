@@ -50,14 +50,22 @@ class BigQueryClient(WarehouseInterface):
         column_names = [field.name for field in table.schema]
         return column_names
 
-    def get_table_data(self, schema: str, table: str, limit: int) -> list:
+    def get_table_data(
+        self, schema: str, table: str, limit: int, page: int = 1, page_token: str = None
+    ) -> dict:
         """returns limited rows from the specified table in the given schema"""
         table_ref = f"{schema}.{table}"
         table: bigquery.Table = self.bqclient.get_table(table_ref)
-        records = self.bqclient.list_rows(table=table, max_results=limit)
+        records = self.bqclient.list_rows(
+            table=table, max_results=limit, page_token=page_token
+        )
         rows = [dict(record) for record in records]
 
-        return rows
+        return {
+            "total_rows": records.total_rows,
+            "next_page": records.next_page_token,
+            "rows": rows,
+        }
 
     def get_columnspec(self, schema: str, table_id: str):
         """fetch the list of columns from a BigQuery table."""

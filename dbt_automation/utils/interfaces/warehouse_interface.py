@@ -15,7 +15,9 @@ class WarehouseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_table_data(self, schema: str, table: str, limit: int):
+    def get_table_data(
+        self, schema: str, table: str, limit: int, page: int = 1, page_token: str = None
+    ):
         pass
 
     @abstractmethod
