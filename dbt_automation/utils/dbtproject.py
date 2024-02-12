@@ -44,7 +44,7 @@ class dbtProject:  # pylint:disable=invalid-name
             outfile.write(model_sql)
             outfile.close()
 
-        return model_sql
+        return model_filename
 
     def write_model_config(self, schema: str, models: list, **kwargs) -> None:
         """writes a .yml with a models: key"""
@@ -64,4 +64,4 @@ class dbtProject:  # pylint:disable=invalid-name
                 sort_keys=False,
             )
 
-        return models_file
+        return models_filename
