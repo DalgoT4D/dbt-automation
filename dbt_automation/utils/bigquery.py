@@ -77,7 +77,7 @@ class BigQueryClient(WarehouseInterface):
         # order
         if order_by:
             query += f"""
-            ORDER BY {quote_columnname(order_by)} {"ASC" if order == 1 else "DESC"}
+            ORDER BY {quote_columnname(order_by, "bigquery")} {"ASC" if order == 1 else "DESC"}
             """
 
         # offset, limit
