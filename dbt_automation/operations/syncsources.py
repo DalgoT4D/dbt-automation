@@ -1,4 +1,5 @@
 """reads tables from db to create a dbt sources.yml"""
+
 import os
 import argparse
 from logging import basicConfig, getLogger, INFO
@@ -53,6 +54,8 @@ def sync_sources(config, warehouse: WarehouseInterface, project_dir):
     with open(sources_file, "w", encoding="utf-8") as outfile:
         yaml.safe_dump(merged_definitions, outfile, sort_keys=False)
         logger.info("wrote source definitions to %s", sources_file)
+
+    return sources_file
 
 
 if __name__ == "__main__":

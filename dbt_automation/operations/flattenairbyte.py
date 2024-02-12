@@ -1,4 +1,5 @@
 """generates models to flatten airbyte raw data"""
+
 import sys
 from logging import basicConfig, getLogger, INFO
 
@@ -79,7 +80,8 @@ def flatten_operation(config: dict, warehouse: WarehouseInterface, project_dir: 
         logger.info(f"completed flattening {tablename}")
 
     # finally write the yml with the models configuration
-    dbtproject.write_model_config(DEST_SCHEMA, models, logger=logger)
+    models_yml_path = dbtproject.write_model_config(DEST_SCHEMA, models, logger=logger)
+    return models_yml_path
 
 
 # ================================================================================

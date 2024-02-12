@@ -1,4 +1,5 @@
 """takes a list of tables and a common column spec and creates a dbt model to merge them"""
+
 import os
 
 import argparse
@@ -50,12 +51,14 @@ def union_tables(config, warehouse: WarehouseInterface, project_dir):
     union_code += ")}}"
 
     logger.info(f"writing dbt model {union_code}")
-    dbtproject.write_model(
+    model_sql_path = dbtproject.write_model(
         dest_schema,
         output_model_name,
         union_code,
     )
     logger.info(f"dbt model {output_model_name} successfully created")
+
+    return model_sql_path
 
 
 if __name__ == "__main__":
