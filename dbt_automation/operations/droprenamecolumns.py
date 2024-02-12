@@ -1,4 +1,5 @@
 """drop and rename columns"""
+
 from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
@@ -24,7 +25,8 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    dbtproject.write_model(dest_schema, output_model_name, model_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+    return model_sql_path
 
 
 def rename_columns(config: dict, warehouse, project_dir: str):
@@ -48,4 +50,5 @@ def rename_columns(config: dict, warehouse, project_dir: str):
     model_code = model_code[:-2]  # Remove trailing comma and space
     model_code += f'\nFROM \n  {{{{ ref("{input_name}") }}}}'
 
-    dbtproject.write_model(dest_schema, output_model_name, model_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+    return model_sql_path

@@ -1,4 +1,5 @@
 """extract from a regex"""
+
 from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
@@ -36,4 +37,5 @@ def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: s
 
     model_code += f'\nFROM \n  {{{{ ref("{input_name}") }}}}'
 
-    dbtproject.write_model(dest_schema, output_model_name, model_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+    return model_sql_path

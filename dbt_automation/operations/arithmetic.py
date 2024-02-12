@@ -72,5 +72,7 @@ def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
     dbt_code += " FROM " + "{{ref('" + input_model + "')}}" + "\n"
 
     logger.info(f"writing dbt model {dbt_code}")
-    dbtproject.write_model(dest_schema, output_name, dbt_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_code)
     logger.info(f"dbt model {output_name} successfully created")
+
+    return model_sql_path

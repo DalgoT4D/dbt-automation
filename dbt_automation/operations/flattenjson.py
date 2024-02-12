@@ -1,4 +1,5 @@
 """pull fields out of a json field into their own columns"""
+
 from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
@@ -54,4 +55,5 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    dbtproject.write_model(dest_schema, output_name, model_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_name, model_code)
+    return model_sql_path

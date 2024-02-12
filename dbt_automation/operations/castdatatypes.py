@@ -50,9 +50,11 @@ def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str
     union_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"
 
     logger.info(f"writing dbt model {union_code}")
-    dbtproject.write_model(
+    model_sql_path = dbtproject.write_model(
         dest_schema,
         output_name,
         union_code,
     )
     logger.info(f"dbt model {output_name} successfully created")
+
+    return model_sql_path

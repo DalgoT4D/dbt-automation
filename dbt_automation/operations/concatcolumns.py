@@ -28,13 +28,16 @@ def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str
     dbt_code = "{{ config(materialized='table', schema='" + dest_schema + "') }}\n"
     concat_fields = ",".join(
         [
-            quote_columnname(col["name"], warehouse.name)
-            if col["is_col"] in ["yes", True, "y"]
-            else f"'{col['name']}'"
+            (
+                quote_columnname(col["name"], warehouse.name)
+                if col["is_col"] in ["yes", True, "y"]
+                else f"'{col['name']}'"
+            )
             for col in columns
         ]
     )
     dbt_code += f"SELECT *, CONCAT({concat_fields}) AS {output_column_name}"
     dbt_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"
 
-    dbtproject.write_model(dest_schema, output_name, dbt_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_code)
+    return model_sql_path
