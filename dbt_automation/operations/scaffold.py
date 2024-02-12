@@ -1,4 +1,5 @@
 """setup the dbt project"""
+
 import os, shutil, yaml
 from pathlib import Path
 from string import Template
@@ -7,6 +8,7 @@ import subprocess, sys
 
 from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+from dbt_automation import assets
 
 
 basicConfig(level=INFO)
@@ -45,7 +47,10 @@ def scaffold(config: dict, warehouse: WarehouseInterface, project_dir: str):
     flatten_json_target = Path(project_dir) / "macros" / "flatten_json.sql"
     custom_schema_target = Path(project_dir) / "macros" / "generate_schema_name.sql"
     logger.info("created %s", flatten_json_target)
-    shutil.copy("dbt_automation/assets/generate_schema_name.sql", custom_schema_target)
+    source_schema_name_macro_path = os.path.abspath(
+        os.path.join(os.path.abspath(assets.__file__), "..", "generate_schema_name.sql")
+    )
+    shutil.copy(source_schema_name_macro_path, custom_schema_target)
     logger.info("created %s", custom_schema_target)
 
     dbtproject_filename = Path(project_dir) / "dbt_project.yml"
