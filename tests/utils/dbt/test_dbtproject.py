@@ -55,7 +55,7 @@ def test_write_model(tmpdir):  # pytest tmpdir fixture
     """test the write_model method"""
     project = dbtProject(tmpdir)
     sql_input_model = "select * from table"
-    project.write_model("test_schema", "test_model", sql_input_model)
+    sql_filename = project.write_model("test_schema", "test_model", sql_input_model)
     assert os.path.exists(tmpdir / "models" / "test_schema" / "test_model.sql") is True
     with open(
         tmpdir / "models" / "test_schema" / "test_model.sql", "r", encoding="utf-8"
@@ -63,6 +63,7 @@ def test_write_model(tmpdir):  # pytest tmpdir fixture
         model_sql = sql_file.read()
 
     assert model_sql.find(sql_input_model) > -1
+    assert str(sql_filename) == "models/test_schema/test_model.sql"
 
 
 def test_write_model_config(tmpdir):  # pytest tmpdir fixture
@@ -83,7 +84,7 @@ def test_write_model_config(tmpdir):  # pytest tmpdir fixture
             ],
         }
     ]
-    project.write_model_config("test_schema", models_input)
+    yaml_filename = project.write_model_config("test_schema", models_input)
     assert os.path.exists(tmpdir / "models" / schema / "models.yml") is True
     with open(
         tmpdir / "models" / schema / "models.yml", "r", encoding="utf-8"
@@ -92,3 +93,4 @@ def test_write_model_config(tmpdir):  # pytest tmpdir fixture
 
     assert len(models_yaml["models"]) == 1
     assert models_yaml["models"][0] == models_input[0]
+    assert str(yaml_filename) == f"models/{schema}/models.yml"

@@ -26,6 +26,10 @@ class dbtProject:  # pylint:disable=invalid-name
         if not os.path.exists(output_schema_dir):
             os.makedirs(output_schema_dir)
 
+    def strip_project_dir(self, child_dir: Path) -> str:
+        """removes the leading project_dir from the child_dir"""
+        return child_dir.relative_to(self.project_dir)
+
     def write_model(
         self, schema: str, modelname: str, model_sql: str, **kwargs
     ) -> None:
@@ -44,7 +48,7 @@ class dbtProject:  # pylint:disable=invalid-name
             outfile.write(model_sql)
             outfile.close()
 
-        return model_filename
+        return self.strip_project_dir(model_filename)
 
     def write_model_config(self, schema: str, models: list, **kwargs) -> None:
         """writes a .yml with a models: key"""
@@ -64,4 +68,4 @@ class dbtProject:  # pylint:disable=invalid-name
                 sort_keys=False,
             )
 
-        return models_filename
+        return self.strip_project_dir(models_filename)
