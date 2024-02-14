@@ -14,10 +14,16 @@ operations:
       config:
         output_name: <name of the output model>
         dest_schema: <enter your destination/output schema>
-        tablenames:
-            - <name of the 1st intermediate table>
-            - <name of the 2nd intermediate table>
-            - <name of the 3rd intermediate table>
+        input:
+            - input_type: <"source" or "model">
+              input_name: <name of source table or ref model>
+              source_name: <name of the source defined in source.yml; will be null for type "model">
+            - input_type: <"source" or "model">
+              input_name: <name of source table or ref model>
+              source_name: <name of the source defined in source.yml; will be null for type "model">
+            - input_type: <"source" or "model">
+              input_name: <name of source table or ref model>
+              source_name: <name of the source defined in source.yml; will be null for type "model">
     - type: syncsources
       config:
         source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
