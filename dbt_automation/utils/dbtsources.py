@@ -1,4 +1,6 @@
+import os
 import yaml
+from pathlib import Path
 
 
 # TODO: need to take into account the multiple schemas in a single source file
@@ -68,3 +70,34 @@ def merge_sourcedefinitions(filedefs: dict, dbdefs: dict) -> dict:
     ]
 
     return outputdefs
+
+
+# ================================================================================
+def read_sources(project_dir) -> list[dict]:
+    """parse all yaml files inside models dir and read sources"""
+    models_dir = Path(project_dir) / "models"
+
+    sources = []
+    for root, dirs, files in os.walk(models_dir):
+        for file in files:
+            if file.endswith(".yml") or file.endswith(".yaml"):
+                file_path = os.path.join(root, file)
+                with open(file_path, "r") as f:
+                    yaml_data = yaml.safe_load(f)
+                    if "sources" in yaml_data:
+                        sources += yaml_data["sources"]
+
+    src_tables = []
+    for src in sources:
+        for table in src["tables"]:
+            # keeping the schema same as input of each operations
+            src_tables.append(
+                {
+                    "source_name": src["name"],
+                    "input_name": table["identifier"],  # table
+                    "input_type": "source",
+                    "schema": src["schema"],
+                }
+            )
+
+    return src_tables
