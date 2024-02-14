@@ -36,7 +36,6 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
 
 def rename_columns(config: dict, warehouse, project_dir: str):
     """renames columns in a model"""
-    # input_name = config["input_name"]
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
     output_model_name = config["output_name"]
