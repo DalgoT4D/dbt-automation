@@ -5,6 +5,7 @@ from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+from dbt_automation.utils.tableutils import source_or_ref
 
 
 basicConfig(level=INFO)
@@ -18,10 +19,12 @@ WAREHOUSE_COLUMN_TYPES = {
 
 # pylint:disable=logging-fstring-interpolation
 def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str):
-    """generates the model"""
+    """
+    generates the model
+    config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
+    """
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
-    input_name = config["input_name"]
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
@@ -30,7 +33,11 @@ def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str
 
     columns = config["columns"]
     columnnames = [c["columnname"] for c in columns]
-    union_code += "SELECT {{dbt_utils.star(from=ref('" + input_name + "'), except=["
+    union_code += (
+        "SELECT {{dbt_utils.star(from="
+        + source_or_ref(**config["input"])
+        + ", except=["
+    )
     union_code += ",".join([f'"{columnname}"' for columnname in columnnames])
     union_code += "])}}"
 
@@ -47,7 +54,7 @@ def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str
             + quote_columnname(column["columnname"], warehouse.name)
         )
 
-    union_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"
+    union_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
     logger.info(f"writing dbt model {union_code}")
     model_sql_path = dbtproject.write_model(
