@@ -1,8 +1,9 @@
-import pytest
+"""tests for postgres operations"""
+
 import os
 from pathlib import Path
 import math
-import subprocess, sys
+import subprocess
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
 from dbt_automation.utils.warehouseclient import get_client
@@ -14,6 +15,7 @@ from dbt_automation.operations.concatcolumns import concat_columns
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.mergetables import union_tables
 
@@ -88,7 +90,7 @@ class TestPostgresOperations:
         sync_sources(
             config,
             TestPostgresOperations.wc_client,
-            TestPostgresOperations.test_project_dir,
+            dbtProject(TestPostgresOperations.test_project_dir),
         )
         sources_yml = (
             Path(TestPostgresOperations.test_project_dir)

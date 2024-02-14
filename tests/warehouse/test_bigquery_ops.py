@@ -1,12 +1,14 @@
-import pytest
+""" tests for bigquery operations """
+
 import os
 from pathlib import Path
 import math
 import json
-import subprocess, sys
+import subprocess
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
 from dbt_automation.utils.warehouseclient import get_client
+from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
@@ -84,7 +86,7 @@ class TestBigqueryOperations:
         sync_sources(
             config,
             TestBigqueryOperations.wc_client,
-            TestBigqueryOperations.test_project_dir,
+            dbtProject(TestBigqueryOperations.test_project_dir),
         )
         sources_yml = (
             Path(TestBigqueryOperations.test_project_dir)
