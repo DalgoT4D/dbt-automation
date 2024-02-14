@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
-
+from dbt_automation.utils.tableutils import source_or_ref
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -18,30 +18,29 @@ logger = getLogger()
 # pylint:disable=unused-argument,logging-fstring-interpolation
 def union_tables(config, warehouse: WarehouseInterface, project_dir):
     """generates a dbt model which uses the dbt_utils union_relations macro to union tables"""
-    tablenames = config["tablenames"]
+    input_arr = config["input_arr"]
     dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
 
-    table_counts = Counter([tablename for tablename in tablenames])
-    # pylint:disable=invalid-name
-    has_error = False
-    for tablename, tablenamecount in table_counts.items():
-        if tablenamecount > 1:
-            logger.error("table appears more than once in spec: %s", tablename)
-            has_error = True
-    if has_error:
-        raise ValueError("duplicate table names found")
-    logger.info("no duplicate table names found")
+    names = set()
+    for input in input_arr:
+        name = source_or_ref(**input)
+        if name in names:
+            logger.error("this appears more than once %s ", name)
+            raise ValueError("duplicate inputs found")
+        names.add(name)
+
+    logger.info("no duplicate inputs found")
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
     logger.info("created the dbt project object")
 
     # pylint:disable=invalid-name
-    logger.info(f"need to process the following tables: {tablenames}")
+    logger.info(f"processing all the inputs")
     relations = "["
-    for tablename in tablenames:
-        relations += f"ref('{tablename}'),"
+    for input in input_arr:
+        relations += f"{source_or_ref(**input)},"
     relations = relations[:-1]
     relations += "]"
     union_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"

@@ -6,7 +6,7 @@ from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.columnutils import make_cleaned_column_names, dedup_list
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
-
+from dbt_automation.utils.tableutils import source_or_ref
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -16,7 +16,7 @@ logger = getLogger()
 def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     source_schema: name of the input schema
-    input_name: name of the input model
+    input: input dictionary check operations.yaml.template
     dest_schema: name of the output schema
     output_name: name of the output model
     columns_to_copy: list of columns to copy from the input model
@@ -24,7 +24,6 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
     json_columns_to_copy: list of columns to copy from the json_column
     """
 
-    input_name = config["input_name"]
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
     columns_to_copy = config["columns_to_copy"]
@@ -51,7 +50,7 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
             "," + warehouse.json_extract_op(json_column, json_field, sql_column) + "\n"
         )
 
-    model_code += " FROM " + "{{ref('" + input_name + "')}}" + "\n"
+    model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)

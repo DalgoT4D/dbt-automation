@@ -127,7 +127,11 @@ class TestBigqueryOperations:
         wc_client = TestBigqueryOperations.wc_client
         output_name = "rename"
         config = {
-            "input_name": "Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "Sheet1",
+                "source_name": None,
+            },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": {"NGO": "ngo", "Month": "month"},
@@ -153,7 +157,11 @@ class TestBigqueryOperations:
         output_name = "drop"
 
         config = {
-            "input_name": "Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "Sheet1",
+                "source_name": None,
+            },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": ["MONTH"],
@@ -176,7 +184,11 @@ class TestBigqueryOperations:
         output_name = "coalesce"
 
         config = {
-            "input_name": "Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "Sheet1",
+                "source_name": None,
+            },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": [
@@ -217,7 +229,11 @@ class TestBigqueryOperations:
         output_name = "concat"
 
         config = {
-            "input_name": "Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "Sheet1",
+                "source_name": None,
+            },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": [
@@ -259,7 +275,11 @@ class TestBigqueryOperations:
         output_name = "cast"
 
         config = {
-            "input_name": "Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "Sheet1",
+                "source_name": None,
+            },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": [
@@ -296,7 +316,11 @@ class TestBigqueryOperations:
         output_name = "arithmetic_add"
 
         config = {
-            "input_name": "cast",  # from previous operation
+            "input": {
+                "input_type": "model",
+                "input_name": "cast",
+                "source_name": None,
+            },  # from previous operation
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "add",
@@ -326,7 +350,11 @@ class TestBigqueryOperations:
         output_name = "arithmetic_sub"
 
         config = {
-            "input_name": "cast",  # from previous operation
+            "input": {
+                "input_type": "model",
+                "input_name": "cast",
+                "source_name": None,
+            },  # from previous operation
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "sub",
@@ -356,7 +384,11 @@ class TestBigqueryOperations:
         output_name = "arithmetic_mul"
 
         config = {
-            "input_name": "cast",  # from previous operation
+            "input": {
+                "input_type": "model",
+                "input_name": "cast",
+                "source_name": None,
+            },  # from previous operation
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "mul",
@@ -386,7 +418,11 @@ class TestBigqueryOperations:
         output_name = "arithmetic_div"
 
         config = {
-            "input_name": "cast",  # from previous operation
+            "input": {
+                "input_type": "model",
+                "input_name": "cast",
+                "source_name": None,
+            },  # from previous operation
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "div",
@@ -421,7 +457,11 @@ class TestBigqueryOperations:
         output_name = "regex_ext"
 
         config = {
-            "input_name": "Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "Sheet1",
+                "source_name": None,
+            },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": {"NGO": "^[C].*"},
@@ -458,7 +498,18 @@ class TestBigqueryOperations:
         config = {
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
-            "tablenames": ["Sheet1", "Sheet2"],
+            "input_arr": [
+                {
+                    "input_type": "model",
+                    "input_name": "Sheet1",
+                    "source_name": None,
+                },
+                {
+                    "input_type": "model",
+                    "input_name": "Sheet2",
+                    "source_name": None,
+                },
+            ],
         }
 
         union_tables(

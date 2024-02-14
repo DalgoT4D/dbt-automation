@@ -5,7 +5,7 @@ This file contains the airthmetic operations for dbt automation
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
-
+from dbt_automation.utils.tableutils import source_or_ref
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -13,9 +13,11 @@ logger = getLogger()
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
 def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
-    """performs arithmetic operations: +/-/*//"""
+    """
+    performs arithmetic operations: +/-/*//
+    config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
+    """
     output_name = config["output_name"]
-    input_model = config["input_name"]
     dest_schema = config["dest_schema"]
     operator = config["operator"]
     operands = config["operands"]
@@ -69,7 +71,7 @@ def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
         dbt_code += ")}}"
         dbt_code += f" AS {output_col_name} "
 
-    dbt_code += " FROM " + "{{ref('" + input_model + "')}}" + "\n"
+    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
     logger.info(f"writing dbt model {dbt_code}")
     model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_code)
