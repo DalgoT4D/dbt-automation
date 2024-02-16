@@ -74,7 +74,6 @@ def arithmetic_dbt_sql(config: dict):
         dbt_code += f" AS {output_col_name} "
 
     dbt_code += f"\nFROM {{ref('{config['input']['source_name']}.{config['input']['input_name']}')}}\n"
-    dbt_code += ")\n"
 
     return dbt_code
 

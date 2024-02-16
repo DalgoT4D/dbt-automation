@@ -36,7 +36,6 @@ def union_tables_sql(config, warehouse: WarehouseInterface):
     relations += "]"
     dbt_code = ""
 
-    breakpoint()
     if config["input_arr"][0]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 

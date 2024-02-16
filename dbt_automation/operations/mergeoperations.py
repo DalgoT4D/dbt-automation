@@ -25,57 +25,47 @@ def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) 
         return "-- No operations specified, no SQL generated."
 
     cte_sql_list = []
-    cte_sql_list.append("{{ config(materialized='table',schema='intermediate') }}")
+    cte_counter = 1
 
     for operation in operations:
-        if operation["type"] == "castdatatypes":
-            cast_sql = cast_datatypes_sql(operation["config"], warehouse)
-            cte_sql_list.append(cast_sql)
+        cte_name = f"cte{cte_counter}"
+        cte_counter += 1
 
-        elif operation["type"] == "arithmetic":
-            arithmetic_sql = arithmetic_dbt_sql(operation["config"])
-            cte_sql_list.append(arithmetic_sql)
+        cte_sql = f"{cte_name} as (\n"
 
-        elif operation["type"] == "coalescecolumns":
-            coalesce_sql = coalesce_columns_dbt_sql(operation["config"], warehouse)
-            cte_sql_list.append(coalesce_sql)
+        if operation["type"] == "cte":
+            cte_sql += f"{operation['config']['sql']}\n"
+        else:
+            if operation["type"] == "castdatatypes":
+                cte_sql += cast_datatypes_sql(operation["config"], warehouse)
+            elif operation["type"] == "arithmetic":
+                cte_sql += arithmetic_dbt_sql(operation["config"])
+            elif operation["type"] == "coalescecolumns":
+                cte_sql += coalesce_columns_dbt_sql(operation["config"], warehouse)
+            elif operation["type"] == "concat":
+                cte_sql += concat_columns_dbt_sql(operation["config"], warehouse)
+            elif operation["type"] == "dropcolumns":
+                cte_sql += drop_columns_sql(operation["config"], warehouse)
+            elif operation["type"] == "renamecolumns":
+                cte_sql += rename_columns_dbt_sql(operation["config"], warehouse)
+            elif operation["type"] == "flattenjson":
+                cte_sql += flattenjson_dbt_sql(operation["config"], warehouse)
+            elif operation["type"] == "regexextraction":
+                cte_sql += regex_extraction_sql(operation["config"], warehouse)
+            elif operation["type"] == "union_tables":
+                cte_sql += union_tables_sql(operation["config"], warehouse)
 
-        elif operation["type"] == "concat":
-            concat_sql = concat_columns_dbt_sql(operation["config"], warehouse)
-            cte_sql_list.append(concat_sql)
-
-        elif operation["type"] == "dropcolumns":
-            drop_sql = drop_columns_sql(operation["config"], warehouse)
-            cte_sql_list.append(drop_sql)
-
-        elif operation["type"] == "renamecolumns":
-            rename_sql = rename_columns_dbt_sql(operation["config"], warehouse)
-            cte_sql_list.append(rename_sql)
-
-        elif operation["type"] == "flattenjson":
-            flatten_json_sql = flattenjson_dbt_sql(operation["config"], warehouse)
-            cte_sql_list.append(flatten_json_sql)
-
-        elif operation["type"] == "regexextraction":
-            regex_sql = regex_extraction_sql(operation["config"], warehouse)
-            cte_sql_list.append(regex_sql)
-
-        elif operation["type"] == "union_tables":
-            # Generate SQL for union_tables operation
-            union_sql = union_tables_sql(operation["config"], warehouse)
-            cte_sql_list.append(union_sql)
+        cte_sql += ")"
+        cte_sql_list.append(cte_sql)
 
     if not cte_sql_list:
         return "-- No SQL code generated for any operation."
 
-    sql = f",\n".join(cte_sql_list) + "\n\n"
+    sql = ",\n".join(cte_sql_list) + "\n\n"
 
-    if cte_sql_list:
-        last_output_name = operations[-1]["config"]["output_name"]
-        sql += f"-- Final SELECT statement combining the outputs of all CTEs\n"
-        sql += f"SELECT *\nFROM {last_output_name}"
-    else:
-        sql += "-- No operations specified, no SQL generated."
+    last_output_name = f"cte{len(cte_sql_list)}"
+    sql += "-- Final SELECT statement combining the outputs of all CTEs\n"
+    sql += f"SELECT *\nFROM {last_output_name}"
 
     return sql
 
