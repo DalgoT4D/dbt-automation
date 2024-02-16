@@ -15,6 +15,7 @@ from dbt_automation.operations.regexextraction import regex_extraction_sql
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.operations.castdatatypes import cast_datatypes_sql
+from dbt_automation.utils.tableutils import source_or_ref
 
 
 def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) -> str:
@@ -26,6 +27,9 @@ def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) 
 
     cte_sql_list = []
     cte_counter = 1
+
+    config_sql = "{{ config(materialized='table', schema='intermediate') }}"
+    cte_sql_list.append(config_sql)
 
     for operation in operations:
         cte_name = f"cte{cte_counter}"
@@ -61,6 +65,11 @@ def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) 
     if not cte_sql_list:
         return "-- No SQL code generated for any operation."
 
+    for i in range(1, len(cte_sql_list)):
+        previous_cte_name = f"cte{i}"
+        if "input" in operations[i - 1]["config"]:
+            select_from = source_or_ref(**operations[i - 1]["config"]["input"])
+            cte_sql_list[i] = cte_sql_list[i].replace(select_from, previous_cte_name)
     sql = ",\n".join(cte_sql_list) + "\n\n"
 
     last_output_name = f"cte{len(cte_sql_list)}"
