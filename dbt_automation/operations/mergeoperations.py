@@ -1,7 +1,6 @@
 from typing import List
 from dbt_automation.operations.arithmetic import arithmetic_dbt_sql
 from dbt_automation.operations.coalescecolumns import (
-    coalesce_columns,
     coalesce_columns_dbt_sql,
 )
 from dbt_automation.operations.concatcolumns import concat_columns_dbt_sql
@@ -62,17 +61,22 @@ def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) 
         cte_sql += ")"
         cte_sql_list.append(cte_sql)
 
+    cte_sql_list[1] = cte_sql_list[1].replace("cte1", "WITH cte1")
+
     if not cte_sql_list:
         return "-- No SQL code generated for any operation."
 
     for i in range(1, len(cte_sql_list)):
-        previous_cte_name = f"cte{i}"
-        if "input" in operations[i - 1]["config"]:
-            select_from = source_or_ref(**operations[i - 1]["config"]["input"])
-            cte_sql_list[i] = cte_sql_list[i].replace(select_from, previous_cte_name)
+        if "input" not in operations[i - 1]["config"]:
+            continue  # Skip this iteration if 'input' key is missing
+        previous_cte_name = f"cte{i-1}"
+        select_from = source_or_ref(**operations[i - 1]["config"]["input"])
+        cte_sql_list[i] = cte_sql_list[i].replace(
+            f" FROM {select_from}", f" FROM {previous_cte_name}"
+        )
     sql = ",\n".join(cte_sql_list) + "\n\n"
 
-    last_output_name = f"cte{len(cte_sql_list)}"
+    last_output_name = f"cte{len(cte_sql_list) - 1}"
     sql += "-- Final SELECT statement combining the outputs of all CTEs\n"
     sql += f"SELECT *\nFROM {last_output_name}"
 
