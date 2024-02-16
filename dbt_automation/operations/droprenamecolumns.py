@@ -12,13 +12,15 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
-    """drops columns from a model"""
+def drop_columns_sql(config: dict, warehouse: WarehouseInterface) -> str:
+    """
+    Generate SQL code for the drop_columns operation.
+    """
     dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
     output_model_name = config["output_name"]
 
-    model_code = f'{{{{ config(materialized="table", schema="{dest_schema}") }}}}\n'
+    model_code = f"WITH drop_column AS (\n"
     model_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
@@ -28,22 +30,31 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
     model_code += "])}}"
     model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+    return model_code
+
+
+def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) -> str:
+    """
+    Perform dropping of columns and generate a DBT model.
+    """
+    sql = drop_columns_sql(config, warehouse)
+
+    dbt_project = dbtProject(project_dir)
+    dbt_project.ensure_models_dir(config["dest_schema"])
+
+    output_model_name = config["output_name"]
+    dest_schema = config["dest_schema"]
+    model_sql_path = dbt_project.write_model(dest_schema, output_model_name, sql)
+
     return model_sql_path
 
 
-def rename_columns(config: dict, warehouse, project_dir: str):
-    """renames columns in a model"""
+def rename_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
+    """Generate SQL code for renaming columns in a model."""
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
-    output_model_name = config["output_name"]
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-
-    model_code = '{{ config(materialized="table", schema="' + dest_schema + '") }}\n\n'
+    model_code = f"WITH rename_column AS (\n"
     model_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
@@ -55,8 +66,23 @@ def rename_columns(config: dict, warehouse, project_dir: str):
     for old_name, new_name in columns.items():
         model_code += f"""{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, """
 
-    model_code = model_code[:-2]  # Remove trailing comma and space
+    model_code = model_code[:-2]
     model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+    return model_code
+
+
+def rename_columns(
+    config: dict, warehouse: WarehouseInterface, project_dir: str
+) -> str:
+    """Perform renaming of columns and generate a DBT model."""
+    dest_schema = config["dest_schema"]
+    output_model_name = config["output_name"]
+
+    sql = rename_columns_dbt_sql(config, warehouse)
+
+    dbtproject = dbtProject(project_dir)
+    dbtproject.ensure_models_dir(dest_schema)
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, sql)
+
     return model_sql_path
