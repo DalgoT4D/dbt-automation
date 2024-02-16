@@ -54,7 +54,11 @@ def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
             + quote_columnname(column["columnname"], warehouse.name)
         )
 
-    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
     return dbt_code
 

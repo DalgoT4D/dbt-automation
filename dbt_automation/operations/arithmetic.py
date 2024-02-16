@@ -73,7 +73,11 @@ def arithmetic_dbt_sql(config: dict):
         dbt_code += ")}}"
         dbt_code += f" AS {output_col_name} "
 
-    dbt_code += f"\nFROM {{ref('{config['input']['source_name']}.{config['input']['input_name']}')}}\n"
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
     return dbt_code
 

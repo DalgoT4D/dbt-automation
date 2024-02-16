@@ -37,7 +37,12 @@ def concat_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
     dbt_code += f"SELECT *, CONCAT({concat_fields}) AS {output_column_name}"
-    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
     return dbt_code
 

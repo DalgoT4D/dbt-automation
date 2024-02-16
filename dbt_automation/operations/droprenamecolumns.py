@@ -20,17 +20,20 @@ def drop_columns_sql(config: dict, warehouse: WarehouseInterface) -> str:
     columns = config.get("columns", [])
     output_model_name = config["output_name"]
 
-    model_code = f"WITH drop_column AS (\n"
-    model_code += (
+    dbt_code = (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
         + ", except=["
     )
-    model_code += ",".join([f'"{col}"' for col in columns])
-    model_code += "])}}"
-    model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    dbt_code += ",".join([f'"{col}"' for col in columns])
+    dbt_code += "])}}"
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
-    return model_code
+    return dbt_code
 
 
 def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) -> str:
@@ -71,7 +74,12 @@ def rename_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
         dbt_code += f"""{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, """
 
     dbt_code = dbt_code[:-2]
-    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    select_from = source_or_ref(**config["input"])
+
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
     return dbt_code
 

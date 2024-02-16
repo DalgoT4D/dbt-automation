@@ -42,7 +42,11 @@ def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += quote_columnname(column["columnname"], warehouse.name) + ", "
     dbt_code = dbt_code[:-2] + ") AS " + config["output_column_name"]
 
-    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
     return dbt_code
 
