@@ -34,7 +34,12 @@ def union_tables_sql(config, warehouse: WarehouseInterface):
         relations += f"{source_or_ref(**input)},"
     relations = relations[:-1]
     relations += "]"
-    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = ""
+
+    breakpoint()
+    if config["input_arr"][0]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+
     # pylint:disable=consider-using-f-string
     dbt_code += "{{ dbt_utils.union_relations("
     dbt_code += f"relations={relations}"

@@ -23,7 +23,11 @@ def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface):
     columnnames = [c["columnname"] for c in columns]
     output_name = config["output_name"]
 
-    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = ""
+
+    if config["input"]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+
     dbt_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])

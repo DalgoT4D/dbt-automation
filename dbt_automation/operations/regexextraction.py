@@ -12,7 +12,10 @@ def regex_extraction_sql(config: dict, warehouse: WarehouseInterface) -> str:
     columns = config.get("columns", {})
     dest_schema = config["dest_schema"]
 
-    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = ""
+
+    if config["input"]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
     for col_name, regex in columns.items():
         if warehouse.name == "postgres":

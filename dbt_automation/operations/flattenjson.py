@@ -29,7 +29,11 @@ def flattenjson_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     json_column = config["json_column"]
     json_columns_to_copy = config["json_columns_to_copy"]
 
-    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = ""
+
+    if config["input"]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+
     if columns_to_copy == "*":
         dbt_code += "SELECT *\n"
     else:

@@ -33,7 +33,11 @@ def arithmetic_dbt_sql(config: dict):
         raise ValueError("Division requires exactly two operands")
 
     # SQL generation logic
-    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = ""
+
+    if config["input"]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+
     dbt_code += "SELECT *, "
 
     if operator == "add":
