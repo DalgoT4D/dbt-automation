@@ -12,10 +12,9 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def arithmetic_dbt_sql(config: dict):
     """
-    performs arithmetic operations: +/-/*//
-    config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
+    Generate SQL code for the arithmetic operation.
     """
     output_name = config["output_name"]
     dest_schema = config["dest_schema"]
@@ -24,19 +23,17 @@ def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
     output_col_name = config["output_column_name"]
 
     if operator not in ["add", "sub", "mul", "div"]:
-        raise ValueError("unknown operation")
+        raise ValueError("Unknown operation")
 
-    if len(operands) <= 1:
-        raise ValueError("need atleast two operands to perform operations")
+    if len(operands) < 2:
+        raise ValueError("At least two operands are required to perform operations")
 
-    if operator == "div" and (len(operands) != 2):
-        raise ValueError("division needs exactly two operands")
+    if operator == "div" and len(operands) != 2:
+        raise ValueError("Division requires exactly two operands")
 
-    # setup the dbt project
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-
-    dbt_code = "{{ config(materialized='table',schema='" + dest_schema + "') }}\n"
+    # SQL generation logic
+    dbt_code = f"WITH {output_name} AS (\n"
+    dbt_code += "SELECT *, "
 
     if operator == "add":
         dbt_code += "SELECT *,"
@@ -71,10 +68,23 @@ def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
         dbt_code += ")}}"
         dbt_code += f" AS {output_col_name} "
 
-    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    dbt_code += f"\nFROM {{ref('{config['input']['source_name']}.{config['input']['input_name']}')}}\n"
+    dbt_code += ")\n"
 
-    logger.info(f"writing dbt model {dbt_code}")
-    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_code)
-    logger.info(f"dbt model {output_name} successfully created")
+    return dbt_code
+
+
+def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
+    """
+    Perform arithmetic operations and generate a DBT model.
+    """
+    sql = arithmetic_dbt_sql(config)
+
+    dbtproject = dbtProject(project_dir)
+    dbtproject.ensure_models_dir(config["dest_schema"])
+
+    model_sql_path = dbtproject.write_model(
+        config["dest_schema"], config["output_name"], sql
+    )
 
     return model_sql_path
