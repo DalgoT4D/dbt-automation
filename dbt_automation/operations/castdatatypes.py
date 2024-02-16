@@ -18,21 +18,18 @@ WAREHOUSE_COLUMN_TYPES = {
 
 
 # pylint:disable=logging-fstring-interpolation
-def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
     generates the model
     config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
     """
     dest_schema = config["dest_schema"]
+    columns = config.get("columns", [])
     output_name = config["output_name"]
-
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-
-    union_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
     columns = config["columns"]
     columnnames = [c["columnname"] for c in columns]
+    union_code = f"WITH {output_name} AS (\n"
     union_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
@@ -56,12 +53,21 @@ def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str
 
     union_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    logger.info(f"writing dbt model {union_code}")
-    model_sql_path = dbtproject.write_model(
-        dest_schema,
-        output_name,
-        union_code,
-    )
-    logger.info(f"dbt model {output_name} successfully created")
+    return union_code
+
+
+def cast_datatypes(
+    config: dict, warehouse: WarehouseInterface, project_dir: str
+) -> str:
+    """
+    Perform casting of data types and generate a DBT model.
+    """
+    sql = cast_datatypes_sql(config, warehouse)
+    dbt_project = dbtProject(project_dir)
+    dbt_project.ensure_models_dir(config["dest_schema"])
+
+    output_name = config["output_name"]
+    dest_schema = config["dest_schema"]
+    model_sql_path = dbt_project.write_model(dest_schema, output_name, sql)
 
     return model_sql_path
