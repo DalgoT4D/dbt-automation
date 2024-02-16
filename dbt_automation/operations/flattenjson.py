@@ -13,7 +13,7 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def flattenjson_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
     source_schema: name of the input schema
     input: input dictionary check operations.yaml.template
@@ -23,15 +23,13 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
     json_column: name of the json column to flatten
     json_columns_to_copy: list of columns to copy from the json_column
     """
-
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
     columns_to_copy = config["columns_to_copy"]
     json_column = config["json_column"]
     json_columns_to_copy = config["json_columns_to_copy"]
 
-    model_code = f'{{{{ config(materialized="table", schema="{dest_schema}") }}}}\n'
-
+    model_code = f"WITH {output_name} AS (\n"
     if columns_to_copy == "*":
         model_code += "SELECT *\n"
     else:
@@ -52,7 +50,20 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
 
     model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
+    return model_code
+
+
+def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
+    """
+    Flatten JSON columns.
+    """
+    sql_code = flattenjson_dbt_sql(config, warehouse)
+
+    dest_schema = config["dest_schema"]
+    output_name = config["output_name"]
+
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    model_sql_path = dbtproject.write_model(dest_schema, output_name, model_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_name, sql_code)
+
     return model_sql_path
