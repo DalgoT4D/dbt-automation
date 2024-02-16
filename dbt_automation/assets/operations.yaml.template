@@ -130,3 +130,106 @@ operations:
         columns:
           column1: <regex operation>
           column2: <regex operation>
+
+    - type: mergeoperations
+      config:
+        operations:
+          - type: castdatatypes
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: cast_output
+              columns:
+                - columnname: <column_name>
+                  columntype: <column_type>
+          - type: arithmetic
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              output_name: arithmetic_output
+              dest_schema: <intermediate_schema>
+              operator: <operator>
+              operands:
+                - <operand1>
+                - <operand2>
+                - <operand3>
+              output_column_name: <output_column_name>
+          - type: coalescecolumns
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: coalesce_columns
+              columns:
+                - columnname: <column_name>
+                - columnname: <column_name>
+              output_column_name: <output_column_name>
+          - type: concat
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: concat
+              columns:
+                - name: <column_name>
+                  is_col: <yes_or_no>
+                - name: <column_name>
+                  is_col: <yes_or_no>
+                - name: <column_name>
+                  is_col: <yes_or_no>
+              output_column_name: <output_column_name>
+          - type: dropcolumns
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: drop_column
+              columns:
+                - <column_name>
+          - type: renamecolumns
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: rename_column
+              columns:
+                <old_column_name>: <new_column_name>
+          - type: flattenjson
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: flatten_json
+              columns_to_copy:
+                - <column_name>
+                - <column_name>
+              json_column: <json_column>
+              json_columns_to_copy:
+                - <json_column_name>
+                - <json_column_name>
+          - type: regexextraction
+            config:
+              input:
+                input_type: <source_type>
+                input_name: <source_name>
+                source_name: <source_name>
+              dest_schema: <intermediate_schema>
+              output_name: regex_extraction
+              columns:
+                <column_name>: <regex_pattern>
+                <column_name>: <regex_pattern>
