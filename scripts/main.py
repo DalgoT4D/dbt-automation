@@ -8,9 +8,11 @@ from logging import basicConfig, getLogger, INFO
 import json
 import yaml
 from dotenv import load_dotenv
+from dbt_automation.operations.arithmetic import arithmetic
+from dbt_automation.operations.mergeoperations import merge_operations
+from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.droprenamecolumns import drop_columns, rename_columns
-from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.operations.coalescecolumns import coalesce_columns
 from dbt_automation.operations.concatcolumns import concat_columns
@@ -19,7 +21,6 @@ from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
-from dbt_automation.operations.scaffold import scaffold
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -34,6 +35,7 @@ OPERATIONS_DICT = {
     "renamecolumns": rename_columns,
     "regexextraction": regex_extraction,
     "scaffold": scaffold,
+    "mergeoperations": merge_operations,
 }
 
 load_dotenv("./../dbconnection.env")
