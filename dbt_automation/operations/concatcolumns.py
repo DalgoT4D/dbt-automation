@@ -12,20 +12,16 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def concat_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
-    This function generates dbt model to concat strings
+    Generate SQL code for the concat_columns operation.
     """
-    logger.info("here in concat columns")
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
     output_column_name = config["output_column_name"]
     columns = config["columns"]
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-
-    dbt_code = "{{ config(materialized='table', schema='" + dest_schema + "') }}\n"
+    dbt_code = f"WITH {output_name} AS (\n"
     concat_fields = ",".join(
         [
             (
@@ -39,5 +35,22 @@ def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str
     dbt_code += f"SELECT *, CONCAT({concat_fields}) AS {output_column_name}"
     dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_code)
+    return dbt_code
+
+
+def concat_columns(
+    config: dict, warehouse: WarehouseInterface, project_dir: str
+) -> str:
+    """
+    Perform concatenation of columns and generate a DBT model.
+    """
+    sql = concat_columns_dbt_sql(config, warehouse)
+
+    dbt_project = dbtProject(project_dir)
+    dbt_project.ensure_models_dir(config["dest_schema"])
+
+    model_sql_path = dbt_project.write_model(
+        config["dest_schema"], config["output_name"], sql
+    )
+
     return model_sql_path
