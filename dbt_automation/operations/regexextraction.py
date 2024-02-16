@@ -6,18 +6,12 @@ from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterfa
 from dbt_automation.utils.tableutils import source_or_ref
 
 
-def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def regex_extraction_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """given a regex and a column name, extract the regex from the column"""
-    dest_schema = config["dest_schema"]
+    output_name = config["output_name"]
     columns = config.get("columns", {})
-    output_model_name = config["output_name"]
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-
-    model_code = (
-        f"{{{{ config(materialized='table', schema='{dest_schema}') }}}}\n\nSELECT "
-    )
+    model_code = f"WITH {output_name} AS (\n"
 
     for col_name, regex in columns.items():
         if warehouse.name == "postgres":
@@ -36,6 +30,23 @@ def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: s
     )
 
     model_code += "\n FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    return model_code
 
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+
+def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: str):
+    """
+    Generate DBT model file for regex extraction.
+    """
+    output_model_sql = regex_extraction_sql(config, warehouse)
+
+    dest_schema = config["dest_schema"]
+    output_model_name = config["output_name"]
+
+    dbtproject = dbtProject(project_dir)
+    dbtproject.ensure_models_dir(dest_schema)
+
+    model_sql_path = dbtproject.write_model(
+        dest_schema, output_model_name, output_model_sql
+    )
+
     return model_sql_path
