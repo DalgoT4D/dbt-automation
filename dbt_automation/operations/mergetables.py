@@ -16,46 +16,47 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def union_tables(config, warehouse: WarehouseInterface, project_dir):
-    """generates a dbt model which uses the dbt_utils union_relations macro to union tables"""
+def union_tables_sql(config, warehouse: WarehouseInterface):
+    """Generates SQL code for unioning tables using the dbt_utils union_relations macro."""
     input_arr = config["input_arr"]
     dest_schema = config["dest_schema"]
-    output_model_name = config["output_name"]
 
     names = set()
     for input in input_arr:
         name = source_or_ref(**input)
         if name in names:
-            logger.error("this appears more than once %s ", name)
-            raise ValueError("duplicate inputs found")
+            logger.error("This appears more than once: %s", name)
+            raise ValueError("Duplicate inputs found")
         names.add(name)
 
-    logger.info("no duplicate inputs found")
-
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-    logger.info("created the dbt project object")
-
-    # pylint:disable=invalid-name
-    logger.info(f"processing all the inputs")
     relations = "["
     for input in input_arr:
         relations += f"{source_or_ref(**input)},"
     relations = relations[:-1]
     relations += "]"
-    union_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
     # pylint:disable=consider-using-f-string
-    union_code += "{{ dbt_utils.union_relations("
-    union_code += f"relations={relations}"
-    union_code += ")}}"
+    dbt_code += "{{ dbt_utils.union_relations("
+    dbt_code += f"relations={relations}"
+    dbt_code += ")}}"
 
-    logger.info(f"writing dbt model {union_code}")
+    return dbt_code
+
+
+def union_tables(config, warehouse: WarehouseInterface, project_dir):
+    """Generates a dbt model which uses the dbt_utils union_relations macro to union tables."""
+    output_model_name = config["output_name"]
+
+    union_code = union_tables_sql(config, warehouse)
+
+    dbtproject = dbtProject(project_dir)
+    dbtproject.ensure_models_dir(config["dest_schema"])
+
     model_sql_path = dbtproject.write_model(
-        dest_schema,
+        config["dest_schema"],
         output_model_name,
         union_code,
     )
-    logger.info(f"dbt model {output_model_name} successfully created")
 
     return model_sql_path
 

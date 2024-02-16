@@ -10,6 +10,7 @@ from dbt_automation.operations.droprenamecolumns import (
     rename_columns_dbt_sql,
 )
 from dbt_automation.operations.flattenjson import flattenjson_dbt_sql
+from dbt_automation.operations.mergetables import union_tables_sql
 from dbt_automation.operations.regexextraction import regex_extraction_sql
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
@@ -24,6 +25,7 @@ def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) 
         return "-- No operations specified, no SQL generated."
 
     cte_sql_list = []
+    cte_sql_list.append("{{ config(materialized='table',schema='intermediate') }}")
 
     for operation in operations:
         if operation["type"] == "castdatatypes":
@@ -58,11 +60,15 @@ def merge_operations_sql(operations: List[dict], warehouse: WarehouseInterface) 
             regex_sql = regex_extraction_sql(operation["config"], warehouse)
             cte_sql_list.append(regex_sql)
 
+        elif operation["type"] == "union_tables":
+            # Generate SQL for union_tables operation
+            union_sql = union_tables_sql(operation["config"], warehouse)
+            cte_sql_list.append(union_sql)
+
     if not cte_sql_list:
         return "-- No SQL code generated for any operation."
 
-    sql = f"{{{{ config(materialized='table', schema='intermediate') }}}}\n"
-    sql += f",\n".join(cte_sql_list) + "\n\n"
+    sql = f",\n".join(cte_sql_list) + "\n\n"
 
     if cte_sql_list:
         last_output_name = operations[-1]["config"]["output_name"]

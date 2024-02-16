@@ -29,11 +29,11 @@ def flattenjson_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     json_column = config["json_column"]
     json_columns_to_copy = config["json_columns_to_copy"]
 
-    model_code = f"WITH {output_name} AS (\n"
+    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
     if columns_to_copy == "*":
-        model_code += "SELECT *\n"
+        dbt_code += "SELECT *\n"
     else:
-        model_code += f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in columns_to_copy])}\n"
+        dbt_code += f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in columns_to_copy])}\n"
 
     # json_columns = warehouse.get_json_columnspec(source_schema, input_name, json_column)
 
@@ -44,13 +44,13 @@ def flattenjson_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     sql_columns = dedup_list(sql_columns)
 
     for json_field, sql_column in zip(json_columns_to_copy, sql_columns):
-        model_code += (
+        dbt_code += (
             "," + warehouse.json_extract_op(json_column, json_field, sql_column) + "\n"
         )
 
-    model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    return model_code
+    return dbt_code
 
 
 def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):

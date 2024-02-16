@@ -23,24 +23,24 @@ def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface):
     columnnames = [c["columnname"] for c in columns]
     output_name = config["output_name"]
 
-    union_code = f"WITH {output_name} AS (\n"
-    union_code += (
+    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
         + ", except=["
     )
-    union_code += ",".join([f'"{columnname}"' for columnname in columnnames])
-    union_code += "])}}"
+    dbt_code += ",".join([f'"{columnname}"' for columnname in columnnames])
+    dbt_code += "])}}"
 
-    union_code += ", COALESCE("
+    dbt_code += ", COALESCE("
 
     for column in config["columns"]:
-        union_code += quote_columnname(column["columnname"], warehouse.name) + ", "
-    union_code = union_code[:-2] + ") AS " + config["output_column_name"]
+        dbt_code += quote_columnname(column["columnname"], warehouse.name) + ", "
+    dbt_code = dbt_code[:-2] + ") AS " + config["output_column_name"]
 
-    union_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    return union_code
+    return dbt_code
 
 
 def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):

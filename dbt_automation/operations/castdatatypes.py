@@ -20,8 +20,7 @@ WAREHOUSE_COLUMN_TYPES = {
 # pylint:disable=logging-fstring-interpolation
 def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
-    generates the model
-    config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
+    Generate SQL code for the cast_datatypes operation.
     """
     dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
@@ -29,20 +28,24 @@ def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
 
     columns = config["columns"]
     columnnames = [c["columnname"] for c in columns]
-    union_code = f"WITH {output_name} AS (\n"
-    union_code += (
+    dbt_code = ""
+
+    if config["input"]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+
+    dbt_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
         + ", except=["
     )
-    union_code += ",".join([f'"{columnname}"' for columnname in columnnames])
-    union_code += "])}}"
+    dbt_code += ",".join([f'"{columnname}"' for columnname in columnnames])
+    dbt_code += "])}}"
 
     for column in columns:
         warehouse_column_type = WAREHOUSE_COLUMN_TYPES[warehouse.name].get(
             column["columntype"], column["columntype"]
         )
-        union_code += (
+        dbt_code += (
             ", CAST("
             + quote_columnname(column["columnname"], warehouse.name)
             + " AS "
@@ -51,9 +54,9 @@ def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
             + quote_columnname(column["columnname"], warehouse.name)
         )
 
-    union_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    return union_code
+    return dbt_code
 
 
 def cast_datatypes(

@@ -54,22 +54,22 @@ def rename_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
 
-    model_code = f"WITH rename_column AS (\n"
-    model_code += (
+    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code += (
         "SELECT {{dbt_utils.star(from="
         + source_or_ref(**config["input"])
         + ", except=["
     )
-    model_code += ",".join([f'"{col}"' for col in columns.keys()])
-    model_code += "])}} , "
+    dbt_code += ",".join([f'"{col}"' for col in columns.keys()])
+    dbt_code += "])}} , "
 
     for old_name, new_name in columns.items():
-        model_code += f"""{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, """
+        dbt_code += f"""{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, """
 
-    model_code = model_code[:-2]
-    model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
+    dbt_code = dbt_code[:-2]
+    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    return model_code
+    return dbt_code
 
 
 def rename_columns(

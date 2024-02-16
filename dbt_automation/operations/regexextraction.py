@@ -10,18 +10,19 @@ def regex_extraction_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """given a regex and a column name, extract the regex from the column"""
     output_name = config["output_name"]
     columns = config.get("columns", {})
+    dest_schema = config["dest_schema"]
 
-    model_code = f"WITH {output_name} AS (\n"
+    dbt_code = f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
     for col_name, regex in columns.items():
         if warehouse.name == "postgres":
-            model_code += f"""substring({quote_columnname(col_name, warehouse.name)}
+            dbt_code += f"""substring({quote_columnname(col_name, warehouse.name)}
                             FROM '{regex}') AS {quote_columnname(col_name, warehouse.name)}, """
         elif warehouse.name == "bigquery":
-            model_code += f"""REGEXP_EXTRACT({quote_columnname(col_name, warehouse.name)}, r'{regex}')
+            dbt_code += f"""REGEXP_EXTRACT({quote_columnname(col_name, warehouse.name)}, r'{regex}')
                             AS {quote_columnname(col_name, warehouse.name)}, """
 
-    model_code += (
+    dbt_code += (
         "{{ dbt_utils.star(from="
         + source_or_ref(**config["input"])
         + ", except=["
@@ -29,8 +30,12 @@ def regex_extraction_sql(config: dict, warehouse: WarehouseInterface) -> str:
         + "]) }}"
     )
 
-    model_code += "\n FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
-    return model_code
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+    return dbt_code
 
 
 def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: str):
