@@ -14,7 +14,8 @@ logger = getLogger()
 # pylint:disable=unused-argument,logging-fstring-interpolation
 def arithmetic_dbt_sql(config: dict):
     """
-    Generate SQL code for the arithmetic operation.
+    performs arithmetic operations: +/-/*//
+    config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
     """
     output_name = config["output_name"]
     dest_schema = config["dest_schema"]
