@@ -17,6 +17,8 @@ def regex_extraction_sql(config: dict, warehouse: WarehouseInterface) -> str:
     if config["input"]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
+    dbt_code += f"\nSELECT "
+
     for col_name, regex in columns.items():
         if warehouse.name == "postgres":
             dbt_code += f"""substring({quote_columnname(col_name, warehouse.name)}
