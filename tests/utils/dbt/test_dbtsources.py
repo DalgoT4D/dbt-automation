@@ -1,7 +1,6 @@
 import pytest
 import yaml
 import os
-from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.dbtsources import (
     readsourcedefinitions,
     mergesource,
