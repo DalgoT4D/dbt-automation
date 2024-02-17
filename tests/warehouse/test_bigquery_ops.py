@@ -109,16 +109,16 @@ class TestBigqueryOperations:
             wc_client,
             TestBigqueryOperations.test_project_dir,
         )
-        TestBigqueryOperations.execute_dbt("run", "Sheet1")
-        TestBigqueryOperations.execute_dbt("run", "Sheet2")
+        TestBigqueryOperations.execute_dbt("run", "_airbyte_raw_Sheet1")
+        TestBigqueryOperations.execute_dbt("run", "_airbyte_raw_Sheet2")
         logger.info("inside test flatten")
         logger.info(
             f"inside project directory : {TestBigqueryOperations.test_project_dir}"
         )
-        assert "Sheet1" in TestBigqueryOperations.wc_client.get_tables(
+        assert "_airbyte_raw_Sheet1" in TestBigqueryOperations.wc_client.get_tables(
             "pytest_intermediate"
         )
-        assert "Sheet2" in TestBigqueryOperations.wc_client.get_tables(
+        assert "_airbyte_raw_Sheet1" in TestBigqueryOperations.wc_client.get_tables(
             "pytest_intermediate"
         )
 
@@ -129,7 +129,7 @@ class TestBigqueryOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -159,7 +159,7 @@ class TestBigqueryOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -186,7 +186,7 @@ class TestBigqueryOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -213,7 +213,9 @@ class TestBigqueryOperations:
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
         assert "ngo_spoc" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 5)
-        col_data_original = wc_client.get_table_data("pytest_intermediate", "Sheet1", 5)
+        col_data_original = wc_client.get_table_data(
+            "pytest_intermediate", "_airbyte_raw_Sheet1", 5
+        )
         col_data_original.sort(key=lambda x: x["_airbyte_ab_id"])
         col_data.sort(key=lambda x: x["_airbyte_ab_id"])
         # TODO: can do a stronger check here; by checking on rows in a loop
@@ -231,7 +233,7 @@ class TestBigqueryOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -277,7 +279,7 @@ class TestBigqueryOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -459,7 +461,7 @@ class TestBigqueryOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -477,7 +479,9 @@ class TestBigqueryOperations:
 
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
         assert "NGO" in cols
-        table_data_org = wc_client.get_table_data("pytest_intermediate", "Sheet1", 10)
+        table_data_org = wc_client.get_table_data(
+            "pytest_intermediate", "_airbyte_raw_Sheet1", 10
+        )
         table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
         table_data_regex = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10
@@ -501,12 +505,12 @@ class TestBigqueryOperations:
             "input_arr": [
                 {
                     "input_type": "model",
-                    "input_name": "Sheet1",
+                    "input_name": "_airbyte_raw_Sheet1",
                     "source_name": None,
                 },
                 {
                     "input_type": "model",
-                    "input_name": "Sheet2",
+                    "input_name": "_airbyte_raw_Sheet2",
                     "source_name": None,
                 },
             ],
@@ -520,8 +524,12 @@ class TestBigqueryOperations:
 
         TestBigqueryOperations.execute_dbt("run", output_name)
 
-        table_data1 = wc_client.get_table_data("pytest_intermediate", "Sheet1", 10)
-        table_data2 = wc_client.get_table_data("pytest_intermediate", "Sheet2", 10)
+        table_data1 = wc_client.get_table_data(
+            "pytest_intermediate", "_airbyte_raw_Sheet1", 10
+        )
+        table_data2 = wc_client.get_table_data(
+            "pytest_intermediate", "_airbyte_raw_Sheet2", 10
+        )
         table_data_union = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10
         )
