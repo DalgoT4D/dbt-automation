@@ -113,8 +113,8 @@ class TestPostgresOperations:
             wc_client,
             TestPostgresOperations.test_project_dir,
         )
-        TestPostgresOperations.execute_dbt("run")
-        # TestPostgresOperations.execute_dbt("run", "Sheet2")
+        TestPostgresOperations.execute_dbt("run", "_airbyte_raw_Sheet1")
+        TestPostgresOperations.execute_dbt("run", "_airbyte_raw_Sheet2")
         logger.info("inside test flatten")
         logger.info(
             f"inside project directory : {TestPostgresOperations.test_project_dir}"
