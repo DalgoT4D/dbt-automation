@@ -113,16 +113,16 @@ class TestPostgresOperations:
             wc_client,
             TestPostgresOperations.test_project_dir,
         )
-        TestPostgresOperations.execute_dbt("run", "Sheet1")
-        TestPostgresOperations.execute_dbt("run", "Sheet2")
+        TestPostgresOperations.execute_dbt("run", "_airbyte_raw_Sheet1")
+        TestPostgresOperations.execute_dbt("run", "_airbyte_raw_Sheet2")
         logger.info("inside test flatten")
         logger.info(
             f"inside project directory : {TestPostgresOperations.test_project_dir}"
         )
-        assert "Sheet1" in TestPostgresOperations.wc_client.get_tables(
+        assert "_airbyte_raw_Sheet1" in TestPostgresOperations.wc_client.get_tables(
             "pytest_intermediate"
         )
-        assert "Sheet2" in TestPostgresOperations.wc_client.get_tables(
+        assert "_airbyte_raw_Sheet2" in TestPostgresOperations.wc_client.get_tables(
             "pytest_intermediate"
         )
 
@@ -133,7 +133,7 @@ class TestPostgresOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -163,7 +163,7 @@ class TestPostgresOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -190,7 +190,7 @@ class TestPostgresOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -218,7 +218,9 @@ class TestPostgresOperations:
         assert "ngo_spoc" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         col_data_original = wc_client.get_table_data(
-            "pytest_intermediate", quote_columnname("Sheet1", "postgres"), 1
+            "pytest_intermediate",
+            quote_columnname("_airbyte_raw_Sheet1", "postgres"),
+            1,
         )
         assert (
             col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
@@ -234,7 +236,7 @@ class TestPostgresOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -280,7 +282,7 @@ class TestPostgresOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -463,7 +465,7 @@ class TestPostgresOperations:
         config = {
             "input": {
                 "input_type": "model",
-                "input_name": "Sheet1",
+                "input_name": "_airbyte_raw_Sheet1",
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
@@ -482,7 +484,9 @@ class TestPostgresOperations:
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
         assert "NGO" in cols
         table_data_org = wc_client.get_table_data(
-            "pytest_intermediate", quote_columnname("Sheet1", "postgres"), 10
+            "pytest_intermediate",
+            quote_columnname("_airbyte_raw_Sheet1", "postgres"),
+            10,
         )
         table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
         table_data_regex = wc_client.get_table_data(
@@ -507,12 +511,12 @@ class TestPostgresOperations:
             "input_arr": [
                 {
                     "input_type": "model",
-                    "input_name": "Sheet1",
+                    "input_name": "_airbyte_raw_Sheet1",
                     "source_name": None,
                 },
                 {
                     "input_type": "model",
-                    "input_name": "Sheet2",
+                    "input_name": "_airbyte_raw_Sheet2",
                     "source_name": None,
                 },
             ],
@@ -527,10 +531,14 @@ class TestPostgresOperations:
         TestPostgresOperations.execute_dbt("run", output_name)
 
         table_data1 = wc_client.get_table_data(
-            "pytest_intermediate", quote_columnname("Sheet1", "postgres"), 10
+            "pytest_intermediate",
+            quote_columnname("_airbyte_raw_Sheet1", "postgres"),
+            10,
         )
         table_data2 = wc_client.get_table_data(
-            "pytest_intermediate", quote_columnname("Sheet2", "postgres"), 10
+            "pytest_intermediate",
+            quote_columnname("_airbyte_raw_Sheet2", "postgres"),
+            10,
         )
         table_data_union = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10

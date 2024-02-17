@@ -11,7 +11,7 @@ def mksourcedefinition(sourcename: str, input_schema: str, tables: list):
     source = {"name": sourcename, "schema": input_schema, "tables": []}
 
     for tablename in tables:
-        cleaned_name = tablename.replace(airbyte_prefix, "")
+        cleaned_name = tablename
         source["tables"].append(
             {
                 "name": cleaned_name,

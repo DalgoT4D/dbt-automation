@@ -39,8 +39,8 @@ def test_mk_source_definition():
     sourcedefinition = mksourcedefinition(sourcename, input_schema, tables)
     assert sourcedefinition["sources"][0]["name"] == sourcename
     assert sourcedefinition["sources"][0]["schema"] == input_schema
-    assert sourcedefinition["sources"][0]["tables"][0]["name"] == "Sheet1"
-    assert sourcedefinition["sources"][0]["tables"][1]["name"] == "Sheet2"
+    assert sourcedefinition["sources"][0]["tables"][0]["name"] == "_airbyte_raw_Sheet1"
+    assert sourcedefinition["sources"][0]["tables"][1]["name"] == "_airbyte_raw_Sheet2"
 
 
 def test_get_source(sources_yaml, tmpdir):
