@@ -19,13 +19,13 @@ def flattenjson_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     input: input dictionary check operations.yaml.template
     dest_schema: name of the output schema
     output_name: name of the output model
-    columns_to_copy: list of columns to copy from the input model
+    source_columns: list of columns to copy from the input model
     json_column: name of the json column to flatten
     json_columns_to_copy: list of columns to copy from the json_column
     """
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
-    columns_to_copy = config["columns_to_copy"]
+    source_columns = config["source_columns"]
     json_column = config["json_column"]
     json_columns_to_copy = config["json_columns_to_copy"]
 
@@ -34,10 +34,10 @@ def flattenjson_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     if config["input"]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
-    if columns_to_copy == "*":
+    if source_columns == "*":
         dbt_code += "SELECT *\n"
     else:
-        dbt_code += f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in columns_to_copy])}\n"
+        dbt_code += f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
 
     # json_columns = warehouse.get_json_columnspec(source_schema, input_name, json_column)
 
