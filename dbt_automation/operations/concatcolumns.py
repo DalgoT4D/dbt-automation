@@ -20,29 +20,27 @@ def concat_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     output_name = config["output_name"]
     output_column_name = config["output_column_name"]
     columns = config["columns"]
+    source_columns = config["source_columns"]
 
-    concat_fields = ",".join(
-        [
-            (
-                quote_columnname(col["name"], warehouse.name)
-                if col["is_col"] in ["yes", True, "y"]
-                else f"'{col['name']}'"
-            )
-            for col in columns
-        ]
-    )
+    columns_to_concat = [col["name"] for col in columns]
+
+    concat_fields = ",".join(columns_to_concat)
+
     dbt_code = ""
 
     if config["input"]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
-    dbt_code += f"SELECT *, CONCAT({concat_fields}) AS {output_column_name}"
+    dbt_code += "SELECT " + ", ".join(
+        [quote_columnname(col, warehouse.name) for col in source_columns]
+    )
+    dbt_code += f", CONCAT({concat_fields}) AS {quote_columnname(output_column_name, warehouse.name)}"
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
-        dbt_code += "\n FROM " + select_from + "\n"
+        dbt_code += f"\nFROM {select_from}\n"
     else:
-        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+        dbt_code += f"\nFROM {{{{ {select_from} }}}}\n"
 
     return dbt_code
 
