@@ -12,15 +12,13 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface):
+def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
     Generate SQL code for the coalesce_columns operation.
     """
-
     dest_schema = config["dest_schema"]
-
-    columns = config["columns"]
-    columnnames = [c["columnname"] for c in columns]
+    columns = config.get("columns", [])
+    source_columns = config["source_columns"]
     output_name = config["output_name"]
 
     dbt_code = ""
@@ -28,25 +26,29 @@ def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface):
     if config["input"]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
+    dbt_code += "SELECT\n"
+
+    select_from = source_or_ref(**config["input"])
+
+    for column in source_columns:
+        if column in [c["columnname"] for c in columns]:
+            dbt_code += f"COALESCE({quote_columnname(column, warehouse.name)}, NULL) AS {quote_columnname(column, warehouse.name)},\n"
+        else:
+            dbt_code += f"{quote_columnname(column, warehouse.name)},\n"
+
     dbt_code += (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
+        f"COALESCE("
+        + ", ".join(
+            [quote_columnname(c["columnname"], warehouse.name) for c in columns]
+        )
+        + f") AS {quote_columnname(output_name, warehouse.name)}\n"
     )
-    dbt_code += ",".join([f'"{columnname}"' for columnname in columnnames])
-    dbt_code += "])}}"
-
-    dbt_code += ", COALESCE("
-
-    for column in config["columns"]:
-        dbt_code += quote_columnname(column["columnname"], warehouse.name) + ", "
-    dbt_code = dbt_code[:-2] + ") AS " + config["output_column_name"]
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
-        dbt_code += "\n FROM " + select_from + "\n"
+        dbt_code += f"FROM {select_from}\n"
     else:
-        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+        dbt_code += f"FROM {{{{{select_from}}}}}\n"
 
     return dbt_code
 
