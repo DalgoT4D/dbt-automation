@@ -36,6 +36,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema: <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         columns_to_copy:
           - column1
           - column2
@@ -52,6 +57,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema: <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         columns:
           - columnname: <column name>
             columntype: <type to cast column to>
@@ -63,6 +73,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema: <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         columns:
           - columnname: <first column>
           - columnname: <second column>
@@ -76,6 +91,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema: <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         columns:
           - name: <string (column or const)>
             is_col: <yes or no>
@@ -94,6 +114,11 @@ operations:
         output_name: <enter the name of the output model>
         dest_schema: <enter your destination/output schema>
         operator: <can be "add", "sub", "mul", "div">
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         operands:
           - <name of the 1st column>
           - <name of the 2nd column or a const value>
@@ -107,6 +132,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema:  <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         columns:
           - <column name>
     - type: renamecolumns
@@ -117,6 +147,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema:  <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+              - ...
         columns:
           <old column name>: <new column name>
     - type: regexextraction
@@ -127,6 +162,11 @@ operations:
           source_name: <name of the source defined in source.yml; will be null for type "model">
         dest_schema:  <destination schema>
         output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
         columns:
           column1: <regex operation>
           column2: <regex operation>
@@ -142,6 +182,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: cast_output
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               columns:
                 - columnname: <column_name>
                   columntype: <column_type>
@@ -154,6 +199,11 @@ operations:
               output_name: arithmetic_output
               dest_schema: <intermediate_schema>
               operator: <operator>
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               operands:
                 - <operand1>
                 - <operand2>
@@ -167,6 +217,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: coalesce_columns
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               columns:
                 - columnname: <column_name>
                 - columnname: <column_name>
@@ -179,6 +234,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: concat
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               columns:
                 - name: <column_name>
                   is_col: <yes_or_no>
@@ -195,6 +255,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: drop_column
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+          - ...
               columns:
                 - <column_name>
           - type: renamecolumns
@@ -205,6 +270,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: rename_column
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               columns:
                 <old_column_name>: <new_column_name>
           - type: flattenjson
@@ -215,6 +285,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: flatten_json
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               columns_to_copy:
                 - <column_name>
                 - <column_name>
@@ -230,6 +305,11 @@ operations:
                 source_name: <source_name>
               dest_schema: <intermediate_schema>
               output_name: regex_extraction
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
               columns:
                 <column_name>: <regex_pattern>
                 <column_name>: <regex_pattern>
