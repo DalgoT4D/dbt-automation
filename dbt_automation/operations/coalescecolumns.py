@@ -12,7 +12,11 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
+def coalesce_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+    config_sql: str,
+) -> str:
     """
     Generate SQL code for the coalesce_columns operation.
     """
@@ -23,8 +27,7 @@ def coalesce_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str
 
     dbt_code = ""
 
-    if config["input"]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = config_sql + "\n"
 
     dbt_code += "SELECT\n"
 
@@ -57,7 +60,13 @@ def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: s
     """
     Perform coalescing of columns and generate a DBT model.
     """
-    sql = coalesce_columns_dbt_sql(config, warehouse)
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = coalesce_columns_dbt_sql(config, warehouse, config_sql)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])

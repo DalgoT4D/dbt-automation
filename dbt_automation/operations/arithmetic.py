@@ -14,13 +14,11 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
+def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface, config_sql: str):
     """
     performs arithmetic operations: +/-/*//
     config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
     """
-    output_name = config["output_name"]
-    dest_schema = config["dest_schema"]
     operator = config["operator"]
     operands = config["operands"]
     output_col_name = config["output_column_name"]
@@ -36,9 +34,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         raise ValueError("Division requires exactly two operands")
 
     dbt_code = ""
-
-    if config["input"]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = config_sql + "\n"
 
     dbt_code += "SELECT "
 
@@ -92,7 +88,13 @@ def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Perform arithmetic operations and generate a DBT model.
     """
-    sql = arithmetic_dbt_sql(config, warehouse)
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = arithmetic_dbt_sql(config, warehouse, config_sql)
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(config["dest_schema"])

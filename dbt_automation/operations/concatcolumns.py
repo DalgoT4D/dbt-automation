@@ -12,12 +12,15 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def concat_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
+def concat_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+    config_sql: str,
+) -> str:
     """
     Generate SQL code for the concat_columns operation.
     """
     dest_schema = config["dest_schema"]
-    output_name = config["output_name"]
     output_column_name = config["output_column_name"]
     columns = config["columns"]
     source_columns = config["source_columns"]
@@ -27,9 +30,7 @@ def concat_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     concat_fields = ",".join(columns_to_concat)
 
     dbt_code = ""
-
-    if config["input"]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = config_sql + "\n"
 
     dbt_code += "SELECT " + ", ".join(
         [quote_columnname(col, warehouse.name) for col in source_columns]
@@ -51,7 +52,13 @@ def concat_columns(
     """
     Perform concatenation of columns and generate a DBT model.
     """
-    sql = concat_columns_dbt_sql(config, warehouse)
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = concat_columns_dbt_sql(config, warehouse, config_sql)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])

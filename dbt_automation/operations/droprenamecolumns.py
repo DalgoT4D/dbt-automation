@@ -12,7 +12,11 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def drop_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
+def drop_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+    config_sql: str,
+) -> str:
     """
     Generate SQL code for dropping columns from the source.
     """
@@ -23,9 +27,8 @@ def drop_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     columns_to_drop = [col for col in source_columns if col not in columns]
 
     dbt_code = ""
+    dbt_code = config_sql + "\n"
 
-    if config["input"]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
     dbt_code += "SELECT " + ", ".join(
         [quote_columnname(col, warehouse.name) for col in columns_to_drop]
     )
@@ -43,7 +46,13 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) 
     """
     Perform dropping of columns and generate a DBT model.
     """
-    sql = drop_columns_dbt_sql(config, warehouse)
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = drop_columns_dbt_sql(config, warehouse, config_sql)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
@@ -55,16 +64,18 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) 
     return model_sql_path
 
 
-def rename_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
+def rename_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+    config_sql: str,
+) -> str:
     """Generate SQL code for renaming columns in a model."""
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
     source_columns = config["source_columns"]
 
     dbt_code = ""
-
-    if config["input"]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code = config_sql + "\n"
 
     dbt_code += "SELECT " + ", ".join([f'"{col}"' for col in source_columns]) + ", "
 
@@ -88,8 +99,13 @@ def rename_columns(
     """Perform renaming of columns and generate a DBT model."""
     dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
 
-    sql = rename_columns_dbt_sql(config, warehouse)
+    sql = rename_columns_dbt_sql(config, warehouse, config_sql)
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)

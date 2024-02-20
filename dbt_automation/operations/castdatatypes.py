@@ -19,7 +19,11 @@ WAREHOUSE_COLUMN_TYPES = {
 
 
 # pylint:disable=logging-fstring-interpolation
-def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
+def cast_datatypes_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+    config_sql: str,
+) -> str:
     """
     Generate SQL code for the cast_datatypes operation.
     """
@@ -29,8 +33,7 @@ def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
 
     dbt_code = ""
 
-    if config["input"]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code += config_sql + "\n"  # Include the configuration SQL
 
     dbt_code += "SELECT\n"
 
@@ -66,7 +69,13 @@ def cast_datatypes(
     """
     Perform casting of data types and generate a DBT model.
     """
-    sql = cast_datatypes_sql(config, warehouse)
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = cast_datatypes_sql(config, warehouse, config_sql)
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
 

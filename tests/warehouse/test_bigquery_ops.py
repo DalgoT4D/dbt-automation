@@ -135,6 +135,7 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": {"NGO": "ngo", "Month": "month"},
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         rename_columns(
@@ -165,6 +166,7 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": ["MONTH"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         drop_columns(
@@ -199,6 +201,7 @@ class TestBigqueryOperations:
                     "columnname": "SPOC",
                 },
             ],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "ngo_spoc",
         }
 
@@ -252,6 +255,7 @@ class TestBigqueryOperations:
                     "is_col": "no",
                 },
             ],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "concat_col",
         }
 
@@ -294,6 +298,7 @@ class TestBigqueryOperations:
                     "columntype": "int",
                 },
             ],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         cast_datatypes(
@@ -328,6 +333,7 @@ class TestBigqueryOperations:
             "operator": "add",
             "operands": ["measure1", "measure2"],
             "output_column_name": "add_col",
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         arithmetic(
@@ -362,6 +368,7 @@ class TestBigqueryOperations:
             "operator": "sub",
             "operands": ["measure1", "measure2"],
             "output_column_name": "sub_col",
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         arithmetic(
@@ -396,6 +403,7 @@ class TestBigqueryOperations:
             "operator": "mul",
             "operands": ["measure1", "measure2"],
             "output_column_name": "mul_col",
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         arithmetic(
@@ -430,6 +438,7 @@ class TestBigqueryOperations:
             "operator": "div",
             "operands": ["measure1", "measure2"],
             "output_column_name": "div_col",
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         arithmetic(
@@ -467,6 +476,7 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": {"NGO": "^[C].*"},
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         regex_extraction(
@@ -514,6 +524,7 @@ class TestBigqueryOperations:
                     "source_name": None,
                 },
             ],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
 
         union_tables(
