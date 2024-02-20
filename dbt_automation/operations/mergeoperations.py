@@ -5,7 +5,7 @@ from dbt_automation.operations.coalescecolumns import (
 )
 from dbt_automation.operations.concatcolumns import concat_columns_dbt_sql
 from dbt_automation.operations.droprenamecolumns import (
-    drop_columns_sql,
+    drop_columns_dbt_sql,
     rename_columns_dbt_sql,
 )
 from dbt_automation.operations.flattenjson import flattenjson_dbt_sql
@@ -18,7 +18,10 @@ from dbt_automation.utils.tableutils import source_or_ref
 
 
 def merge_operations_sql(
-    operations: List[dict], warehouse: WarehouseInterface, source_name
+    operations: List[dict],
+    warehouse: WarehouseInterface,
+    source_name: str,
+    config_sql: str,
 ) -> str:
     """
     Generate SQL code by merging SQL code from multiple operations.
@@ -29,7 +32,6 @@ def merge_operations_sql(
     cte_sql_list = []
     cte_counter = 1
 
-    config_sql = "{{ config(materialized='table', schema='intermediate') }}"
     cte_sql_list.append(config_sql)
 
     for operation in operations:
@@ -44,13 +46,13 @@ def merge_operations_sql(
             if operation["type"] == "castdatatypes":
                 cte_sql += cast_datatypes_sql(operation["config"], warehouse)
             elif operation["type"] == "arithmetic":
-                cte_sql += arithmetic_dbt_sql(operation["config"])
+                cte_sql += arithmetic_dbt_sql(operation["config"], warehouse)
             elif operation["type"] == "coalescecolumns":
                 cte_sql += coalesce_columns_dbt_sql(operation["config"], warehouse)
             elif operation["type"] == "concat":
                 cte_sql += concat_columns_dbt_sql(operation["config"], warehouse)
             elif operation["type"] == "dropcolumns":
-                cte_sql += drop_columns_sql(operation["config"], warehouse)
+                cte_sql += drop_columns_dbt_sql(operation["config"], warehouse)
             elif operation["type"] == "renamecolumns":
                 cte_sql += rename_columns_dbt_sql(operation["config"], warehouse)
             elif operation["type"] == "flattenjson":
@@ -71,16 +73,16 @@ def merge_operations_sql(
     for i in range(1, len(cte_sql_list)):
         if "input" not in operations[i - 1]["config"]:
             continue  # Skip this iteration if 'input' key is missing
-        previous_cte_name = f"cte{i-1}"
+        previous_cte_name = f"cte{i - 1}"
         select_from = source_or_ref(**operations[i - 1]["config"]["input"])
         cte_sql_list[i] = cte_sql_list[i].replace(
-            f" FROM {select_from}", f" FROM {previous_cte_name}"
+            f"{select_from}", f"{previous_cte_name}"
         )
-    # Replace cte0 with actual source name
-    cte_sql_list[1] = cte_sql_list[1].replace("cte0", source_name)
 
-    # Join all CTEs with a comma
-    sql = ",\n".join(cte_sql_list) + "\n\n"
+    cte_sql_list[1] = cte_sql_list[1].replace("cte0", f"{{{{ref('{source_name}')}}}}")
+
+    sql = ",\n".join(cte_sql_list[1:]) + "\n\n"
+    sql = f"{cte_sql_list[0]}\n{sql}"
 
     last_output_name = f"cte{len(cte_sql_list) - 1}"
     sql += "-- Final SELECT statement combining the outputs of all CTEs\n"
@@ -97,10 +99,13 @@ def merge_operations(
     """
     Perform merging of operations and generate a DBT model.
     """
+    config_sql = "{{ config(materialized='table', schema='intermediate') }}"
+
     sql = merge_operations_sql(
         config["operations"],
         warehouse,
         source_name=config["operations"][0]["config"]["input"]["source_name"],
+        config_sql=config_sql,
     )
 
     destination_schema = config["operations"][0]["config"].get(
