@@ -5,6 +5,7 @@ from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
+from dbt_automation.utils.postgres import PostgresClient
 from dbt_automation.utils.tableutils import source_or_ref
 
 
@@ -24,41 +25,37 @@ def cast_datatypes_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
     dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
-    output_name = config["output_name"]
+    source_columns = config["source_columns"]
 
-    columns = config["columns"]
-    columnnames = [c["columnname"] for c in columns]
     dbt_code = ""
 
     if config["input"]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
-    dbt_code += (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
-    )
-    dbt_code += ",".join([f'"{columnname}"' for columnname in columnnames])
-    dbt_code += "])}}"
+    dbt_code += "SELECT\n"
+
+    select_from = source_or_ref(**config["input"])
+
+    cast_columnnames = [c["columnname"] for c in columns]
+
+    for column in source_columns:
+        if column not in cast_columnnames:
+            dbt_code += f"{quote_columnname(column, warehouse.name)},\n"
 
     for column in columns:
-        warehouse_column_type = WAREHOUSE_COLUMN_TYPES[warehouse.name].get(
-            column["columntype"], column["columntype"]
-        )
-        dbt_code += (
-            ", CAST("
-            + quote_columnname(column["columnname"], warehouse.name)
-            + " AS "
-            + warehouse_column_type
-            + ") AS "
-            + quote_columnname(column["columnname"], warehouse.name)
-        )
+        if "columntype" in column:
+            warehouse_column_type = WAREHOUSE_COLUMN_TYPES[warehouse.name].get(
+                column["columntype"], column["columntype"]
+            )
+            dbt_code += f"CAST({quote_columnname(column['columnname'], warehouse.name)} AS {warehouse_column_type}) AS {quote_columnname(column['columnname'], warehouse.name)},\n"
+
+    dbt_code = dbt_code.rstrip(",\n") + "\n"
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
-        dbt_code += "\n FROM " + select_from + "\n"
+        dbt_code += f"FROM {select_from}\n"
     else:
-        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+        dbt_code += f"FROM {{{{{select_from}}}}}\n"
 
     return dbt_code
 
