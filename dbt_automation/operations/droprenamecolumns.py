@@ -12,26 +12,29 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def drop_columns_sql(config: dict, warehouse: WarehouseInterface) -> str:
+def drop_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """
-    Generate SQL code for the drop_columns operation.
+    Generate SQL code for dropping columns from the source.
     """
     dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
-    output_model_name = config["output_name"]
+    source_columns = config["source_columns"]
 
-    dbt_code = (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
+    columns_to_drop = [col for col in source_columns if col not in columns]
+
+    dbt_code = ""
+
+    if config["input"]["input_type"] != "cte":
+        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
+    dbt_code += "SELECT " + ", ".join(
+        [quote_columnname(col, warehouse.name) for col in columns_to_drop]
     )
-    dbt_code += ",".join([f'"{col}"' for col in columns])
-    dbt_code += "])}}"
+
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
-        dbt_code += "\n FROM " + select_from + "\n"
+        dbt_code += f"\nFROM {select_from}\n"
     else:
-        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+        dbt_code += f"\nFROM {{{{ {select_from} }}}}\n"
 
     return dbt_code
 
@@ -40,7 +43,7 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) 
     """
     Perform dropping of columns and generate a DBT model.
     """
-    sql = drop_columns_sql(config, warehouse)
+    sql = drop_columns_dbt_sql(config, warehouse)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
@@ -56,24 +59,19 @@ def rename_columns_dbt_sql(config: dict, warehouse: WarehouseInterface) -> str:
     """Generate SQL code for renaming columns in a model."""
     dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
+    source_columns = config["source_columns"]
 
     dbt_code = ""
 
     if config["input"]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
-    dbt_code += (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
-    )
-    dbt_code += ",".join([f'"{col}"' for col in columns.keys()])
-    dbt_code += "])}} , "
+    dbt_code += "SELECT " + ", ".join([f'"{col}"' for col in source_columns]) + ", "
 
     for old_name, new_name in columns.items():
-        dbt_code += f"""{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, """
+        dbt_code += f"{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, "
 
-    dbt_code = dbt_code[:-2]
+    dbt_code = dbt_code[:-2]  # Remove trailing comma and space
     select_from = source_or_ref(**config["input"])
 
     if config["input"]["input_type"] == "cte":
