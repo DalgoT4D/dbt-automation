@@ -25,7 +25,9 @@ def concat_columns_dbt_sql(
     columns = config["columns"]
     source_columns = config["source_columns"]
 
-    columns_to_concat = [col["name"] for col in columns]
+    columns_to_concat = [
+        col["name"] for col in columns if col.get("is_col", "yes") == "yes"
+    ]
 
     concat_fields = ",".join(columns_to_concat)
 

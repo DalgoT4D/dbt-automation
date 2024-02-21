@@ -134,8 +134,8 @@ class TestBigqueryOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
-            "columns": {"NGO": "ngo", "Month": "month"},
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+            "columns": {"NGO": "ngo", "Month": "month"},
         }
 
         rename_columns(
@@ -181,7 +181,7 @@ class TestBigqueryOperations:
         assert "MONTH" not in cols
 
     def test_coalescecolumns(self):
-        """test coalescecolumns"""
+        """Test coalescecolumns"""
         wc_client = TestBigqueryOperations.wc_client
         output_name = "coalesce"
 
@@ -202,7 +202,7 @@ class TestBigqueryOperations:
                 },
             ],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
-            "output_column_name": "ngo_spoc",
+            "output_column_name": "coalesce",
         }
 
         coalesce_columns(
@@ -214,16 +214,16 @@ class TestBigqueryOperations:
         TestBigqueryOperations.execute_dbt("run", output_name)
 
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-        assert "ngo_spoc" in cols
+        assert "coalesce" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 5)
         col_data_original = wc_client.get_table_data(
             "pytest_intermediate", "_airbyte_raw_Sheet1", 5
         )
-        col_data_original.sort(key=lambda x: x["_airbyte_ab_id"])
-        col_data.sort(key=lambda x: x["_airbyte_ab_id"])
+        col_data_original.sort(key=lambda x: x["Month"])
+        col_data.sort(key=lambda x: x["Month"])
         # TODO: can do a stronger check here; by checking on rows in a loop
         assert (
-            col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
+            col_data[0]["coalesce"] == col_data_original[0]["NGO"]
             if col_data_original[0]["NGO"] is not None
             else col_data_original[0]["SPOC"]
         )
@@ -255,7 +255,7 @@ class TestBigqueryOperations:
                     "is_col": "no",
                 },
             ],
-            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+            "source_columns": ["NGO", "SPOC", "measure1", "measure2", "Indicator"],
             "output_column_name": "concat_col",
         }
 
@@ -271,8 +271,7 @@ class TestBigqueryOperations:
         assert "concat_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
-            table_data[0]["concat_col"]
-            == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
+            table_data[0]["concat_col"] == table_data[0]["NGO"] + table_data[0]["SPOC"]
         )
 
     def test_castdatatypes(self):
@@ -492,11 +491,11 @@ class TestBigqueryOperations:
         table_data_org = wc_client.get_table_data(
             "pytest_intermediate", "_airbyte_raw_Sheet1", 10
         )
-        table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_org.sort(key=lambda x: x["Month"])
         table_data_regex = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10
         )
-        table_data_regex.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_regex.sort(key=lambda x: x["Month"])
         for regex, org in zip(table_data_regex, table_data_org):
             assert (
                 regex["NGO"] == org["NGO"]

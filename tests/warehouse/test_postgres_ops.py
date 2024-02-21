@@ -138,6 +138,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": {"NGO": "ngo", "Month": "month"},
         }
 
@@ -168,6 +169,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": ["MONTH"],
         }
 
@@ -195,6 +197,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": [
                 {
                     "columnname": "NGO",
@@ -203,7 +206,7 @@ class TestPostgresOperations:
                     "columnname": "SPOC",
                 },
             ],
-            "output_column_name": "ngo_spoc",
+            "output_column_name": "coalesce",
         }
 
         coalesce_columns(
@@ -215,7 +218,7 @@ class TestPostgresOperations:
         TestPostgresOperations.execute_dbt("run", output_name)
 
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-        assert "ngo_spoc" in cols
+        assert "coalesce" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         col_data_original = wc_client.get_table_data(
             "pytest_intermediate",
@@ -223,7 +226,7 @@ class TestPostgresOperations:
             1,
         )
         assert (
-            col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
+            col_data[0]["coalesce"] == col_data_original[0]["NGO"]
             if col_data_original[0]["NGO"] is not None
             else col_data_original[0]["SPOC"]
         )
@@ -241,6 +244,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": [
                 {
                     "name": "NGO",
@@ -287,6 +291,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": [
                 {
                     "columnname": "measure1",
@@ -330,6 +335,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "add",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "add_col",
         }
 
@@ -364,6 +370,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "sub",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "sub_col",
         }
 
@@ -398,6 +405,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "mul",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "mul_col",
         }
 
@@ -432,6 +440,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "div",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "div_col",
         }
 
@@ -470,6 +479,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": {"NGO": "^[C].*"},
         }
 
@@ -508,6 +518,7 @@ class TestPostgresOperations:
         config = {
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "input_arr": [
                 {
                     "input_type": "model",
