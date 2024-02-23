@@ -28,7 +28,9 @@ def concat_columns_dbt_sql(
         col["name"] for col in columns if col.get("is_col", "yes") == "yes"
     ]
 
-    concat_fields = ",".join(columns_to_concat)
+    concat_fields = ",".join(
+        [quote_columnname(col, warehouse.name) for col in columns_to_concat]
+    )
 
     dbt_code = ""
     dbt_code = config_sql + "\n"

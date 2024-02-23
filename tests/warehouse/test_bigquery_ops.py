@@ -772,3 +772,8 @@ class TestBigqueryOperations:
             table_data[0]["add_col"]
             == table_data[0]["measure1"] + table_data[0]["measure2"]
         )
+
+        assert (
+            table_data[0]["concat_col"]
+            == table_data[0]["NGO"] + table_data[0]["Indicator"]
+        )

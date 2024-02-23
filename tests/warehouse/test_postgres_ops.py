@@ -246,7 +246,14 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
-            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+            "source_columns": [
+                "NGO",
+                "SPOC",
+                "Month",
+                "measure1",
+                "measure2",
+                "Indicator",
+            ],
             "columns": [
                 {
                     "name": "NGO",
@@ -276,8 +283,7 @@ class TestPostgresOperations:
         assert "concat_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
-            table_data[0]["concat_col"]
-            == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
+            table_data[0]["concat_col"] == table_data[0]["NGO"] + table_data[0]["SPOC"]
         )
 
     def test_castdatatypes(self):
@@ -500,11 +506,11 @@ class TestPostgresOperations:
             quote_columnname("_airbyte_raw_Sheet1", "postgres"),
             10,
         )
-        table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_org.sort(key=lambda x: x["Month"])
         table_data_regex = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10
         )
-        table_data_regex.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_regex.sort(key=lambda x: x["Month"])
         for regex, org in zip(table_data_regex, table_data_org):
             assert (
                 regex["NGO"] == org["NGO"]
@@ -780,4 +786,9 @@ class TestPostgresOperations:
         assert (
             table_data[0]["add_col"]
             == table_data[0]["measure1"] + table_data[0]["measure2"]
+        )
+
+        assert (
+            table_data[0]["concat_col"]
+            == table_data[0]["NGO"] + table_data[0]["Indicator"]
         )
