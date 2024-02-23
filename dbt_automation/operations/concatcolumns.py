@@ -20,7 +20,6 @@ def concat_columns_dbt_sql(
     """
     Generate SQL code for the concat_columns operation.
     """
-    dest_schema = config["dest_schema"]
     output_column_name = config["output_column_name"]
     columns = config["columns"]
     source_columns = config["source_columns"]

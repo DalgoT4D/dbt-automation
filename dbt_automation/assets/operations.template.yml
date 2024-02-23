@@ -173,6 +173,9 @@ operations:
 
     - type: mergeoperations
       config:
+        dest_schema: <destination_schema>
+        output_name: mergeoperation
+        source_name: <name of the source defined in source.yml; will be null for type "model">
         operations:
           - type: castdatatypes
             config:
