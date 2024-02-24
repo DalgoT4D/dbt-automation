@@ -16,7 +16,6 @@ logger = getLogger()
 def flattenjson_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """
     source_schema: name of the input schema
@@ -27,19 +26,14 @@ def flattenjson_dbt_sql(
     json_column: name of the json column to flatten
     json_columns_to_copy: list of columns to copy from the json_column
     """
-    dest_schema = config["dest_schema"]
-    output_name = config["output_name"]
     source_columns = config["source_columns"]
     json_column = config["json_column"]
     json_columns_to_copy = config["json_columns_to_copy"]
 
-    dbt_code = ""
-    dbt_code = config_sql + "\n"
-
     if source_columns == "*":
-        dbt_code += "SELECT *\n"
+        dbt_code = "SELECT *\n"
     else:
-        dbt_code += f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
+        dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
 
     # json_columns = warehouse.get_json_columnspec(source_schema, input_name, json_column)
 
@@ -67,14 +61,14 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Flatten JSON columns.
     """
-    config_sql = (
-        "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
-    )
 
+    config_sql = ""
     if config["input"]["input_type"] != "cte":
-        config_sql = ""
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
 
-    sql_code = flattenjson_dbt_sql(config, warehouse, config_sql)
+    sql_code = config_sql + "\n" + flattenjson_dbt_sql(config, warehouse)
 
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]

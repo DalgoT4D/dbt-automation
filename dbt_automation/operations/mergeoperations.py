@@ -38,28 +38,28 @@ def merge_operations_sql(
         cte_sql = f"{', ' if cte_counter > 2 else ''}{cte_name} as (\n"
 
         if operation["type"] == "castdatatypes":
-            cte_sql += cast_datatypes_sql(operation["config"], warehouse, "")
+            cte_sql += cast_datatypes_sql(operation["config"], warehouse)
         elif operation["type"] == "arithmetic":
-            cte_sql += arithmetic_dbt_sql(operation["config"], warehouse, "")
+            cte_sql += arithmetic_dbt_sql(operation["config"], warehouse)
         elif operation["type"] == "coalescecolumns":
-            cte_sql += coalesce_columns_dbt_sql(operation["config"], warehouse, "")
+            cte_sql += coalesce_columns_dbt_sql(operation["config"], warehouse)
         elif operation["type"] == "concat":
-            cte_sql += concat_columns_dbt_sql(operation["config"], warehouse, "")
+            cte_sql += concat_columns_dbt_sql(operation["config"], warehouse)
         elif operation["type"] == "dropcolumns":
-            cte_sql += drop_columns_dbt_sql(operation["config"], warehouse, "")
+            cte_sql += drop_columns_dbt_sql(operation["config"], warehouse)
         elif operation["type"] == "renamecolumns":
-            cte_sql += rename_columns_dbt_sql(operation["config"], warehouse, "")
+            cte_sql += rename_columns_dbt_sql(operation["config"], warehouse)
         elif operation["type"] == "flattenjson":
-            cte_sql += flattenjson_dbt_sql(operation["config"], warehouse, "")
+            cte_sql += flattenjson_dbt_sql(operation["config"], warehouse)
         elif operation["type"] == "regexextraction":
-            cte_sql += regex_extraction_sql(operation["config"], warehouse, "")
+            cte_sql += regex_extraction_sql(operation["config"], warehouse)
         elif operation["type"] == "union_tables":
-            cte_sql += union_tables_sql(operation["config"], warehouse, "")
+            cte_sql += union_tables_sql(operation["config"], warehouse)
 
         cte_sql += ")"
         cte_sql_list.append(cte_sql)
 
-    cte_sql_list[0] = cte_sql_list[0].replace(f"cte1", f"WITH cte1")
+    cte_sql_list[0] = cte_sql_list[0].replace("cte1", "WITH cte1")
 
     if not cte_sql_list:
         return "-- No SQL code generated for any operation."

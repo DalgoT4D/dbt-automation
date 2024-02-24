@@ -15,7 +15,6 @@ logger = getLogger()
 def concat_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """
     Generate SQL code for the concat_columns operation.
@@ -32,10 +31,7 @@ def concat_columns_dbt_sql(
         [quote_columnname(col, warehouse.name) for col in columns_to_concat]
     )
 
-    dbt_code = ""
-    dbt_code = config_sql + "\n"
-
-    dbt_code += "SELECT " + ", ".join(
+    dbt_code = "SELECT " + ", ".join(
         [quote_columnname(col, warehouse.name) for col in source_columns]
     )
     dbt_code += f", CONCAT({concat_fields}) AS {quote_columnname(output_column_name, warehouse.name)}"
@@ -61,7 +57,7 @@ def concat_columns(
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = concat_columns_dbt_sql(config, warehouse, config_sql)
+    sql = config_sql + "\n" + concat_columns_dbt_sql(config, warehouse)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])

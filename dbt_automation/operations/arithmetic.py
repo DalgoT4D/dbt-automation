@@ -14,7 +14,7 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface, config_sql: str):
+def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
     """
     performs arithmetic operations: +/-/*//
     config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
@@ -33,10 +33,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface, config_sql: 
     if operator == "div" and len(operands) != 2:
         raise ValueError("Division requires exactly two operands")
 
-    dbt_code = ""
-    dbt_code = config_sql + "\n"
-
-    dbt_code += "SELECT "
+    dbt_code = "SELECT "
 
     dbt_code += ", ".join(
         [quote_columnname(col, warehouse.name) for col in source_columns]
@@ -94,7 +91,7 @@ def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = arithmetic_dbt_sql(config, warehouse, config_sql)
+    sql = config_sql + "\n" + arithmetic_dbt_sql(config, warehouse)
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(config["dest_schema"])

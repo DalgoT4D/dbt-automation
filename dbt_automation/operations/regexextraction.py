@@ -9,18 +9,12 @@ from dbt_automation.utils.tableutils import source_or_ref
 def regex_extraction_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """Given a regex and a column name, extract the regex from the column."""
-    output_name = config["output_name"]
     columns = config.get("columns", {})
     source_columns = config["source_columns"]
-    dest_schema = config["dest_schema"]
 
-    dbt_code = ""
-    dbt_code = config_sql + "\n"
-
-    dbt_code += f"\nSELECT "
+    dbt_code = f"\nSELECT "
 
     select_expressions = []
 
@@ -64,7 +58,7 @@ def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: s
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    output_model_sql = regex_extraction_sql(config, warehouse, config_sql)
+    output_model_sql = config_sql + "\n" + regex_extraction_sql(config, warehouse)
 
     dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]

@@ -15,21 +15,15 @@ logger = getLogger()
 def coalesce_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """
     Generate SQL code for the coalesce_columns operation.
     """
-    dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
     source_columns = config["source_columns"]
     output_name = config["output_name"]
 
-    dbt_code = ""
-
-    dbt_code = config_sql + "\n"
-
-    dbt_code += "SELECT\n"
+    dbt_code = "SELECT\n"
 
     select_from = source_or_ref(**config["input"])
 
@@ -40,7 +34,7 @@ def coalesce_columns_dbt_sql(
             dbt_code += f"{quote_columnname(column, warehouse.name)},\n"
 
     dbt_code += (
-        f"COALESCE("
+        "COALESCE("
         + ", ".join(
             [quote_columnname(c["columnname"], warehouse.name) for c in columns]
         )
@@ -66,7 +60,7 @@ def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: s
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = coalesce_columns_dbt_sql(config, warehouse, config_sql)
+    sql = config_sql + "\n" + coalesce_columns_dbt_sql(config, warehouse)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])

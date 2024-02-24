@@ -22,20 +22,14 @@ WAREHOUSE_COLUMN_TYPES = {
 def cast_datatypes_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """
     Generate SQL code for the cast_datatypes operation.
     """
-    dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
     source_columns = config["source_columns"]
 
-    dbt_code = ""
-
-    dbt_code += config_sql + "\n"  # Include the configuration SQL
-
-    dbt_code += "SELECT\n"
+    dbt_code = "SELECT\n"
 
     select_from = source_or_ref(**config["input"])
 
@@ -75,7 +69,7 @@ def cast_datatypes(
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = cast_datatypes_sql(config, warehouse, config_sql)
+    sql = config_sql + "\n" + cast_datatypes_sql(config, warehouse)
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
 

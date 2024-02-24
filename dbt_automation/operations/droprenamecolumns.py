@@ -15,21 +15,16 @@ logger = getLogger()
 def drop_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """
     Generate SQL code for dropping columns from the source.
     """
-    dest_schema = config["dest_schema"]
     columns = config.get("columns", [])
     source_columns = config["source_columns"]
 
     columns_to_drop = [col for col in source_columns if col not in columns]
 
-    dbt_code = ""
-    dbt_code = config_sql + "\n"
-
-    dbt_code += "SELECT " + ", ".join(
+    dbt_code = "SELECT " + ", ".join(
         [quote_columnname(col, warehouse.name) for col in columns_to_drop]
     )
 
@@ -52,7 +47,7 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) 
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = drop_columns_dbt_sql(config, warehouse, config_sql)
+    sql = config_sql + "\n" + drop_columns_dbt_sql(config, warehouse)
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
@@ -67,18 +62,13 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) 
 def rename_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-    config_sql: str,
 ) -> str:
     """Generate SQL code for renaming columns in a model."""
-    dest_schema = config["dest_schema"]
     columns = config.get("columns", {})
     source_columns = config["source_columns"]
 
-    dbt_code = ""
-    dbt_code = config_sql + "\n"
-
     selected_columns = [col for col in source_columns if col not in columns]
-    dbt_code += (
+    dbt_code = (
         "SELECT "
         + ", ".join([quote_columnname(col, warehouse.name) for col in selected_columns])
         + ", "
@@ -111,7 +101,7 @@ def rename_columns(
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = rename_columns_dbt_sql(config, warehouse, config_sql)
+    sql = config_sql + "\n" + rename_columns_dbt_sql(config, warehouse)
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
