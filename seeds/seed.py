@@ -1,13 +1,12 @@
 """This script seeds airbyte's raw data into test warehouse"""
 
-import argparse, os
-from logging import basicConfig, getLogger, INFO
-from dbt_automation.utils.warehouseclient import get_client
-from dotenv import load_dotenv
-import csv
-from pathlib import Path
+import argparse
+import os
 import json
+from logging import basicConfig, getLogger, INFO
 from google.cloud import bigquery
+from dotenv import load_dotenv
+from dbt_automation.utils.warehouseclient import get_client
 
 
 basicConfig(level=INFO)
@@ -21,9 +20,6 @@ warehouse = args.warehouse
 
 load_dotenv("dbconnection.env")
 
-tablename = "_airbyte_raw_Sheet1"
-json_file = "seeds/sample_sheet1.json"
-
 for json_file, tablename in zip(
     ["seeds/sample_sheet1.json", "seeds/sample_sheet2.json"],
     ["_airbyte_raw_Sheet1", "_airbyte_raw_Sheet2"],
@@ -31,7 +27,7 @@ for json_file, tablename in zip(
     logger.info("seeding %s into %s", json_file, tablename)
 
     data = []
-    with open(json_file, "r") as file:
+    with open(json_file, "r", encoding="utf-8") as file:
         data = json.load(file)
 
     columns = ["_airbyte_ab_id", "_airbyte_data", "_airbyte_emitted_at"]
@@ -99,7 +95,7 @@ for json_file, tablename in zip(
 
         logger.info("creating the dataset")
         dataset = wc_client.bqclient.create_dataset(dataset, timeout=30, exists_ok=True)
-        logger.info("created dataset : {}".format(dataset.dataset_id))
+        logger.info("created dataset: %s", dataset.dataset_id)
 
         # create the staging table if its does not exist
         table_schema = [

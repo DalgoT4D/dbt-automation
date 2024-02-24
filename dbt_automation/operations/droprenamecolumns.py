@@ -12,51 +12,99 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
-    """drops columns from a model"""
-    dest_schema = config["dest_schema"]
+def drop_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+) -> str:
+    """
+    Generate SQL code for dropping columns from the source.
+    """
     columns = config.get("columns", [])
-    output_model_name = config["output_name"]
+    source_columns = config["source_columns"]
 
-    model_code = f'{{{{ config(materialized="table", schema="{dest_schema}") }}}}\n'
-    model_code += (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
+    columns_to_drop = [col for col in source_columns if col not in columns]
+
+    dbt_code = "SELECT " + ", ".join(
+        [quote_columnname(col, warehouse.name) for col in columns_to_drop]
     )
-    model_code += ",".join([f'"{col}"' for col in columns])
-    model_code += "])}}"
-    model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += f"\nFROM {select_from}\n"
+    else:
+        dbt_code += f"\nFROM {{{{ {select_from} }}}}\n"
+
+    return dbt_code
+
+
+def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str) -> str:
+    """
+    Perform dropping of columns and generate a DBT model.
+    """
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = config_sql + "\n" + drop_columns_dbt_sql(config, warehouse)
+
+    dbt_project = dbtProject(project_dir)
+    dbt_project.ensure_models_dir(config["dest_schema"])
+
+    output_model_name = config["output_name"]
+    dest_schema = config["dest_schema"]
+    model_sql_path = dbt_project.write_model(dest_schema, output_model_name, sql)
+
     return model_sql_path
 
 
-def rename_columns(config: dict, warehouse, project_dir: str):
-    """renames columns in a model"""
-    dest_schema = config["dest_schema"]
+def rename_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+) -> str:
+    """Generate SQL code for renaming columns in a model."""
     columns = config.get("columns", {})
+    source_columns = config["source_columns"]
+
+    selected_columns = [col for col in source_columns if col not in columns]
+    dbt_code = (
+        "SELECT "
+        + ", ".join([quote_columnname(col, warehouse.name) for col in selected_columns])
+        + ", "
+    )
+
+    # Rename columns
+    for old_name, new_name in columns.items():
+        dbt_code += f"{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, "
+
+    dbt_code = dbt_code[:-2]  # Remove trailing comma and space
+    select_from = source_or_ref(**config["input"])
+
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+
+    return dbt_code
+
+
+def rename_columns(
+    config: dict, warehouse: WarehouseInterface, project_dir: str
+) -> str:
+    """Perform renaming of columns and generate a DBT model."""
+    dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = config_sql + "\n" + rename_columns_dbt_sql(config, warehouse)
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, sql)
 
-    model_code = '{{ config(materialized="table", schema="' + dest_schema + '") }}\n\n'
-    model_code += (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
-    )
-    model_code += ",".join([f'"{col}"' for col in columns.keys()])
-    model_code += "])}} , "
-
-    for old_name, new_name in columns.items():
-        model_code += f"""{quote_columnname(old_name, warehouse.name)} AS {quote_columnname(new_name, warehouse.name)}, """
-
-    model_code = model_code[:-2]  # Remove trailing comma and space
-    model_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
-
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
     return model_sql_path

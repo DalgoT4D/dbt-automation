@@ -6,36 +6,68 @@ from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterfa
 from dbt_automation.utils.tableutils import source_or_ref
 
 
-def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: str):
-    """given a regex and a column name, extract the regex from the column"""
-    dest_schema = config["dest_schema"]
+def regex_extraction_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+) -> str:
+    """Given a regex and a column name, extract the regex from the column."""
     columns = config.get("columns", {})
+    source_columns = config["source_columns"]
+
+    dbt_code = f"\nSELECT "
+
+    select_expressions = []
+
+    for col_name in source_columns:
+        if col_name in columns:
+            regex = columns[col_name]
+            if warehouse.name == "postgres":
+                select_expressions.append(
+                    f"substring({quote_columnname(col_name, warehouse.name)} FROM '{regex}') AS {quote_columnname(col_name, warehouse.name)}"
+                )
+            elif warehouse.name == "bigquery":
+                select_expressions.append(
+                    f"REGEXP_EXTRACT({quote_columnname(col_name, warehouse.name)}, r'{regex}') AS {quote_columnname(col_name, warehouse.name)}"
+                )
+
+    dbt_code += ", ".join(select_expressions)
+
+    non_regex_columns = [col for col in source_columns if col not in columns]
+    dbt_code += ", " + ", ".join(
+        [quote_columnname(col, warehouse.name) for col in non_regex_columns]
+    )
+
+    dbt_code = dbt_code.rstrip(", ")
+
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + "\n"
+    else:
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+
+    return dbt_code
+
+
+def regex_extraction(config: dict, warehouse: WarehouseInterface, project_dir: str):
+    """
+    Generate DBT model file for regex extraction.
+    """
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    output_model_sql = config_sql + "\n" + regex_extraction_sql(config, warehouse)
+
+    dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
 
-    model_code = (
-        f"{{{{ config(materialized='table', schema='{dest_schema}') }}}}\n\nSELECT "
+    model_sql_path = dbtproject.write_model(
+        dest_schema, output_model_name, output_model_sql
     )
 
-    for col_name, regex in columns.items():
-        if warehouse.name == "postgres":
-            model_code += f"""substring({quote_columnname(col_name, warehouse.name)}
-                            FROM '{regex}') AS {quote_columnname(col_name, warehouse.name)}, """
-        elif warehouse.name == "bigquery":
-            model_code += f"""REGEXP_EXTRACT({quote_columnname(col_name, warehouse.name)}, r'{regex}')
-                            AS {quote_columnname(col_name, warehouse.name)}, """
-
-    model_code += (
-        "{{ dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
-        + ", ".join([f'"{col}"' for col in columns.keys()])
-        + "]) }}"
-    )
-
-    model_code += "\n FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
-
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, model_code)
     return model_sql_path

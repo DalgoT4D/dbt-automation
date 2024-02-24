@@ -12,32 +12,58 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def concat_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+) -> str:
     """
-    This function generates dbt model to concat strings
+    Generate SQL code for the concat_columns operation.
     """
-    logger.info("here in concat columns")
-    dest_schema = config["dest_schema"]
-    output_name = config["output_name"]
     output_column_name = config["output_column_name"]
     columns = config["columns"]
+    source_columns = config["source_columns"]
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
+    columns_to_concat = [
+        col["name"] for col in columns if col.get("is_col", "yes") == "yes"
+    ]
 
-    dbt_code = "{{ config(materialized='table', schema='" + dest_schema + "') }}\n"
     concat_fields = ",".join(
-        [
-            (
-                quote_columnname(col["name"], warehouse.name)
-                if col["is_col"] in ["yes", True, "y"]
-                else f"'{col['name']}'"
-            )
-            for col in columns
-        ]
+        [quote_columnname(col, warehouse.name) for col in columns_to_concat]
     )
-    dbt_code += f"SELECT *, CONCAT({concat_fields}) AS {output_column_name}"
-    dbt_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_code)
+    dbt_code = "SELECT " + ", ".join(
+        [quote_columnname(col, warehouse.name) for col in source_columns]
+    )
+    dbt_code += f", CONCAT({concat_fields}) AS {quote_columnname(output_column_name, warehouse.name)}"
+
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += f"\nFROM {select_from}\n"
+    else:
+        dbt_code += f"\nFROM {{{{ {select_from} }}}}\n"
+
+    return dbt_code
+
+
+def concat_columns(
+    config: dict, warehouse: WarehouseInterface, project_dir: str
+) -> str:
+    """
+    Perform concatenation of columns and generate a DBT model.
+    """
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = config_sql + "\n" + concat_columns_dbt_sql(config, warehouse)
+
+    dbt_project = dbtProject(project_dir)
+    dbt_project.ensure_models_dir(config["dest_schema"])
+
+    model_sql_path = dbt_project.write_model(
+        config["dest_schema"], config["output_name"], sql
+    )
+
     return model_sql_path

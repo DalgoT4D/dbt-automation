@@ -6,6 +6,7 @@ import math
 import subprocess
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
+from dbt_automation.operations.mergeoperations import merge_operations
 from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.operations.syncsources import sync_sources
@@ -18,6 +19,7 @@ from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.mergetables import union_tables
+from tests.warehouse.test_bigquery_ops import TestBigqueryOperations
 
 
 basicConfig(level=INFO)
@@ -138,6 +140,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": {"NGO": "ngo", "Month": "month"},
         }
 
@@ -168,6 +171,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": ["MONTH"],
         }
 
@@ -195,6 +199,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": [
                 {
                     "columnname": "NGO",
@@ -203,7 +208,7 @@ class TestPostgresOperations:
                     "columnname": "SPOC",
                 },
             ],
-            "output_column_name": "ngo_spoc",
+            "output_column_name": "coalesce",
         }
 
         coalesce_columns(
@@ -215,7 +220,7 @@ class TestPostgresOperations:
         TestPostgresOperations.execute_dbt("run", output_name)
 
         cols = wc_client.get_table_columns("pytest_intermediate", output_name)
-        assert "ngo_spoc" in cols
+        assert "coalesce" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         col_data_original = wc_client.get_table_data(
             "pytest_intermediate",
@@ -223,7 +228,7 @@ class TestPostgresOperations:
             1,
         )
         assert (
-            col_data[0]["ngo_spoc"] == col_data_original[0]["NGO"]
+            col_data[0]["coalesce"] == col_data_original[0]["NGO"]
             if col_data_original[0]["NGO"] is not None
             else col_data_original[0]["SPOC"]
         )
@@ -241,6 +246,14 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": [
+                "NGO",
+                "SPOC",
+                "Month",
+                "measure1",
+                "measure2",
+                "Indicator",
+            ],
             "columns": [
                 {
                     "name": "NGO",
@@ -270,8 +283,7 @@ class TestPostgresOperations:
         assert "concat_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
-            table_data[0]["concat_col"]
-            == table_data[0]["NGO"] + table_data[0]["SPOC"] + "test"
+            table_data[0]["concat_col"] == table_data[0]["NGO"] + table_data[0]["SPOC"]
         )
 
     def test_castdatatypes(self):
@@ -287,6 +299,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": [
                 {
                     "columnname": "measure1",
@@ -330,6 +343,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "add",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "add_col",
         }
 
@@ -364,6 +378,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "sub",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "sub_col",
         }
 
@@ -398,6 +413,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "mul",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "mul_col",
         }
 
@@ -432,6 +448,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "operator": "div",
             "operands": ["measure1", "measure2"],
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "div_col",
         }
 
@@ -470,6 +487,7 @@ class TestPostgresOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": {"NGO": "^[C].*"},
         }
 
@@ -488,11 +506,11 @@ class TestPostgresOperations:
             quote_columnname("_airbyte_raw_Sheet1", "postgres"),
             10,
         )
-        table_data_org.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_org.sort(key=lambda x: x["Month"])
         table_data_regex = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10
         )
-        table_data_regex.sort(key=lambda x: x["_airbyte_ab_id"])
+        table_data_regex.sort(key=lambda x: x["Month"])
         for regex, org in zip(table_data_regex, table_data_org):
             assert (
                 regex["NGO"] == org["NGO"]
@@ -508,6 +526,7 @@ class TestPostgresOperations:
         config = {
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "input_arr": [
                 {
                     "input_type": "model",
@@ -545,3 +564,231 @@ class TestPostgresOperations:
         )
 
         assert len(table_data1) + len(table_data2) == len(table_data_union)
+
+    def test_merge_operation(self):
+        """test merge_operation"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "merge"
+        config = {
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "source_name": "_airbyte_raw_Sheet1",
+            "operations": [
+                {
+                    "type": "castdatatypes",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "columns": [
+                            {
+                                "columnname": "measure1",
+                                "columntype": "int",
+                            },
+                            {
+                                "columnname": "measure2",
+                                "columntype": "int",
+                            },
+                        ],
+                        "source_columns": [
+                            "NGO",
+                            "Month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "SPOC",
+                        ],
+                    },
+                },
+                {
+                    "type": "arithmetic",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },  # from previous operation
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "operator": "add",
+                        "operands": ["measure1", "measure2"],
+                        "output_column_name": "add_col",
+                        "source_columns": [
+                            "NGO",
+                            "Month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "SPOC",
+                        ],
+                    },
+                },
+                {
+                    "type": "renamecolumns",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "source_columns": [
+                            "NGO",
+                            "Month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "SPOC",
+                            "add_col",
+                        ],
+                        "columns": {"NGO": "ngo"},
+                    },
+                },
+                {
+                    "type": "dropcolumns",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "columns": ["SPOC"],
+                        "source_columns": [
+                            "NGO",
+                            "month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "SPOC",
+                            "add_col",
+                        ],
+                    },
+                },
+                {
+                    "type": "coalescecolumns",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "columns": [
+                            {
+                                "columnname": "NGO",
+                            },
+                            {
+                                "columnname": "Indicator",
+                            },
+                        ],
+                        "source_columns": [
+                            "NGO",
+                            "month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "add_col",
+                        ],
+                        "output_column_name": "coalesce",
+                    },
+                },
+                {
+                    "type": "concat",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "columns": [
+                            {
+                                "name": "NGO",
+                                "is_col": "yes",
+                            },
+                            {
+                                "name": "Indicator",
+                                "is_col": "yes",
+                            },
+                            {
+                                "name": "test",
+                                "is_col": "no",
+                            },
+                        ],
+                        "source_columns": [
+                            "NGO",
+                            "month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "add_col",
+                        ],
+                        "output_column_name": "concat_col",
+                    },
+                },
+                {
+                    "type": "regexextraction",
+                    "config": {
+                        "input": {
+                            "input_type": "cte",
+                            "input_name": "_airbyte_raw_Sheet1",
+                            "source_name": "_airbyte_raw_Sheet1",
+                        },
+                        "dest_schema": "pytest_intermediate",
+                        "output_name": output_name,
+                        "columns": {"NGO": "^[C].*"},
+                        "source_columns": [
+                            "NGO",
+                            "month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "add_col",
+                            "concat_col",
+                        ],
+                        "output_column_name": "regex",
+                    },
+                },
+            ],
+        }
+
+        merge_operations(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        assert "NGO" in cols
+        assert "measure1" in cols
+        assert "measure2" in cols
+        assert "Indicator" in cols
+        assert "month" in cols
+        table_data_org = wc_client.get_table_data(
+            "pytest_intermediate", "_airbyte_raw_Sheet1", 10
+        )
+        table_data_org.sort(key=lambda x: x["Month"])
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 10)
+        table_data.sort(key=lambda x: x["month"])
+        assert type(table_data[0]["measure1"]) == int
+        assert type(table_data[0]["measure2"]) == int
+
+        assert (
+            table_data[0]["add_col"]
+            == table_data[0]["measure1"] + table_data[0]["measure2"]
+        )
+
+        assert (
+            table_data[0]["concat_col"]
+            == table_data[0]["NGO"] + table_data[0]["Indicator"]
+        )

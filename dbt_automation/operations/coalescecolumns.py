@@ -12,42 +12,61 @@ logger = getLogger()
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
-def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
+def coalesce_columns_dbt_sql(
+    config: dict,
+    warehouse: WarehouseInterface,
+) -> str:
     """
-    coalesces columns
+    Generate SQL code for the coalesce_columns operation.
     """
-    dest_schema = config["dest_schema"]
+    columns = config.get("columns", [])
+    source_columns = config["source_columns"]
     output_name = config["output_name"]
 
-    dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(dest_schema)
+    dbt_code = "SELECT\n"
 
-    union_code = f"{{{{ config(materialized='table', schema='{dest_schema}') }}}}\n"
+    select_from = source_or_ref(**config["input"])
 
-    columns = config["columns"]
-    columnnames = [c["columnname"] for c in columns]
-    union_code += (
-        "SELECT {{dbt_utils.star(from="
-        + source_or_ref(**config["input"])
-        + ", except=["
+    for column in source_columns:
+        if column in [c["columnname"] for c in columns]:
+            dbt_code += f"COALESCE({quote_columnname(column, warehouse.name)}, NULL) AS {quote_columnname(column, warehouse.name)},\n"
+        else:
+            dbt_code += f"{quote_columnname(column, warehouse.name)},\n"
+
+    dbt_code += (
+        "COALESCE("
+        + ", ".join(
+            [quote_columnname(c["columnname"], warehouse.name) for c in columns]
+        )
+        + f") AS {quote_columnname(output_name, warehouse.name)}\n"
     )
-    union_code += ",".join([f'"{columnname}"' for columnname in columnnames])
-    union_code += "])}}"
 
-    union_code += ", COALESCE("
+    select_from = source_or_ref(**config["input"])
+    if config["input"]["input_type"] == "cte":
+        dbt_code += f"FROM {select_from}\n"
+    else:
+        dbt_code += f"FROM {{{{{select_from}}}}}\n"
 
-    for column in config["columns"]:
-        union_code += quote_columnname(column["columnname"], warehouse.name) + ", "
-    union_code = union_code[:-2] + ") AS " + config["output_column_name"]
+    return dbt_code
 
-    union_code += " FROM " + "{{" + source_or_ref(**config["input"]) + "}}" + "\n"
 
-    logger.info(f"writing dbt model {union_code}")
-    model_sql_path = dbtproject.write_model(
-        dest_schema,
-        output_name,
-        union_code,
-    )
-    logger.info(f"dbt model {output_name} successfully created")
+def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
+    """
+    Perform coalescing of columns and generate a DBT model.
+    """
+    config_sql = ""
+    if config["input"]["input_type"] != "cte":
+        config_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
+
+    sql = config_sql + "\n" + coalesce_columns_dbt_sql(config, warehouse)
+
+    dbt_project = dbtProject(project_dir)
+    dbt_project.ensure_models_dir(config["dest_schema"])
+
+    output_name = config["output_name"]
+    dest_schema = config["dest_schema"]
+    model_sql_path = dbt_project.write_model(dest_schema, output_name, sql)
 
     return model_sql_path
