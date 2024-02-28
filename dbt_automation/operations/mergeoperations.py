@@ -100,6 +100,7 @@ def merge_operations(
         "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}\n"
     )
 
+    # TODO: input can be model or a source; needs a dict
     sql = config_sql + merge_operations_sql(
         config["operations"],
         warehouse,
