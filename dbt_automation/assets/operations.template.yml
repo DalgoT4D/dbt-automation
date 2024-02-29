@@ -79,8 +79,8 @@ operations:
           - <column name>
           - ...
         columns:
-          - columnname: <first column>
-          - columnname: <second column>
+          - <first column>
+          - <second column>
           - ...
         output_column_name: <output column name>
     - type: concat
@@ -98,11 +98,11 @@ operations:
           - ...
         columns:
           - name: <string (column or const)>
-            is_col: <yes or no>
+            is_col: <boolean>
           - name: <string (column or const)>
-            is_col: <yes or no>
+            is_col: <boolean>
           - name: <string (column or const)>
-            is_col: <yes or no>
+            is_col: <boolean>
         output_column_name: <output column name>
 
     - type: arithmetic
@@ -211,8 +211,8 @@ operations:
                 - <column name>
                 - ...
               columns:
-                - columnname: <column_name>
-                - columnname: <column_name>
+                - <column_name>
+                - <column_name>
               output_column_name: <output_column_name>
           - type: concat
             config:
@@ -223,11 +223,11 @@ operations:
                 - ...
               columns:
                 - name: <column_name>
-                  is_col: <yes_or_no>
+                  is_col: <boolean>
                 - name: <column_name>
-                  is_col: <yes_or_no>
+                  is_col: <boolean>
                 - name: <column_name>
-                  is_col: <yes_or_no>
+                  is_col: <boolean>
               output_column_name: <output_column_name>
           - type: dropcolumns
             config:

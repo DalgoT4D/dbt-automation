@@ -54,7 +54,7 @@ def cast_datatypes_sql(
     else:
         dbt_code += f"FROM {{{{{select_from}}}}}\n"
 
-    return dbt_code
+    return dbt_code, source_columns
 
 
 def cast_datatypes(
@@ -63,18 +63,19 @@ def cast_datatypes(
     """
     Perform casting of data types and generate a DBT model.
     """
-    config_sql = ""
+    dbt_sql = ""
     if config["input"]["input_type"] != "cte":
-        config_sql = (
+        dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = config_sql + "\n" + cast_datatypes_sql(config, warehouse)
+    select_statement, output_cols = cast_datatypes_sql(config, warehouse)
+    dbt_sql += "\n" + select_statement
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
 
     output_name = config["output_name"]
     dest_schema = config["dest_schema"]
-    model_sql_path = dbt_project.write_model(dest_schema, output_name, sql)
+    model_sql_path = dbt_project.write_model(dest_schema, output_name, dbt_sql)
 
-    return model_sql_path
+    return model_sql_path, output_cols

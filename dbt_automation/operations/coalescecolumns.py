@@ -19,26 +19,26 @@ def coalesce_columns_dbt_sql(
     """
     Generate SQL code for the coalesce_columns operation.
     """
-    columns = config.get("columns", [])
     source_columns = config["source_columns"]
-    output_name = config["output_name"]
+    coalesce_columns = config.get("columns", [])
+    output_col_name = config["output_column_name"]
 
     dbt_code = "SELECT\n"
 
     select_from = source_or_ref(**config["input"])
 
-    for column in source_columns:
-        if column in [c["columnname"] for c in columns]:
-            dbt_code += f"COALESCE({quote_columnname(column, warehouse.name)}, NULL) AS {quote_columnname(column, warehouse.name)},\n"
-        else:
-            dbt_code += f"{quote_columnname(column, warehouse.name)},\n"
+    for col_name in source_columns:
+        dbt_code += f"{quote_columnname(col_name, warehouse.name)},\n"
 
     dbt_code += (
         "COALESCE("
         + ", ".join(
-            [quote_columnname(c["columnname"], warehouse.name) for c in columns]
+            [
+                quote_columnname(col_name, warehouse.name)
+                for col_name in coalesce_columns
+            ]
         )
-        + f") AS {quote_columnname(output_name, warehouse.name)}\n"
+        + f") AS {quote_columnname(output_col_name, warehouse.name)}\n"
     )
 
     select_from = source_or_ref(**config["input"])
@@ -47,26 +47,29 @@ def coalesce_columns_dbt_sql(
     else:
         dbt_code += f"FROM {{{{{select_from}}}}}\n"
 
-    return dbt_code
+    return dbt_code, source_columns + [output_col_name]
 
 
 def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Perform coalescing of columns and generate a DBT model.
     """
-    config_sql = ""
+    dbt_sql = ""
     if config["input"]["input_type"] != "cte":
-        config_sql = (
+        dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = config_sql + "\n" + coalesce_columns_dbt_sql(config, warehouse)
+    select_statement, output_cols = coalesce_columns_dbt_sql(config, warehouse)
+    dbt_sql += "\n" + select_statement
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
 
     output_name = config["output_name"]
     dest_schema = config["dest_schema"]
-    model_sql_path = dbt_project.write_model(dest_schema, output_name, sql)
+    model_sql_path = dbt_project.write_model(dest_schema, output_name, dbt_sql)
 
-    return model_sql_path
+    logger.info("output model:", model_sql_path)
+
+    return model_sql_path, output_cols
