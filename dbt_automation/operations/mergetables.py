@@ -42,10 +42,9 @@ def union_tables_sql(config, warehouse: WarehouseInterface):
 
     include_cols = [f'"{col}"' for col in source_columns]
 
-
     # pylint:disable=consider-using-f-string
     dbt_code += "{{ dbt_utils.union_relations("
-    dbt_code += f"relations={relations} , include=[{",".join(include_cols)}]" 
+    dbt_code += f"relations={relations} , " + f"include=[{','.join(include_cols)}]"
     dbt_code += ")}}"
 
     return dbt_code, source_columns
