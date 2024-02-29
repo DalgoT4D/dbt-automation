@@ -200,9 +200,7 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
-            "columns": [
-                "NGO", "SPOC"
-            ],
+            "columns": ["NGO", "SPOC"],
             "output_column_name": "coalesce",
         }
 
@@ -677,12 +675,8 @@ class TestPostgresOperations:
                         "dest_schema": "pytest_intermediate",
                         "output_name": output_name,
                         "columns": [
-                            {
-                                "columnname": "NGO",
-                            },
-                            {
-                                "columnname": "Indicator",
-                            },
+                            "NGO",
+                            "Indicator",
                         ],
                         "source_columns": [
                             "NGO",
@@ -708,15 +702,15 @@ class TestPostgresOperations:
                         "columns": [
                             {
                                 "name": "NGO",
-                                "is_col": "yes",
+                                "is_col": True,
                             },
                             {
                                 "name": "Indicator",
-                                "is_col": "yes",
+                                "is_col": True,
                             },
                             {
                                 "name": "test",
-                                "is_col": "no",
+                                "is_col": False,
                             },
                         ],
                         "source_columns": [

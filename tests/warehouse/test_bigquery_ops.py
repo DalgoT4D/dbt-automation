@@ -197,9 +197,7 @@ class TestBigqueryOperations:
             },
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
-            "columns": [
-                "NGO", "SPOC"
-            ],
+            "columns": ["NGO", "SPOC"],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "coalesce",
         }
@@ -662,12 +660,8 @@ class TestBigqueryOperations:
                         "dest_schema": "pytest_intermediate",
                         "output_name": output_name,
                         "columns": [
-                            {
-                                "columnname": "NGO",
-                            },
-                            {
-                                "columnname": "Indicator",
-                            },
+                            "NGO",
+                            "Indicator",
                         ],
                         "source_columns": [
                             "NGO",
@@ -693,15 +687,15 @@ class TestBigqueryOperations:
                         "columns": [
                             {
                                 "name": "NGO",
-                                "is_col": "yes",
+                                "is_col": True,
                             },
                             {
                                 "name": "Indicator",
-                                "is_col": "yes",
+                                "is_col": True,
                             },
                             {
                                 "name": "test",
-                                "is_col": "no",
+                                "is_col": False,
                             },
                         ],
                         "source_columns": [
