@@ -19,7 +19,6 @@ from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.mergetables import union_tables
-from tests.warehouse.test_bigquery_ops import TestBigqueryOperations
 
 
 basicConfig(level=INFO)
@@ -232,7 +231,7 @@ class TestPostgresOperations:
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         col_data_original = wc_client.get_table_data(
             "pytest_intermediate",
-            quote_columnname("_airbyte_raw_Sheet1", "postgres"),
+            "_airbyte_raw_Sheet1",
             1,
         )
         assert (
@@ -295,9 +294,9 @@ class TestPostgresOperations:
         ]
         assert "concat_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        assert (
-            table_data[0]["concat_col"] == table_data[0]["NGO"] + table_data[0]["SPOC"]
-        )
+        assert table_data[0]["concat_col"] == table_data[0]["NGO"] + table_data[0][
+            "SPOC"
+        ] + "".join([col["name"] for col in config["columns"] if not col["is_col"]])
 
     def test_castdatatypes(self):
         """test castdatatypes"""
@@ -546,7 +545,7 @@ class TestPostgresOperations:
         assert "NGO" in cols
         table_data_org = wc_client.get_table_data(
             "pytest_intermediate",
-            quote_columnname("_airbyte_raw_Sheet1", "postgres"),
+            "_airbyte_raw_Sheet1",
             10,
         )
         table_data_org.sort(key=lambda x: x["Month"])
@@ -594,12 +593,12 @@ class TestPostgresOperations:
 
         table_data1 = wc_client.get_table_data(
             "pytest_intermediate",
-            quote_columnname("_airbyte_raw_Sheet1", "postgres"),
+            "_airbyte_raw_Sheet1",
             10,
         )
         table_data2 = wc_client.get_table_data(
             "pytest_intermediate",
-            quote_columnname("_airbyte_raw_Sheet2", "postgres"),
+            "_airbyte_raw_Sheet2",
             10,
         )
         table_data_union = wc_client.get_table_data(
@@ -610,23 +609,20 @@ class TestPostgresOperations:
 
     def test_merge_operation(self):
         """test merge_operation"""
-        wc_client = TestBigqueryOperations.wc_client
+        wc_client = TestPostgresOperations.wc_client
         output_name = "merge"
         config = {
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
-            "source_name": "_airbyte_raw_Sheet1",
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet1",
+                "source_name": None,
+            },
             "operations": [
                 {
                     "type": "castdatatypes",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
                         "columns": [
                             {
                                 "columnname": "measure1",
@@ -650,13 +646,6 @@ class TestPostgresOperations:
                 {
                     "type": "arithmetic",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },  # from previous operation
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
                         "operator": "add",
                         "operands": ["measure1", "measure2"],
                         "output_column_name": "add_col",
@@ -673,13 +662,6 @@ class TestPostgresOperations:
                 {
                     "type": "renamecolumns",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
                         "source_columns": [
                             "NGO",
                             "Month",
@@ -695,17 +677,10 @@ class TestPostgresOperations:
                 {
                     "type": "dropcolumns",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
                         "columns": ["SPOC"],
                         "source_columns": [
-                            "NGO",
-                            "month",
+                            "ngo",
+                            "Month",
                             "measure1",
                             "measure2",
                             "Indicator",
@@ -717,20 +692,13 @@ class TestPostgresOperations:
                 {
                     "type": "coalescecolumns",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
                         "columns": [
-                            "NGO",
+                            "ngo",
                             "Indicator",
                         ],
                         "source_columns": [
-                            "NGO",
-                            "month",
+                            "ngo",
+                            "Month",
                             "measure1",
                             "measure2",
                             "Indicator",
@@ -742,16 +710,9 @@ class TestPostgresOperations:
                 {
                     "type": "concat",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
                         "columns": [
                             {
-                                "name": "NGO",
+                                "name": "ngo",
                                 "is_col": True,
                             },
                             {
@@ -764,12 +725,13 @@ class TestPostgresOperations:
                             },
                         ],
                         "source_columns": [
-                            "NGO",
-                            "month",
+                            "ngo",
+                            "Month",
                             "measure1",
                             "measure2",
                             "Indicator",
                             "add_col",
+                            "coalesce",
                         ],
                         "output_column_name": "concat_col",
                     },
@@ -777,21 +739,15 @@ class TestPostgresOperations:
                 {
                     "type": "regexextraction",
                     "config": {
-                        "input": {
-                            "input_type": "cte",
-                            "input_name": "_airbyte_raw_Sheet1",
-                            "source_name": "_airbyte_raw_Sheet1",
-                        },
-                        "dest_schema": "pytest_intermediate",
-                        "output_name": output_name,
-                        "columns": {"NGO": "^[C].*"},
+                        "columns": {"ngo": "^[C].*"},
                         "source_columns": [
-                            "NGO",
-                            "month",
+                            "ngo",
+                            "Month",
                             "measure1",
                             "measure2",
                             "Indicator",
                             "add_col",
+                            "coalesce",
                             "concat_col",
                         ],
                         "output_column_name": "regex",
@@ -803,27 +759,26 @@ class TestPostgresOperations:
         merge_operations(
             config,
             wc_client,
-            TestBigqueryOperations.test_project_dir,
+            TestPostgresOperations.test_project_dir,
         )
 
-        TestBigqueryOperations.execute_dbt("run", output_name)
+        TestPostgresOperations.execute_dbt("run", output_name)
         cols = [
             col_dict["name"]
             for col_dict in wc_client.get_table_columns(
                 "pytest_intermediate", output_name
             )
         ]
-        assert "NGO" in cols
+        assert "ngo" in cols
         assert "measure1" in cols
         assert "measure2" in cols
         assert "Indicator" in cols
-        assert "month" in cols
-        table_data_org = wc_client.get_table_data(
-            "pytest_intermediate", "_airbyte_raw_Sheet1", 10
-        )
-        table_data_org.sort(key=lambda x: x["Month"])
+        assert "Month" in cols
+        assert "add_col" in cols
+        assert "coalesce" in cols
+        assert "concat_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 10)
-        table_data.sort(key=lambda x: x["month"])
+        table_data.sort(key=lambda x: x["Month"])
         assert type(table_data[0]["measure1"]) == int
         assert type(table_data[0]["measure2"]) == int
 
@@ -832,7 +787,16 @@ class TestPostgresOperations:
             == table_data[0]["measure1"] + table_data[0]["measure2"]
         )
 
+        initial_raw_data = wc_client.get_table_data(
+            "pytest_intermediate", "_airbyte_raw_Sheet1", 10
+        )
+
         assert (
-            table_data[0]["concat_col"]
-            == table_data[0]["NGO"] + table_data[0]["Indicator"]
+            len(
+                set([row["concat_col"] for row in table_data])
+                - set(
+                    [row["NGO"] + row["Indicator"] + "test" for row in initial_raw_data]
+                )
+            )
+            == 0
         )
