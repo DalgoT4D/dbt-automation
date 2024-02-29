@@ -201,12 +201,7 @@ class TestPostgresOperations:
             "output_name": output_name,
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "columns": [
-                {
-                    "columnname": "NGO",
-                },
-                {
-                    "columnname": "SPOC",
-                },
+                "NGO", "SPOC"
             ],
             "output_column_name": "coalesce",
         }
@@ -257,15 +252,15 @@ class TestPostgresOperations:
             "columns": [
                 {
                     "name": "NGO",
-                    "is_col": "yes",
+                    "is_col": True,
                 },
                 {
                     "name": "SPOC",
-                    "is_col": "yes",
+                    "is_col": True,
                 },
                 {
                     "name": "test",
-                    "is_col": "no",
+                    "is_col": False,
                 },
             ],
             "output_column_name": "concat_col",

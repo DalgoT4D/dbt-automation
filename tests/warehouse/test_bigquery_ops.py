@@ -198,12 +198,7 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "columns": [
-                {
-                    "columnname": "NGO",
-                },
-                {
-                    "columnname": "SPOC",
-                },
+                "NGO", "SPOC"
             ],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "coalesce",
@@ -248,15 +243,15 @@ class TestBigqueryOperations:
             "columns": [
                 {
                     "name": "NGO",
-                    "is_col": "yes",
+                    "is_col": True,
                 },
                 {
                     "name": "SPOC",
-                    "is_col": "yes",
+                    "is_col": True,
                 },
                 {
                     "name": "test",
-                    "is_col": "no",
+                    "is_col": False,
                 },
             ],
             "source_columns": ["NGO", "SPOC", "measure1", "measure2", "Indicator"],
