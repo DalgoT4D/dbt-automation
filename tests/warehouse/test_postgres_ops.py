@@ -152,7 +152,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "ngo" in cols
         assert "month" in cols
         assert "NGO" not in cols
@@ -183,7 +188,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "MONTH" not in cols
 
     def test_coalescecolumns(self):
@@ -212,7 +222,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "coalesce" in cols
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         col_data_original = wc_client.get_table_data(
@@ -272,7 +287,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "concat_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
@@ -313,7 +333,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "measure1" in cols
         assert "measure2" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
@@ -348,7 +373,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "add_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
@@ -383,7 +413,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "sub_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
@@ -418,7 +453,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "mul_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
@@ -453,7 +493,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "div_col" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
         assert (
@@ -492,7 +537,12 @@ class TestPostgresOperations:
 
         TestPostgresOperations.execute_dbt("run", output_name)
 
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "NGO" in cols
         table_data_org = wc_client.get_table_data(
             "pytest_intermediate",
@@ -757,7 +807,12 @@ class TestPostgresOperations:
         )
 
         TestBigqueryOperations.execute_dbt("run", output_name)
-        cols = wc_client.get_table_columns("pytest_intermediate", output_name)
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
         assert "NGO" in cols
         assert "measure1" in cols
         assert "measure2" in cols
