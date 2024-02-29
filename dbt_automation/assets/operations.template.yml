@@ -24,6 +24,11 @@ operations:
             - input_type: <"source" or "model">
               input_name: <name of source table or ref model>
               source_name: <name of the source defined in source.yml; will be null for type "model">
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
     - type: syncsources
       config:
         source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
