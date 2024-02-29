@@ -22,7 +22,7 @@ WAREHOUSE_COLUMN_TYPES = {
 def cast_datatypes_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     Generate SQL code for the cast_datatypes operation.
     """
@@ -57,9 +57,7 @@ def cast_datatypes_sql(
     return dbt_code, source_columns
 
 
-def cast_datatypes(
-    config: dict, warehouse: WarehouseInterface, project_dir: str
-) -> str:
+def cast_datatypes(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Perform casting of data types and generate a DBT model.
     """

@@ -16,7 +16,7 @@ logger = getLogger()
 def flattenjson_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     source_schema: name of the input schema
     input: input dictionary check operations.yaml.template

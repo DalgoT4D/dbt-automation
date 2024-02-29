@@ -15,7 +15,7 @@ logger = getLogger()
 def drop_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     Generate SQL code for dropping columns from the source.
     """
@@ -63,7 +63,7 @@ def drop_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
 def rename_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """Generate SQL code for renaming columns in a model."""
     columns = config.get("columns", {})
     source_columns = config["source_columns"]

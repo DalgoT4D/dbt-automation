@@ -15,7 +15,7 @@ logger = getLogger()
 def concat_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     Generate SQL code for the concat_columns operation.
     """
@@ -48,9 +48,7 @@ def concat_columns_dbt_sql(
     return dbt_code, source_columns + [output_column_name]
 
 
-def concat_columns(
-    config: dict, warehouse: WarehouseInterface, project_dir: str
-) -> str:
+def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Perform concatenation of columns and generate a DBT model.
     """

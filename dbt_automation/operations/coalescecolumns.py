@@ -15,7 +15,7 @@ logger = getLogger()
 def coalesce_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     Generate SQL code for the coalesce_columns operation.
     """

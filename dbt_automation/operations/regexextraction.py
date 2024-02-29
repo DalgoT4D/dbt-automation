@@ -9,7 +9,7 @@ from dbt_automation.utils.tableutils import source_or_ref
 def regex_extraction_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """Given a regex and a column name, extract the regex from the column."""
     columns = config.get("columns", {})
     source_columns = config["source_columns"]
