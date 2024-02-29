@@ -28,30 +28,49 @@ def merge_operations_sql(
         return "-- No operations specified, no SQL generated."
 
     cte_sql_list = []
+    output_cols = []  # return the last operations output columns
 
     # push select statements into the queue
     for cte_counter, operation in enumerate(operations):
 
         if operation["type"] == "castdatatypes":
-            op_select_statement = cast_datatypes_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = cast_datatypes_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "arithmetic":
-            op_select_statement = arithmetic_dbt_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = arithmetic_dbt_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "coalescecolumns":
-            op_select_statement = coalesce_columns_dbt_sql(
+            op_select_statement, out_cols = coalesce_columns_dbt_sql(
                 operation["config"], warehouse
             )
         elif operation["type"] == "concat":
-            op_select_statement = concat_columns_dbt_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = concat_columns_dbt_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "dropcolumns":
-            op_select_statement = drop_columns_dbt_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = drop_columns_dbt_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "renamecolumns":
-            op_select_statement = rename_columns_dbt_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = rename_columns_dbt_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "flattenjson":
-            op_select_statement = flattenjson_dbt_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = flattenjson_dbt_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "regexextraction":
-            op_select_statement = regex_extraction_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = regex_extraction_sql(
+                operation["config"], warehouse
+            )
         elif operation["type"] == "union_tables":
-            op_select_statement = union_tables_sql(operation["config"], warehouse)
+            op_select_statement, out_cols = union_tables_sql(
+                operation["config"], warehouse
+            )
+
+        output_cols = out_cols
 
         cte_sql = f" , {operation['as_cte']} as (\n"
         if cte_counter == 0:
@@ -67,19 +86,19 @@ def merge_operations_sql(
 
         cte_sql_list.append(cte_sql)
 
-    return "".join(cte_sql_list)
+    return "".join(cte_sql_list), output_cols
 
 
 def merge_operations(
     config: dict,
     warehouse: WarehouseInterface,
     project_dir: str,
-) -> str:
+):
     """
     Perform merging of operations and generate a DBT model.
     """
 
-    config_sql = (
+    dbt_sql = (
         "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}\n"
     )
 
@@ -96,16 +115,17 @@ def merge_operations(
                 "source_name": None,
             }
 
-    sql = config_sql + merge_operations_sql(
+    select_statement, output_cols = merge_operations_sql(
         config["operations"],
         warehouse,
     )
+    dbt_sql += select_statement
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
 
     model_sql_path = dbt_project.write_model(
-        config["dest_schema"], config["output_name"], sql
+        config["dest_schema"], config["output_name"], dbt_sql
     )
 
-    return model_sql_path
+    return model_sql_path, output_cols
