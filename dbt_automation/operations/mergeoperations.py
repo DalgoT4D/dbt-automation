@@ -71,7 +71,7 @@ def merge_operations_sql(
 
 
 def merge_operations(
-    config: List[dict],
+    config: dict,
     warehouse: WarehouseInterface,
     project_dir: str,
 ) -> str:
