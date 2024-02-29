@@ -78,26 +78,27 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
     else:
         dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
-    return dbt_code
+    return dbt_code, source_columns + [output_col_name]
 
 
 def arithmetic(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Perform arithmetic operations and generate a DBT model.
     """
-    config_sql = ""
+    dbt_sql = ""
     if config["input"]["input_type"] != "cte":
-        config_sql = (
+        dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = config_sql + "\n" + arithmetic_dbt_sql(config, warehouse)
+    select_statement, output_cols = arithmetic_dbt_sql(config, warehouse)
+    dbt_sql += dbt_sql + "\n" + select_statement
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(config["dest_schema"])
 
     model_sql_path = dbtproject.write_model(
-        config["dest_schema"], config["output_name"], sql
+        config["dest_schema"], config["output_name"], dbt_sql
     )
 
-    return model_sql_path
+    return model_sql_path, output_cols

@@ -45,11 +45,14 @@ class BigQueryClient(WarehouseInterface):
         return [x.dataset_id for x in datasets]
 
     def get_table_columns(self, schema: str, table: str) -> list:
-        """fetch the list of columns from a BigQuery table."""
+        """fetch the list of columns from a BigQuery table along with their data types."""
         table_ref = f"{schema}.{table}"
         table: bigquery.Table = self.bqclient.get_table(table_ref)
-        column_names = [field.name for field in table.schema]
-        return column_names
+        columns = [
+            {"name": field.name, "data_type": field.field_type}
+            for field in table.schema
+        ]
+        return columns
 
     def get_table_data(
         self,

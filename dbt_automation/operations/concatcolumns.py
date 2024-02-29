@@ -15,24 +15,27 @@ logger = getLogger()
 def concat_columns_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     Generate SQL code for the concat_columns operation.
     """
     output_column_name = config["output_column_name"]
-    columns = config["columns"]
+    concat_columns = config["columns"]
     source_columns = config["source_columns"]
-
-    columns_to_concat = [
-        col["name"] for col in columns if col.get("is_col", "yes") == "yes"
-    ]
-
-    concat_fields = ",".join(
-        [quote_columnname(col, warehouse.name) for col in columns_to_concat]
-    )
 
     dbt_code = "SELECT " + ", ".join(
         [quote_columnname(col, warehouse.name) for col in source_columns]
+    )
+
+    concat_fields = ",".join(
+        [
+            (
+                quote_columnname(col["name"], warehouse.name)
+                if col["is_col"]
+                else f"'{col['name']}'"
+            )
+            for col in concat_columns
+        ]
     )
     dbt_code += f", CONCAT({concat_fields}) AS {quote_columnname(output_column_name, warehouse.name)}"
 
@@ -42,28 +45,27 @@ def concat_columns_dbt_sql(
     else:
         dbt_code += f"\nFROM {{{{ {select_from} }}}}\n"
 
-    return dbt_code
+    return dbt_code, source_columns + [output_column_name]
 
 
-def concat_columns(
-    config: dict, warehouse: WarehouseInterface, project_dir: str
-) -> str:
+def concat_columns(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
     Perform concatenation of columns and generate a DBT model.
     """
-    config_sql = ""
+    dbt_sql = ""
     if config["input"]["input_type"] != "cte":
-        config_sql = (
+        dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql = config_sql + "\n" + concat_columns_dbt_sql(config, warehouse)
+    select_statement, output_cols = concat_columns_dbt_sql(config, warehouse)
+    dbt_sql += "\n" + select_statement
 
     dbt_project = dbtProject(project_dir)
     dbt_project.ensure_models_dir(config["dest_schema"])
 
     model_sql_path = dbt_project.write_model(
-        config["dest_schema"], config["output_name"], sql
+        config["dest_schema"], config["output_name"], dbt_sql
     )
 
-    return model_sql_path
+    return model_sql_path, output_cols

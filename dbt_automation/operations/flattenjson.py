@@ -16,7 +16,7 @@ logger = getLogger()
 def flattenjson_dbt_sql(
     config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     source_schema: name of the input schema
     input: input dictionary check operations.yaml.template
@@ -54,7 +54,7 @@ def flattenjson_dbt_sql(
     else:
         dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
-    return dbt_code
+    return dbt_code, source_columns + sql_columns
 
 
 def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
@@ -62,19 +62,20 @@ def flattenjson(config: dict, warehouse: WarehouseInterface, project_dir: str):
     Flatten JSON columns.
     """
 
-    config_sql = ""
+    dbt_sql = ""
     if config["input"]["input_type"] != "cte":
-        config_sql = (
+        dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    sql_code = config_sql + "\n" + flattenjson_dbt_sql(config, warehouse)
+    select_statement, output_cols = flattenjson_dbt_sql(config, warehouse)
+    dbt_sql += "\n" + select_statement
 
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    model_sql_path = dbtproject.write_model(dest_schema, output_name, sql_code)
+    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_sql)
 
-    return model_sql_path
+    return model_sql_path, output_cols

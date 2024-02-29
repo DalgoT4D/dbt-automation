@@ -20,6 +20,7 @@ def union_tables_sql(config, warehouse: WarehouseInterface):
     """Generates SQL code for unioning tables using the dbt_utils union_relations macro."""
     input_arr = config["input_arr"]
     dest_schema = config["dest_schema"]
+    source_columns = config["source_columns"]
 
     names = set()
     for input in input_arr:
@@ -39,19 +40,21 @@ def union_tables_sql(config, warehouse: WarehouseInterface):
     if config["input_arr"][0]["input_type"] != "cte":
         dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
 
+    include_cols = [f'"{col}"' for col in source_columns]
+
     # pylint:disable=consider-using-f-string
     dbt_code += "{{ dbt_utils.union_relations("
-    dbt_code += f"relations={relations}"
+    dbt_code += f"relations={relations} , " + f"include=[{','.join(include_cols)}]"
     dbt_code += ")}}"
 
-    return dbt_code
+    return dbt_code, source_columns
 
 
 def union_tables(config, warehouse: WarehouseInterface, project_dir):
     """Generates a dbt model which uses the dbt_utils union_relations macro to union tables."""
     output_model_name = config["output_name"]
 
-    union_code = union_tables_sql(config, warehouse)
+    union_code, output_cols = union_tables_sql(config, warehouse)
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(config["dest_schema"])
@@ -62,7 +65,7 @@ def union_tables(config, warehouse: WarehouseInterface, project_dir):
         union_code,
     )
 
-    return model_sql_path
+    return model_sql_path, output_cols
 
 
 if __name__ == "__main__":

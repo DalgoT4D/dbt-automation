@@ -101,7 +101,7 @@ class PostgresClient(WarehouseInterface):
         # select
         query = f"""
         SELECT * 
-        FROM {schema}.{table}
+        FROM "{schema}"."{table}"
         """
 
         # order
@@ -125,12 +125,12 @@ class PostgresClient(WarehouseInterface):
         """returns the column names of the specified table in the given schema"""
         resultset = self.execute(
             f"""
-            SELECT column_name 
+            SELECT column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = '{schema}' AND table_name = '{table}';
             """
         )
-        return [x[0] for x in resultset]
+        return [{"name": x[0], "data_type": x[1]} for x in resultset]
 
     def get_columnspec(self, schema: str, table: str):
         """get the column schema for this table"""
