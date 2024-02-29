@@ -175,16 +175,13 @@ operations:
       config:
         dest_schema: <destination_schema>
         output_name: mergeoperation
-        source_name: <name of the source defined in source.yml; will be null for type "model">
+        input:
+          input_type: <"source" or "model">
+          input_name: <name of source table or ref model>
+          source_name: <name of the source defined in source.yml; will be null for type "model">
         operations:
           - type: castdatatypes
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: cast_output
               source_columns:
                 - <column name>
                 - <column name>
@@ -195,12 +192,6 @@ operations:
                   columntype: <column_type>
           - type: arithmetic
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              output_name: arithmetic_output
-              dest_schema: <intermediate_schema>
               operator: <operator>
               source_columns:
                 - <column name>
@@ -214,12 +205,6 @@ operations:
               output_column_name: <output_column_name>
           - type: coalescecolumns
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: coalesce_columns
               source_columns:
                 - <column name>
                 - <column name>
@@ -231,12 +216,6 @@ operations:
               output_column_name: <output_column_name>
           - type: concat
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: concat
               source_columns:
                 - <column name>
                 - <column name>
@@ -252,27 +231,14 @@ operations:
               output_column_name: <output_column_name>
           - type: dropcolumns
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: drop_column
               source_columns:
                 - <column name>
                 - <column name>
                 - <column name>
-          - ...
               columns:
                 - <column_name>
           - type: renamecolumns
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: rename_column
               source_columns:
                 - <column name>
                 - <column name>
@@ -282,12 +248,6 @@ operations:
                 <old_column_name>: <new_column_name>
           - type: flattenjson
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: flatten_json
               source_columns:
                 - <column name>
                 - <column name>
@@ -302,17 +262,10 @@ operations:
                 - <json_column_name>
           - type: regexextraction
             config:
-              input:
-                input_type: <source_type>
-                input_name: <source_name>
-                source_name: <source_name>
-              dest_schema: <intermediate_schema>
-              output_name: regex_extraction
               source_columns:
                 - <column name>
                 - <column name>
                 - <column name>
-                - ...
               columns:
                 <column_name>: <regex_pattern>
                 <column_name>: <regex_pattern>
