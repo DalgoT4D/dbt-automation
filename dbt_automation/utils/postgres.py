@@ -101,7 +101,7 @@ class PostgresClient(WarehouseInterface):
         # select
         query = f"""
         SELECT * 
-        FROM {schema}.{table}
+        FROM "{schema}"."{table}"
         """
 
         # order
