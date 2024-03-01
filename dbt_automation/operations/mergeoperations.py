@@ -18,14 +18,29 @@ from dbt_automation.utils.tableutils import source_or_ref
 
 
 def merge_operations_sql(
-    operations: List[dict],
+    config: dict,
     warehouse: WarehouseInterface,
-) -> str:
+):
     """
     Generate SQL code by merging SQL code from multiple operations.
     """
+    for i, operation in enumerate(config["operations"]):
+        operation["as_cte"] = f"cte{i+1}"  # this will go as WITH cte1 as (...)
+        if i == 0:
+            # first operation input can be model or source
+            operation["config"]["input"] = config["input"]
+        else:
+            # select the previous as_cte as source for next operations
+            operation["config"]["input"] = {
+                "input_name": config["operations"][i - 1]["as_cte"],
+                "input_type": "cte",
+                "source_name": None,
+            }
+
+    operations = config["operations"]
+
     if not operations:
-        return "-- No operations specified, no SQL generated."
+        return "-- No operations specified, no SQL generated.", []
 
     cte_sql_list = []
     output_cols = []  # return the last operations output columns
@@ -102,21 +117,8 @@ def merge_operations(
         "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}\n"
     )
 
-    for i, operation in enumerate(config["operations"]):
-        operation["as_cte"] = f"cte{i+1}"  # this will go as WITH cte1 as (...)
-        if i == 0:
-            # first operation input can be model or source
-            operation["config"]["input"] = config["input"]
-        else:
-            # select the previous as_cte as source for next operations
-            operation["config"]["input"] = {
-                "input_name": config["operations"][i - 1]["as_cte"],
-                "input_type": "cte",
-                "source_name": None,
-            }
-
     select_statement, output_cols = merge_operations_sql(
-        config["operations"],
+        config,
         warehouse,
     )
     dbt_sql += select_statement
