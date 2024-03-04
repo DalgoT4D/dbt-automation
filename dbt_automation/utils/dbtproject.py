@@ -69,3 +69,13 @@ class dbtProject:  # pylint:disable=invalid-name
             )
 
         return self.strip_project_dir(models_filename)
+
+    def delete_model(self, model_relative_path: Path):
+        """Delete a model; relative path will look like models/intermediate/example_model.sql"""
+
+        model_path = Path(self.project_dir) / model_relative_path
+        if model_path.exists():
+            model_path.unlink()
+            return True
+
+        return False
