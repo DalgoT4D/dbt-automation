@@ -24,17 +24,15 @@ basicConfig(level=INFO)
 logger = getLogger()
 
 
-def sync_sources(config, warehouse: WarehouseInterface, dbtproject: dbtProject):
+def generate_source_definitions_yaml(
+    source_name: str, input_schema: str, tablenames: list, dbtproject: dbtProject
+):
     """
-    reads tables from the input_schema to create a dbt sources.yml
-    uses the metadata from the existing source definitions, if any
+    Generate the sources.yml file. Or merge if one already exists
     """
-    input_schema = config["source_schema"]
-    source_name = config["source_name"]
     source_dir = dbtproject.models_dir(input_schema)
     sources_file = dbtproject.sources_filename(input_schema)
 
-    tablenames = warehouse.get_tables(input_schema)
     dbsourcedefinitions = mksourcedefinition(source_name, input_schema, tablenames)
     logger.info("read sources from database schema %s", input_schema)
 
@@ -57,6 +55,21 @@ def sync_sources(config, warehouse: WarehouseInterface, dbtproject: dbtProject):
         logger.info("wrote source definitions to %s", sources_file)
 
     return dbtproject.strip_project_dir(sources_file)
+
+
+def sync_sources(config, warehouse: WarehouseInterface, dbtproject: dbtProject):
+    """
+    reads tables from the input_schema to create a dbt sources.yml
+    uses the metadata from the existing source definitions, if any
+    """
+    input_schema = config["source_schema"]
+    source_name = config["source_name"]
+
+    tablenames = warehouse.get_tables(input_schema)
+
+    return generate_source_definitions_yaml(
+        source_name, input_schema, tablenames, dbtproject
+    )
 
 
 if __name__ == "__main__":
