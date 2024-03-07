@@ -33,7 +33,7 @@ def replace_dbt_sql(config: dict, warehouse: WarehouseInterface):
         col_name = column_dict["col_name"]
         output_col_name = column_dict["output_column_name"]
 
-        """REPLACE(REPLACE(.....)) As output_name"""
+        """REPLACE(REPLACE( ... ), "find" , "replace") As output_name"""
         replace_sql_str = f"{quote_columnname(col_name, warehouse.name)}"
         for op in column_dict["replace_ops"]:
             replace_sql_str = f"REPLACE({replace_sql_str}, {quote_constvalue(op['find'], warehouse.name)}, {quote_constvalue(op['replace'], warehouse.name)})"

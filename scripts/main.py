@@ -71,6 +71,8 @@ if config_data is None:
 if config_data["warehouse"] not in ["postgres", "bigquery"]:
     raise ValueError("unknown warehouse")
 
+logger.info(f"running operations for warehouse {config_data['warehouse']}")
+
 if config_data["warehouse"] == "postgres":
     conn_info = {
         "host": os.getenv("DBHOST"),
