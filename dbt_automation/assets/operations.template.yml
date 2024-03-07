@@ -176,7 +176,6 @@ operations:
         columns:
           column1: <regex operation>
           column2: <regex operation>
-
     - type: replace
       config:
         input: 
@@ -204,6 +203,30 @@ operations:
                 replace: <new string to be replaced with>
               - find: <old string to be replaced>
                 replace: <new string to be replaced with>
+
+    - type: join
+      config:
+        input_arr:
+          - input:
+              input_type: <"source" or "model">
+              input_name: <name of source table or ref model>
+              source_name: <name of the source defined in source.yml; will be null for type "model">
+            source_columns:
+              - <column name>
+              - <column name>
+              - <column name>
+          - input:
+              input_type: <"source" or "model">
+              input_name: <name of source table or ref model>
+              source_name: <name of the source defined in source.yml; will be null for type "model">
+            source_columns:
+              - <column name>
+              - <column name>
+              - <column name>
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+        join_type: <"inner" or "left">
+
     - type: mergeoperations
       config:
         dest_schema: <destination_schema>
