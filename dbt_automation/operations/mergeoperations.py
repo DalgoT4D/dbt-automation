@@ -14,6 +14,7 @@ from dbt_automation.operations.regexextraction import regex_extraction_sql
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.operations.castdatatypes import cast_datatypes_sql
+from dbt_automation.operations.replace import replace_dbt_sql
 from dbt_automation.utils.tableutils import source_or_ref
 
 
@@ -82,6 +83,10 @@ def merge_operations_sql(
             )
         elif operation["type"] == "union_tables":
             op_select_statement, out_cols = union_tables_sql(
+                operation["config"], warehouse
+            )
+        elif operation["type"] == "replace":
+            op_select_statement, out_cols = replace_dbt_sql(
                 operation["config"], warehouse
             )
 

@@ -177,6 +177,33 @@ operations:
           column1: <regex operation>
           column2: <regex operation>
 
+    - type: replace
+      config:
+        input: 
+            input_type: <"source" or "model">
+            input_name: <name of source table or ref model>
+            source_name: <name of the source defined in source.yml; will be null for type "model">
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+        columns:
+          - col_name: <name of the col to look in>
+            output_column_name: <output_column_name>
+            replace_ops:
+              - find: <old string to be replaced>
+                replace: <new string to be replaced with>
+              - find: <old string to be replaced>
+                replace: <new string to be replaced with>
+          - col_name: <name of the col to look in>
+            output_column_name: <output_column_name>
+            replace_ops:
+              - find: <old string to be replaced>
+                replace: <new string to be replaced with>
+              - find: <old string to be replaced>
+                replace: <new string to be replaced with>
     - type: mergeoperations
       config:
         dest_schema: <destination_schema>
@@ -276,3 +303,24 @@ operations:
               columns:
                 <column_name>: <regex_pattern>
                 <column_name>: <regex_pattern>
+          - type: replace
+            config:
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              columns:
+                - col_name: <name of the col to look in>
+                  output_column_name: <output_column_name>
+                  replace_ops:
+                    - find: <old string to be replaced>
+                      replace: <new string to be replaced with>
+                    - find: <old string to be replaced>
+                      replace: <new string to be replaced with>
+                - col_name: <name of the col to look in>
+                  output_column_name: <output_column_name>
+                  replace_ops:
+                    - find: <old string to be replaced>
+                      replace: <new string to be replaced with>
+                    - find: <old string to be replaced>
+                      replace: <new string to be replaced with>
