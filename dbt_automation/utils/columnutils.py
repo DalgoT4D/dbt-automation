@@ -57,3 +57,13 @@ def quote_columnname(colname: str, warehouse: str):
         return "`" + colname + "`"
     else:
         raise ValueError(f"unsupported warehouse: {warehouse}")
+
+
+def quote_constvalue(value: str, warehouse: str):
+    """encloses a constant string value inside proper quotes"""
+    if warehouse == "postgres":
+        return "'" + value + "'"
+    elif warehouse == "bigquery":
+        return "'" + value + "'"
+    else:
+        raise ValueError(f"unsupported warehouse: {warehouse}")

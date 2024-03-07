@@ -21,6 +21,7 @@ from dbt_automation.operations.syncsources import sync_sources
 from dbt_automation.operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
+from dbt_automation.operations.replace import replace
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -36,6 +37,7 @@ OPERATIONS_DICT = {
     "regexextraction": regex_extraction,
     "scaffold": scaffold,
     "mergeoperations": merge_operations,
+    "replace": replace,
 }
 
 load_dotenv("./../dbconnection.env")
@@ -68,6 +70,8 @@ if config_data is None:
 # TODO: Add stronger validations for each operation here
 if config_data["warehouse"] not in ["postgres", "bigquery"]:
     raise ValueError("unknown warehouse")
+
+logger.info(f"running operations for warehouse {config_data['warehouse']}")
 
 if config_data["warehouse"] == "postgres":
     conn_info = {

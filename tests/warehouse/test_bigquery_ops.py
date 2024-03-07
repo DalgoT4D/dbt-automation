@@ -738,6 +738,30 @@ class TestBigqueryOperations:
                         "output_column_name": "regex",
                     },
                 },
+                {
+                    "type": "replace",
+                    "config": {
+                        "source_columns": [
+                            "ngo",
+                            "Month",
+                            "measure1",
+                            "measure2",
+                            "Indicator",
+                            "add_col",
+                            "coalesce",
+                            "concat_col",
+                        ],
+                        "columns": [
+                            {
+                                "col_name": "ngo",
+                                "output_column_name": "ngo_replaced",
+                                "replace_ops": [
+                                    {"find": "CRC", "replace": "NGO_REPLACED_NAME"}
+                                ],
+                            }
+                        ],
+                    },
+                },
             ],
         }
 
@@ -762,10 +786,12 @@ class TestBigqueryOperations:
         assert "add_col" in cols
         assert "coalesce" in cols
         assert "concat_col" in cols
+        assert "ngo_replaced" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 10)
         table_data.sort(key=lambda x: x["Month"])
         assert type(table_data[0]["measure1"]) == int
         assert type(table_data[0]["measure2"]) == int
+        assert "NGO_REPLACED_NAME" in [row["ngo_replaced"] for row in table_data]
 
         assert (
             table_data[0]["add_col"]
@@ -785,4 +811,3 @@ class TestBigqueryOperations:
             )
             == 0
         )
-
