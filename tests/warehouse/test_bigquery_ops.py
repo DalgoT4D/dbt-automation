@@ -750,7 +750,6 @@ class TestBigqueryOperations:
                             "add_col",
                             "coalesce",
                             "concat_col",
-                            "regex",
                         ],
                         "columns": [
                             {
