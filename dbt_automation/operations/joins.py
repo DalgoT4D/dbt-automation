@@ -15,6 +15,7 @@ def joins_sql(
     """Given a regex and a column name, extract the regex from the column."""
     input_tables = config.get("input_arr", [])
     join_type: str = config.get("join_type", "")
+    join_on = config.get("join_on", {})
 
     if join_type not in ["inner", "left"]:
         raise ValueError(f"join type not supported")
@@ -22,53 +23,49 @@ def joins_sql(
     if len(input_tables) != 2:
         raise ValueError(f"join operation requires exactly 2 input tables")
 
-    alias = ["t1", "t2"]
-
-    source_columns_table1 = set(input_tables[0]["source_columns"])
-    source_columns_table2 = set(input_tables[1]["source_columns"])
-
-    # Find intersection of source columns
-    intersecting_columns = source_columns_table1 & source_columns_table2
-
-    # Add "_2" to intersecting column names in second table
-    input_tables[1]["source_columns"] = [
-        col + "_2" if col in intersecting_columns else col
-        for col in input_tables[1]["source_columns"]
-    ]
+    aliases = ["t1", "t2"]
 
     # select
     dbt_code = f"\nSELECT "
 
-    for alias, input_table in zip(alias, input_tables):
+    output_set = set()  # to check for duplicate column names
+    for i, (alias, input_table) in enumerate(zip(aliases, input_tables)):
         source_columns = input_table["source_columns"]
 
         for col_name in source_columns:
-            dbt_code += f"{quote_columnname(alias, warehouse.name)}.{quote_columnname(col_name, warehouse.name)},\n"
+            dbt_code += f"{quote_columnname(alias, warehouse.name)}.{quote_columnname(col_name, warehouse.name)}"
+            if col_name in output_set:
+                dbt_code += (
+                    f" AS {quote_columnname(col_name + f'_{i+1}', warehouse.name)},\n"
+                )
+                output_set.add(col_name + f"_{i+1}")
+            else:
+                dbt_code += ",\n"
+                output_set.add(col_name)
 
-    dbt_code = dbt_code[:-2] + f"\n"
+    dbt_code = dbt_code[:-2]
 
-    select_from = source_or_ref(**config["input"])
-    if config["input"]["input_type"] == "cte":
-        dbt_code += "\n FROM " + select_from + f" {alias[0]}" + "\n"
+    select_from = source_or_ref(**input_tables[0]["input"])
+    if input_tables[0]["input"]["input_type"] == "cte":
+        dbt_code += "\n FROM " + select_from + " " + aliases[0] + "\n"
     else:
-        dbt_code += "\n FROM " + "{{" + select_from + "}}" + f" {alias[0]}" + "\n"
+        dbt_code += "\n FROM " + "{{" + select_from + "}}" + " " + aliases[0] + "\n"
 
     # join
     dbt_code += (
         f" {join_type.upper()} JOIN "
         + "{{"
-        + source_or_ref(**input_tables[1])
+        + source_or_ref(**input_tables[1]["input"])
         + "}}"
-        + f" {alias[1]}"
+        + f" {aliases[1]}"
         + "\n"
     )
 
-    # TODO:
+    # TODO: maybe cascade multiple ON conditions
+    dbt_code += f" ON {quote_columnname(aliases[0], warehouse.name)}.{quote_columnname(join_on['key1'], warehouse.name)}"
+    dbt_code += f"= {quote_columnname(aliases[1], warehouse.name)}.{quote_columnname(join_on['key2'], warehouse.name)}\n"
 
-    return (
-        dbt_code,
-        input_tables[0]["source_columns"] + input_tables[1]["source_columns"],
-    )
+    return dbt_code, len(output_set)
 
 
 def join(config: dict, warehouse: WarehouseInterface, project_dir: str):
@@ -78,7 +75,7 @@ def join(config: dict, warehouse: WarehouseInterface, project_dir: str):
     dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
     dbt_sql = ""
-    if config["input"]["input_type"] != "cte":
+    if config["input_arr"][0]["input"]["input_type"] != "cte":
         dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )

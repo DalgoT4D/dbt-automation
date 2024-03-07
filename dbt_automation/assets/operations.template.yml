@@ -226,6 +226,10 @@ operations:
         dest_schema:  <destination schema>
         output_name: <name of the output model>
         join_type: <"inner" or "left">
+        join_on:
+          key1: <colname of table1>
+          key2: <colname of table2>
+
 
     - type: mergeoperations
       config:
