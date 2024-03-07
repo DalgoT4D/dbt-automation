@@ -87,6 +87,7 @@ operations:
           - <first column>
           - <second column>
           - ...
+        default_value: null
         output_column_name: <output column name>
     - type: concat
       config: 
@@ -218,6 +219,7 @@ operations:
               columns:
                 - <column_name>
                 - <column_name>
+              default_value: null
               output_column_name: <output_column_name>
           - type: concat
             config:
