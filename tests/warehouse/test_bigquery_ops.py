@@ -752,13 +752,15 @@ class TestBigqueryOperations:
                             "concat_col",
                             "regex",
                         ],
-                        "columns": {
-                            "col_name": "ngo",
-                            "output_column_name": "ngo_replaced",
-                            "replace_ops": [
-                                {"find": "CRC", "replace": "NGO_REPLACED_NAME"}
-                            ],
-                        },
+                        "columns": [
+                            {
+                                "col_name": "ngo",
+                                "output_column_name": "ngo_replaced",
+                                "replace_ops": [
+                                    {"find": "CRC", "replace": "NGO_REPLACED_NAME"}
+                                ],
+                            }
+                        ],
                     },
                 },
             ],
