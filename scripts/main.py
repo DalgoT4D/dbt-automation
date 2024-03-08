@@ -22,6 +22,7 @@ from dbt_automation.operations.flattenairbyte import flatten_operation
 from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.replace import replace
+from dbt_automation.operations.joins import join
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -38,6 +39,7 @@ OPERATIONS_DICT = {
     "scaffold": scaffold,
     "mergeoperations": merge_operations,
     "replace": replace,
+    "join": join,
 }
 
 load_dotenv("./../dbconnection.env")
