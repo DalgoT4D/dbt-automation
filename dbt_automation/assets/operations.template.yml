@@ -229,6 +229,7 @@ operations:
         join_on:
           key1: <colname of table1>
           key2: <colname of table2>
+          compare_with: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
 
 
     - type: mergeoperations
