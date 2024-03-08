@@ -95,7 +95,7 @@ class PostgresClient(WarehouseInterface):
         """
         returns limited rows from the specified table in the given schema
         """
-        offset = (page - 1) * limit
+        offset = max((page - 1) * limit, 0)
         # total_rows = self.execute(f"SELECT COUNT(*) FROM {schema}.{table}")[0][0]
 
         # select
