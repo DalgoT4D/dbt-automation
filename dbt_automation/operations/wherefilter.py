@@ -1,6 +1,5 @@
 """generates a model which filters using the sql where clause"""
 
-import datetime
 from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
@@ -10,6 +9,51 @@ from dbt_automation.utils.tableutils import source_or_ref
 
 basicConfig(level=INFO)
 logger = getLogger()
+
+# sql, columns = wherefilter.where_filter_sql({
+#     "source_columns": ["salinity", "Arsenic"],
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "destinations_v2",
+#         "input_name": "Sheet2",
+#     },
+#     "where_type": "and",
+#     "clauses": [
+#         {
+#             "column": "Iron",
+#             "operator": ">=",
+#             "value": "0"
+#         },
+#         {
+#             "column": "Nitrate",
+#             "operator": "<>",
+#             "value": "50"
+#         }
+#     ]
+# }, wc_client)
+#
+#       SELECT
+#       `salinity`,
+#       `Arsenic`
+#       FROM {{source('destinations_v2', 'Sheet2')}}
+#       WHERE (`Iron` >= '0'  AND `Nitrate` <> '50' )
+#
+# sql, columns = wherefilter.where_filter_sql({
+#     "source_columns": ["salinity", "Arsenic"],
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "destinations_v2",
+#         "input_name": "Sheet2",
+#     },
+#     "where_type": "sql",
+#     "sql_snippet": "CAST(`Iron`, INT64) > CAST(`Nitrate`, INT64)"
+# }, wc_client)
+#
+#       SELECT
+#       `salinity`,
+#       `Arsenic`
+#       FROM {{source('destinations_v2', 'Sheet2')}}
+#       WHERE (CAST(`Iron`, INT64) > CAST(`Nitrate`, INT64))
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
