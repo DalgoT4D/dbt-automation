@@ -23,6 +23,7 @@ from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.replace import replace
 from dbt_automation.operations.joins import join
+from dbt_automation.operations.wherefilter import where_filter
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -40,6 +41,7 @@ OPERATIONS_DICT = {
     "mergeoperations": merge_operations,
     "replace": replace,
     "join": join,
+    "where": where_filter,
 }
 
 load_dotenv("./../dbconnection.env")
