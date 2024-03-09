@@ -87,6 +87,4 @@ def coalesce_columns(config: dict, warehouse: WarehouseInterface, project_dir: s
     dest_schema = config["dest_schema"]
     model_sql_path = dbt_project.write_model(dest_schema, output_name, dbt_sql)
 
-    logger.info("output model:", model_sql_path)
-
     return model_sql_path, output_cols
