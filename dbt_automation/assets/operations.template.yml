@@ -230,7 +230,7 @@ operations:
               - <column name>
               - <column name>
               - <column name>
-            seq: < by defaull 1 is the above input ; will help in mergeoperation chaininig to figure out if we want to do a left or a right join>
+            seq: < its 1 for the above input ; will help in mergeoperation chaininig to figure out if we want to do a left or a right join>
 
 
     - type: mergeoperations
@@ -353,3 +353,27 @@ operations:
                       replace: <new string to be replaced with>
                     - find: <old string to be replaced>
                       replace: <new string to be replaced with>
+          - type: join
+            config:
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              dest_schema:  <destination schema>
+              output_name: <name of the output model>
+              join_type: <"inner" or "left">
+              join_on:
+                key1: <colname of table1>
+                key2: <colname of table2>
+                compare_with: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+              other_inputs:
+                - input:
+                    input_type: <"source" or "model" table2>
+                    input_name: <name of source table or ref model table2>
+                    source_name: <name of the source defined in source.yml; will be null for type "model" table2>
+                  source_columns:
+                    - <column name>
+                    - <column name>
+                    - <column name>
+                  seq: < its 1 for the above input ; will help in mergeoperation chaininig to figure out if we want to do a left or a right join>
+
