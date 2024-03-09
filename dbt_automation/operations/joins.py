@@ -7,24 +7,22 @@ from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.utils.tableutils import source_or_ref
 
-
 # sql, len_output_set = joins.joins_sql({
-#     "input_arr": [
-#         {
-#             "input": {
-#                 "input_type": "source",
-#                 "source_name": "pytest_intermediate",
-#                 "input_name": "arithmetic_add",
-#             },
-#             "source_columns": ["measure1", "measure2"]
-#         },
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "pytest_intermediate",
+#         "input_name": "arithmetic_add",
+#     },
+#     "source_columns": ["measure1", "measure2"],
+#     "other_inputs": [
 #         {
 #             "input": {
 #                 "input_type": "source",
 #                 "source_name": "pytest_intermediate",
 #                 "input_name": "arithmetic_div",
 #             },
-#             "source_columns": ["Indicator", "measure2"],
+#             "source_columns": ["Indicator", "measure2", "Month"],
+#             "seq": 1
 #         },
 #     ],
 #     "join_type": "inner",
@@ -35,18 +33,19 @@ from dbt_automation.utils.tableutils import source_or_ref
 #     },
 #     "dest_schema": "joined",
 # }, wc_client)
-
-# gives sql =
-
-#     SELECT "t1"."measure1",
-#     "t1"."measure2",
-#     "t2"."Indicator",
-#     "t2"."measure2" AS "measure2_2"
-#     FROM {{source('pytest_intermediate', 'arithmetic_add')}} t1
-#     INNER JOIN {{source('pytest_intermediate', 'arithmetic_div')}} t2
-#     ON "t1"."NGO" = "t2"."NGO"
-
-# and len_output_set = 4 (columns)
+#
+# then sql is
+#
+#    SELECT "t1"."measure1",
+#    "t1"."measure2",
+#    "t2"."Indicator",
+#    "t2"."measure2" AS "measure2_2",
+#    "t2"."Month"
+#    FROM {{source('pytest_intermediate', 'arithmetic_add')}} t1
+#    INNER JOIN {{source('pytest_intermediate', 'arithmetic_div')}} t2
+#    ON "t1"."NGO" = "t2"."NGO"
+#
+# and len_output_set = 5 (columns)
 
 
 def joins_sql(
@@ -54,7 +53,11 @@ def joins_sql(
     warehouse: WarehouseInterface,
 ):
     """Given a regex and a column name, extract the regex from the column."""
-    input_tables = config.get("input_arr", [])
+
+    input_tables = [
+        {"input": config["input"], "source_columns": config["source_columns"], "seq": 1}
+    ] + config.get("other_inputs", [])
+    input_tables.sort(key=lambda x: x["seq"])
     join_type: str = config.get("join_type", "")
     join_on = config.get("join_on", {})
 
@@ -86,21 +89,28 @@ def joins_sql(
 
     dbt_code = dbt_code[:-2]
 
-    select_from = source_or_ref(**input_tables[0]["input"])
-    if input_tables[0]["input"]["input_type"] == "cte":
+    table1 = input_tables[0]["input"]
+    select_from = source_or_ref(**table1)
+    if table1["input_type"] == "cte":
         dbt_code += "\n FROM " + select_from + " " + aliases[0] + "\n"
     else:
         dbt_code += "\n FROM " + "{{" + select_from + "}}" + " " + aliases[0] + "\n"
 
     # join
-    dbt_code += (
-        f" {join_type.upper()} JOIN "
-        + "{{"
-        + source_or_ref(**input_tables[1]["input"])
-        + "}}"
-        + f" {aliases[1]}"
-        + "\n"
-    )
+    table2 = input_tables[1]["input"]
+    join_with = source_or_ref(**table2)
+    if table2["input_type"] == "cte":
+        dbt_code += f" {join_type.upper()} JOIN " + join_with + " " + aliases[1] + "\n"
+    else:
+        dbt_code += (
+            f" {join_type.upper()} JOIN "
+            + "{{"
+            + join_with
+            + "}}"
+            + " "
+            + aliases[1]
+            + "\n"
+        )
 
     dbt_code += f" ON {quote_columnname(aliases[0], warehouse.name)}.{quote_columnname(join_on['key1'], warehouse.name)}"
     dbt_code += f" {join_on['compare_with']} {quote_columnname(aliases[1], warehouse.name)}.{quote_columnname(join_on['key2'], warehouse.name)}\n"
@@ -115,7 +125,7 @@ def join(config: dict, warehouse: WarehouseInterface, project_dir: str):
     dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
     dbt_sql = ""
-    if config["input_arr"][0]["input"]["input_type"] != "cte":
+    if config["input"] != "cte":
         dbt_sql = (
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
