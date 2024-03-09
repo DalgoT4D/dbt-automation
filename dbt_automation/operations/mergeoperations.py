@@ -15,6 +15,7 @@ from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.operations.castdatatypes import cast_datatypes_sql
 from dbt_automation.operations.replace import replace_dbt_sql
+from dbt_automation.operations.joins import joins_sql
 from dbt_automation.utils.tableutils import source_or_ref
 
 
@@ -89,6 +90,8 @@ def merge_operations_sql(
             op_select_statement, out_cols = replace_dbt_sql(
                 operation["config"], warehouse
             )
+        elif operation["type"] == "join":
+            op_select_statement, out_cols = joins_sql(operation["config"], warehouse)
 
         output_cols = out_cols
 
