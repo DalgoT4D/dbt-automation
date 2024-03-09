@@ -22,19 +22,18 @@ def where_filter_sql(
     """
     source_columns = config["source_columns"]
     input_table = config["input"]
-    clauses: dict = config.get("clauses", {})
-
-    # only one of the below 3 clauses will be present
-    and_clauses: list[dict] = clauses.get("and", [])
-    or_clauses: list[dict] = clauses.get("or", [])
-    sql_snippet: list[dict] = clauses.get("sql_snippet", "")
+    clauses: dict = config.get("clauses", [])
+    clause_type: str = config.get("where_type", "")  # and, or, sql
+    sql_snippet: str = config.get("sql_snippet", "")
 
     dbt_code = "SELECT\n"
 
     select_from = source_or_ref(**input_table)
 
-    for col_name in source_columns:
-        dbt_code += f"{quote_columnname(col_name, warehouse.name)},\n"
+    dbt_code += ",\n".join(
+        [quote_columnname(col_name, warehouse.name) for col_name in source_columns]
+    )
+    dbt_code += "\n"
 
     select_from = source_or_ref(**input_table)
     if input_table["input_type"] == "cte":
@@ -43,13 +42,14 @@ def where_filter_sql(
         dbt_code += f"FROM {{{{{select_from}}}}}\n"
 
     # where
-    if not (len(and_clauses) > 0 or len(or_clauses) > 0 or len(sql_snippet) > 0):
+    if len(clauses) == 0 and not sql_snippet:
         raise ValueError("No where clause provided")
 
     dbt_code += "WHERE ("
-    if len(and_clauses) > 0:
+
+    if clause_type in ["and", "or"]:
         temp = []
-        for clause in and_clauses:
+        for clause in clauses:
             clause = (
                 f"{quote_columnname(clause['column'], warehouse.name)} "
                 + f"{clause['operator']} "
@@ -57,21 +57,9 @@ def where_filter_sql(
             )
             temp.append(clause)
 
-        dbt_code += " AND ".join(temp)
+        dbt_code += f" {clause_type.upper()} ".join(temp)
 
-    elif len(or_clauses) > 0:
-        temp = []
-        for clause in or_clauses:
-            clause = (
-                f"{quote_columnname(clause['column'], warehouse.name)} "
-                + f"{clause['operator']} "
-                + f"{quote_constvalue(str(clause['value']), warehouse.name)} "
-            )
-            temp.append(clause)
-
-        dbt_code += " OR ".join(temp)
-
-    elif sql_snippet:
+    elif clause_type == "sql":
         dbt_code += f"{sql_snippet}"
 
     dbt_code += ")"

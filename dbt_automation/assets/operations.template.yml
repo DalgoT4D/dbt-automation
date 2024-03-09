@@ -244,22 +244,21 @@ operations:
           - <column name>
         dest_schema:  <destination schema>
         output_name: <name of the output model>
+        where_type: <"and" or "or" or "sql">
         clauses:
-          and: 
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
               value: <value>
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
               value: <value>
-          or:
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
               value: <value>
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
               value: <value>
-          sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
+        sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
   
     - type: mergeoperations
       config:
@@ -411,19 +410,18 @@ operations:
                 - <column name>
                 - <column name>
                 - <column name>
+              where_type: <"and" or "or" or "sql">
               clauses:
-                and: 
                   - column: <column name>
                     operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
                     value: <value>
                   - column: <column name>
                     operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
                     value: <value>
-                or:
                   - column: <column name>
                     operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
                     value: <value>
                   - column: <column name>
                     operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
                     value: <value>
-                sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
+              sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
