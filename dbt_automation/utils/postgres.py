@@ -95,7 +95,7 @@ class PostgresClient(WarehouseInterface):
         """
         returns limited rows from the specified table in the given schema
         """
-        offset = (page - 1) * limit
+        offset = max((page - 1) * limit, 0)
         # total_rows = self.execute(f"SELECT COUNT(*) FROM {schema}.{table}")[0][0]
 
         # select
@@ -239,3 +239,18 @@ class PostgresClient(WarehouseInterface):
         }
 
         return profiles_yml
+
+    def get_total_rows(self, schema: str, table: str) -> int:
+        """Fetches the total number of rows for a specified table."""
+        try:
+            resultset = self.execute(
+                f"""
+                SELECT COUNT(*) 
+                FROM "{schema}"."{table}";
+                """
+            )
+            total_rows = resultset[0][0] if resultset else 0
+            return total_rows
+        except Exception as e:
+            logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
+            raise

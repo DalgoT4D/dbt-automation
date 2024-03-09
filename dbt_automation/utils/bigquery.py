@@ -65,7 +65,7 @@ class BigQueryClient(WarehouseInterface):
     ) -> list:
         """returns limited rows from the specified table in the given schema"""
 
-        offset = (page - 1) * limit
+        offset = max((page - 1) * limit, 0)
         # total_rows = self.execute(
         #     f"SELECT COUNT(*) as total_rows FROM `{schema}`.`{table}`"
         # )
@@ -224,3 +224,21 @@ class BigQueryClient(WarehouseInterface):
         }
 
         return profiles_yml
+
+    def get_total_rows(self, schema: str, table: str) -> int:
+        """Fetches the total number of rows for a specified table."""
+        try:
+            resultset = self.execute(
+                f"""
+                SELECT COUNT(*) 
+                FROM `{schema}`.`{table}`;
+                """
+            )
+            total_rows = 0
+            for row in resultset:
+                total_rows = row[0]
+                break
+            return total_rows
+        except Exception as e:
+            logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
+            raise
