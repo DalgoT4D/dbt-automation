@@ -7,6 +7,44 @@ from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.utils.tableutils import source_or_ref
 
+# sql, len_output_set = joins.joins_sql({
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "pytest_intermediate",
+#         "input_name": "arithmetic_add",
+#     },
+#     "source_columns": ["measure1", "measure2"],
+#     "other_inputs": [
+#         {
+#             "input": {
+#                 "input_type": "source",
+#                 "source_name": "pytest_intermediate",
+#                 "input_name": "arithmetic_div",
+#             },
+#             "source_columns": ["Indicator", "measure2", "Month"],
+#             "seq": 1
+#         },
+#     ],
+#     "join_type": "inner",
+#     "join_on": {
+#         "key1": "NGO",
+#         "key2": "NGO",
+#         "compare_with": "="
+#     },
+#     "dest_schema": "joined",
+# }, wc_client)
+#
+# then sql is
+#
+# SELECT "t1"."measure1",
+# "t1"."measure2",
+# "t2"."Indicator",
+# "t2"."measure2" AS "measure2_2",
+# "t2"."Month"
+# FROM {{source('pytest_intermediate', 'arithmetic_add')}} t1
+# INNER JOIN {{source('pytest_intermediate', 'arithmetic_div')}} t2
+# ON "t1"."NGO" = "t2"."NGO"
+
 
 def joins_sql(
     config: dict,
