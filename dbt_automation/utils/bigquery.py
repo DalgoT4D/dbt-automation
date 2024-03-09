@@ -231,10 +231,13 @@ class BigQueryClient(WarehouseInterface):
             resultset = self.execute(
                 f"""
                 SELECT COUNT(*) 
-                FROM "{schema}"."{table}";
+                FROM `{schema}`.`{table}`;
                 """
             )
-            total_rows = resultset[0][0] if resultset else 0
+            total_rows = 0
+            for row in resultset:
+                total_rows = row[0]
+                break
             return total_rows
         except Exception as e:
             logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
