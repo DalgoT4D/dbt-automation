@@ -23,6 +23,8 @@ def where_filter_sql(
     source_columns = config["source_columns"]
     input_table = config["input"]
     clauses: dict = config.get("clauses", {})
+
+    # only one of the below 3 clauses will be present
     and_clauses: list[dict] = clauses.get("and", [])
     or_clauses: list[dict] = clauses.get("or", [])
     sql_snippet: list[dict] = clauses.get("sql_snippet", "")
