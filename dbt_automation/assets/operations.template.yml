@@ -405,3 +405,25 @@ operations:
                     - <column name>
                   seq: < its 1 for the above input ; will help in mergeoperation chaininig to figure out if we want to do a left or a right join>
 
+          - type: where
+            config: 
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              clauses:
+                and: 
+                  - column: <column name>
+                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                    value: <value>
+                  - column: <column name>
+                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                    value: <value>
+                or:
+                  - column: <column name>
+                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                    value: <value>
+                  - column: <column name>
+                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                    value: <value>
+                sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
