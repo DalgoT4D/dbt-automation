@@ -24,6 +24,7 @@ from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.replace import replace
 from dbt_automation.operations.joins import join
 from dbt_automation.operations.wherefilter import where_filter
+from dbt_automation.operations.groupby import groupby
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -42,6 +43,7 @@ OPERATIONS_DICT = {
     "replace": replace,
     "join": join,
     "where": where_filter,
+    "groupby": groupby,
 }
 
 load_dotenv("./../dbconnection.env")
@@ -104,9 +106,10 @@ for op_data in config_data["operations"]:
 
     logger.info(f"running the {op_type} operation")
     logger.info(f"using config {config}")
-    OPERATIONS_DICT[op_type](
+    output = OPERATIONS_DICT[op_type](
         config=config, warehouse=warehouse, project_dir=project_dir
     )
     logger.info(f"finished running the {op_type} operation")
+    logger.info(output)
 
 warehouse.close()
