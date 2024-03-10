@@ -2,16 +2,52 @@
 Generates a model after grouping by and aggregating columns
 """
 
-import datetime
 from logging import basicConfig, getLogger, INFO
 
 from dbt_automation.utils.dbtproject import dbtProject
-from dbt_automation.utils.columnutils import quote_columnname, quote_constvalue
+from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.utils.tableutils import source_or_ref
 
 basicConfig(level=INFO)
 logger = getLogger()
+
+# sql, columns = groupby.groupby_dbt_sql({
+#     "source_columns": ["NGO", "Month"],
+#     "aggregate_on": [
+#         {
+#             "operation": "count",
+#             "column": "measure1",
+#             "output_col_name": "measure1__count",
+#         },
+#         {
+#             "operation": "countdistinct",
+#             "column": "measure2",
+#             "output_col_name": "measure2__count",
+#         },
+#         {
+#             "operation": "sum",
+#             "column": "Indicator",
+#             "output_col_name": "sum_of_indicator"
+#         },
+#     ],
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "pytest_intermediate",
+#         "input_name": "arithmetic_add",
+#     },
+# }, wc_client)
+#
+# =>
+#
+#       SELECT
+#       "NGO",
+#       "Month",
+#       COUNT("measure1") AS "measure1__count",
+#       COUNT(DISTINCT "measure2") AS "measure2__count",
+#       SUM("Indicator") AS "sum_of_indicator"
+#       FROM {{source('pytest_intermediate', 'arithmetic_add')}}
+#       GROUP BY "NGO","Month"
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
