@@ -17,6 +17,7 @@ from dbt_automation.operations.castdatatypes import cast_datatypes_sql
 from dbt_automation.operations.replace import replace_dbt_sql
 from dbt_automation.operations.joins import joins_sql
 from dbt_automation.operations.wherefilter import where_filter_sql
+from dbt_automation.operations.groupby import groupby_dbt_sql
 
 
 def merge_operations_sql(
@@ -94,6 +95,10 @@ def merge_operations_sql(
             op_select_statement, out_cols = joins_sql(operation["config"], warehouse)
         elif operation["type"] == "where":
             op_select_statement, out_cols = where_filter_sql(
+                operation["config"], warehouse
+            )
+        elif operation["type"] == "groupby":
+            op_select_statement, out_cols = groupby_dbt_sql(
                 operation["config"], warehouse
             )
 
