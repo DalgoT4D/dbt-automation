@@ -115,7 +115,7 @@ def joins_sql(
     dbt_code += f" ON {quote_columnname(aliases[0], warehouse.name)}.{quote_columnname(join_on['key1'], warehouse.name)}"
     dbt_code += f" {join_on['compare_with']} {quote_columnname(aliases[1], warehouse.name)}.{quote_columnname(join_on['key2'], warehouse.name)}\n"
 
-    return dbt_code, len(output_set)
+    return dbt_code, list(output_set)
 
 
 def join(config: dict, warehouse: WarehouseInterface, project_dir: str):
