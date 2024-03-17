@@ -5,7 +5,7 @@ This file contains the airthmetic operations for dbt automation
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
-from dbt_automation.utils.columnutils import quote_columnname
+from dbt_automation.utils.columnutils import quote_columnname, quote_constvalue
 
 from dbt_automation.utils.tableutils import source_or_ref
 
@@ -20,7 +20,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
     config["input"] is dict {"source_name": "", "input_name": "", "input_type": ""}
     """
     operator = config["operator"]
-    operands = config["operands"]
+    operands = config["operands"]  # {"is_col": true, "value": "1"}[]
     output_col_name = config["output_column_name"]
     source_columns = config.get("source_columns", [])
 
@@ -43,7 +43,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_add(["
         for operand in operands:
-            dbt_code += f"'{quote_columnname(str(operand), warehouse.name)}',"
+            dbt_code += f"{quote_columnname(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {output_col_name} "
@@ -51,7 +51,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
     if operator == "mul":
         dbt_code += ","
         for operand in operands:
-            dbt_code += f"{operand} * "
+            dbt_code += f"{quote_columnname(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)} * "
         dbt_code = dbt_code[:-2]
         dbt_code += f" AS {output_col_name} "
 
@@ -59,7 +59,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_subtract(["
         for operand in operands:
-            dbt_code += f"'{quote_columnname(str(operand), warehouse.name)}',"
+            dbt_code += f"{quote_columnname(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {output_col_name} "
@@ -68,7 +68,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_divide("
         for operand in operands:
-            dbt_code += f"'{quote_columnname(str(operand), warehouse.name)}',"
+            dbt_code += f"{quote_columnname(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code += ")}}"
         dbt_code += f" AS {output_col_name} "
 
