@@ -39,13 +39,14 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         [quote_columnname(col, warehouse.name) for col in source_columns]
     )
 
-    # dbt_utils function safe_add, safe_subtract, safe_divide take input as single quoted fields for column eg. 'field1'
+    # dbt_utils function safe_add, safe_subtract, safe_divide
+    # takes input as single quoted fields for column eg. 'field1'. regardless of the warehouse
 
     if operator == "add":
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_add(["
         for operand in operands:
-            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)},"
+            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {output_col_name} "
@@ -61,7 +62,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_subtract(["
         for operand in operands:
-            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)},"
+            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {output_col_name} "
@@ -70,7 +71,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_divide("
         for operand in operands:
-            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)},"
+            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code += ")}}"
         dbt_code += f" AS {output_col_name} "
 
