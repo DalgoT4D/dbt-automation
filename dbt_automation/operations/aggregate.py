@@ -1,5 +1,5 @@
 """
-Generates a model after grouping by and aggregating columns
+Generates a model after aggregating columns
 """
 
 from logging import basicConfig, getLogger, INFO
