@@ -12,6 +12,31 @@ from dbt_automation.utils.tableutils import source_or_ref
 basicConfig(level=INFO)
 logger = getLogger()
 
+# sql, len_output_set = aggregate.aggregate_dbt_sql({
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "pytest_intermediate",
+#         "input_name": "arithmetic_add",
+#     },
+#     "aggregate_on": [
+#         {
+#             "operation": "count",
+#             "column": "NGO",
+#             "output_col_name": "count__ngo"
+#         },
+#         {
+#             "operation": "countdistinct",
+#             "column": "Month",
+#             "output_col_name": "distinctmonths"
+#         },
+#     ],
+
+# }, wc_client)
+
+# SELECT
+#  COUNT("NGO")  AS "count__ngo", COUNT(DISTINCT "Month")  AS "distinctmonths"
+# FROM {{source('pytest_intermediate', 'arithmetic_add')}}
+
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
 def aggregate_dbt_sql(
