@@ -20,6 +20,7 @@ from dbt_automation.operations.wherefilter import where_filter_sql
 from dbt_automation.operations.groupby import groupby_dbt_sql
 from dbt_automation.operations.aggregate import aggregate_dbt_sql
 from dbt_automation.operations.casewhen import casewhen_dbt_sql
+from dbt_automation.operations.flattenjson import flattenjson_dbt_sql
 
 
 def merge_operations_sql(
@@ -109,6 +110,10 @@ def merge_operations_sql(
             )
         elif operation["type"] == "casewhen":
             op_select_statement, out_cols = casewhen_dbt_sql(
+                operation["config"], warehouse
+            )
+        elif operation["type"] == "flattenjson":
+            op_select_statement, out_cols = flattenjson_dbt_sql(
                 operation["config"], warehouse
             )
 
