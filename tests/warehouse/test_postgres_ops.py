@@ -359,7 +359,10 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "add",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "add_col",
         }
@@ -399,7 +402,10 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "sub",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "sub_col",
         }
@@ -439,7 +445,10 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "mul",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "mul_col",
         }
@@ -479,7 +488,10 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "div",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "output_column_name": "div_col",
         }
@@ -647,7 +659,10 @@ class TestPostgresOperations:
                     "type": "arithmetic",
                     "config": {
                         "operator": "add",
-                        "operands": ["measure1", "measure2"],
+                        "operands": [
+                            {"value": "measure1", "is_col": True},
+                            {"value": "measure2", "is_col": True},
+                        ],
                         "output_column_name": "add_col",
                         "source_columns": [
                             "NGO",

@@ -351,7 +351,10 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "add",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "output_column_name": "add_col",
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
@@ -391,7 +394,10 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "sub",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "output_column_name": "sub_col",
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
@@ -431,7 +437,10 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "mul",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "output_column_name": "mul_col",
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
@@ -471,7 +480,10 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "operator": "div",
-            "operands": ["measure1", "measure2"],
+            "operands": [
+                {"value": "measure1", "is_col": True},
+                {"value": "measure2", "is_col": True},
+            ],
             "output_column_name": "div_col",
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
         }
@@ -632,7 +644,10 @@ class TestBigqueryOperations:
                     "type": "arithmetic",
                     "config": {
                         "operator": "add",
-                        "operands": ["measure1", "measure2"],
+                        "operands": [
+                            {"value": "measure1", "is_col": True},
+                            {"value": "measure2", "is_col": True},
+                        ],
                         "output_column_name": "add_col",
                         "source_columns": [
                             "NGO",

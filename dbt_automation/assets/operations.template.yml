@@ -126,9 +126,12 @@ operations:
           - <column name>
           - ...
         operands:
-          - <name of the 1st column>
-          - <name of the 2nd column or a const value>
-          - <name of the 3nd column or a const value>
+          - value: <string (column name or const)>
+            is_col: <boolean>
+          - value: <string (column name or const)>
+            is_col: <boolean>
+          - value: <string (column name or const)>
+            is_col: <boolean>
         output_column_name: <output column name>
     - type: dropcolumns
       config:
@@ -312,9 +315,12 @@ operations:
                 - <column name>
                 - ...
               operands:
-                - <operand1>
-                - <operand2>
-                - <operand3>
+                - value: <string (column name or const)>
+                  is_col: <boolean>
+                - value: <string (column name or const)>
+                  is_col: <boolean>
+                - value: <string (column name or const)>
+                  is_col: <boolean>
               output_column_name: <output_column_name>
           - type: coalescecolumns
             config:
