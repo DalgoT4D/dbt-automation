@@ -304,7 +304,42 @@ operations:
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
             output_col_name: <output col name>
-        
+    
+    - type: casewhen
+      config: 
+        input:
+          input_type: <"source" or "model" of table1>
+          input_name: <name of source table or ref model table1>
+          source_name: <name of the source defined in source.yml; will be null for type "model" table1>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+        when_clauses:
+          - column: <column name>
+            operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" or "between">
+            operands:
+              - value: <string (column name or string const)>
+                is_col: <boolean>
+              - value: <string (column name or string const)>
+                is_col: <boolean>
+            then:
+              value: <string (column name or string const)>
+              is_col: <boolean>
+          - column: <column name>
+            operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" or "between">
+            operands:
+              - value: <string (column name or string const)>
+                is_col: <boolean>
+            then:
+              value: <string (column name or string const)>
+              is_col: <boolean>
+        else_clause:
+          value: <string (column name or string const)>
+          is_col: <boolean>
+        output_column_name: <output column name>
   
     - type: mergeoperations
       config:
@@ -504,4 +539,34 @@ operations:
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
                   output_col_name: <output col name>
-        
+
+          - type: casewhen
+            config: 
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              when_clauses:
+                - column: <column name>
+                  operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" or "between">
+                  operands:
+                    - value: <string (column name or string const)>
+                      is_col: <boolean>
+                    - value: <string (column name or string const)>
+                      is_col: <boolean>
+                  then:
+                    value: <string (column name or string const)>
+                    is_col: <boolean>
+                - column: <column name>
+                  operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" or "between">
+                  operands:
+                    - value: <string (column name or string const)>
+                      is_col: <boolean>
+                  then:
+                    value: <string (column name or string const)>
+                    is_col: <boolean>
+              else_clause:
+                value: <string (column name or string const)>
+                is_col: <boolean>
+              output_column_name: <output column name>
+  ```    

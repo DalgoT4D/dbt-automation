@@ -26,6 +26,7 @@ from dbt_automation.operations.joins import join
 from dbt_automation.operations.wherefilter import where_filter
 from dbt_automation.operations.groupby import groupby
 from dbt_automation.operations.aggregate import aggregate
+from dbt_automation.operations.casewhen import casewhen
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -46,6 +47,7 @@ OPERATIONS_DICT = {
     "where": where_filter,
     "groupby": groupby,
     "aggregate": aggregate,
+    "casewhen": casewhen,
 }
 
 load_dotenv("./../dbconnection.env")

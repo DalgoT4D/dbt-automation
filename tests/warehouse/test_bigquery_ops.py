@@ -22,6 +22,7 @@ from dbt_automation.operations.castdatatypes import cast_datatypes
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.mergetables import union_tables
 from dbt_automation.operations.aggregate import aggregate
+from dbt_automation.operations.casewhen import casewhen
 
 
 basicConfig(level=INFO)
@@ -601,6 +602,66 @@ class TestBigqueryOperations:
             "pytest_intermediate", output_name, 10
         )
         assert len(table_data_agg) == 1
+
+    def test_casewhen(self):
+        """test casewhen operation"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "casewhen"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet2",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "SPOC"],
+            "when_clauses": [
+                {
+                    "column": "SPOC",
+                    "operator": "=",
+                    "operands": [{"value": "SPOC A", "is_col": False}],
+                    "then": {"value": "A", "is_col": False},
+                },
+                {
+                    "column": "SPOC",
+                    "operator": "=",
+                    "operands": [{"value": "SPOC B", "is_col": False}],
+                    "then": {"value": "B", "is_col": False},
+                },
+                {
+                    "column": "SPOC",
+                    "operator": "=",
+                    "operands": [{"value": "SPOC C", "is_col": False}],
+                    "then": {"value": "C", "is_col": False},
+                },
+            ],
+            "else_clause": {"value": "SPOC", "is_col": True},
+            "output_column_name": "spoc_category_renamed",
+        }
+
+        casewhen(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
+        assert "spoc_category_renamed" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 10)
+        spoc_values = set([row["spoc_category_renamed"] for row in table_data])
+
+        assert "SPOC A" not in spoc_values
+        assert "SPOC B" not in spoc_values
+        assert "SPOC C" not in spoc_values
 
     def test_mergetables(self):
         """test merge tables"""
