@@ -19,6 +19,7 @@ from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.mergetables import union_tables
+from dbt_automation.operations.aggregate import aggregate
 
 
 basicConfig(level=INFO)
@@ -571,6 +572,46 @@ class TestPostgresOperations:
                 if org["NGO"].startswith("C")
                 else (regex["NGO"] is None)
             )
+
+    def test_aggregate(self):
+        """test aggregate col operation"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "aggregate_col"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "cast",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "aggregate_on": [
+                {"column": "measure1", "operation": "sum", "output_col_name": "agg1"},
+                {"column": "measure2", "operation": "sum", "output_col_name": "agg2"},
+            ],
+        }
+
+        aggregate(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
+        assert "agg1" in cols
+        assert "agg2" in cols
+        table_data_agg = wc_client.get_table_data(
+            "pytest_intermediate", output_name, 10
+        )
+        assert len(table_data_agg) == 1
 
     def test_mergetables(self):
         """test merge tables"""

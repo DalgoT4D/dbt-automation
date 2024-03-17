@@ -25,6 +25,7 @@ from dbt_automation.operations.replace import replace
 from dbt_automation.operations.joins import join
 from dbt_automation.operations.wherefilter import where_filter
 from dbt_automation.operations.groupby import groupby
+from dbt_automation.operations.aggregate import aggregate
 
 OPERATIONS_DICT = {
     "flatten": flatten_operation,
@@ -44,6 +45,7 @@ OPERATIONS_DICT = {
     "join": join,
     "where": where_filter,
     "groupby": groupby,
+    "aggregate": aggregate,
 }
 
 load_dotenv("./../dbconnection.env")
