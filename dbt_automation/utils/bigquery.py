@@ -242,3 +242,17 @@ class BigQueryClient(WarehouseInterface):
         except Exception as e:
             logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
             raise
+
+    def get_column_data_types(self) -> list:
+        """Returns a list of distinct column data types from BigQuery."""
+        try:
+            resultset = self.execute(
+                """
+                SELECT DISTINCT data_type
+                FROM `project_id.dataset_id.INFORMATION_SCHEMA.COLUMNS`
+                """
+            )
+            return [row[0] for row in resultset]
+        except Exception as e:
+            logger.error(f"Failed to fetch BigQuery column data types: {e}")
+            raise

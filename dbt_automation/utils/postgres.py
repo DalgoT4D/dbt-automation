@@ -254,3 +254,18 @@ class PostgresClient(WarehouseInterface):
         except Exception as e:
             logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
             raise
+
+    def get_column_data_types(self) -> list:
+        """Returns a list of distinct column data types from PostgreSQL."""
+        try:
+            resultset = self.execute(
+                """
+                SELECT DISTINCT data_type
+                FROM information_schema.columns
+                WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
+                """
+            )
+            return [row[0] for row in resultset]
+        except Exception as e:
+            logger.error(f"Failed to fetch PostgreSQL column data types: {e}")
+            raise
