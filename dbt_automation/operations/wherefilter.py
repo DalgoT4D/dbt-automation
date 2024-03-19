@@ -67,7 +67,7 @@ def where_filter_sql(
     source_columns = config["source_columns"]
     input_table = config["input"]
     clauses: dict = config.get("clauses", [])
-    clause_type: str = config.get("where_type", "")  # and, or, sql
+    clause_type: str = config.get("where_type", "and")  # and, or, sql
     sql_snippet: str = config.get("sql_snippet", "")
 
     dbt_code = "SELECT\n"
@@ -94,10 +94,12 @@ def where_filter_sql(
     if clause_type in ["and", "or"]:
         temp = []
         for clause in clauses:
+            operand = clause["operand"]
+
             clause = (
                 f"{quote_columnname(clause['column'], warehouse.name)} "
                 + f"{clause['operator']} "
-                + f"{quote_constvalue(str(clause['value']), warehouse.name)} "
+                + f"{quote_columnname(operand['value'], warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)} "
             )
             temp.append(clause)
 

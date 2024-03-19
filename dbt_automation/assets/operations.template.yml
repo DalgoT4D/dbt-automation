@@ -251,16 +251,24 @@ operations:
         clauses:
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-              value: <value>
+              operand: 
+                value: <string (column name or string const)>
+                is_col: <boolean>
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-              value: <value>
+              operand: 
+                value: <string (column name or string const)>
+                is_col: <boolean>
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-              value: <value>
+              operand: 
+                value: <string (column name or string const)>
+                is_col: <boolean>
             - column: <column name>
               operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-              value: <value>
+              operand: 
+                value: <string (column name or string const)>
+                is_col: <boolean>
         sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
 
     - type: groupby
@@ -496,18 +504,26 @@ operations:
                 - <column name>
               where_type: <"and" or "or" or "sql">
               clauses:
-                  - column: <column name>
-                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-                    value: <value>
-                  - column: <column name>
-                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-                    value: <value>
-                  - column: <column name>
-                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-                    value: <value>
-                  - column: <column name>
-                    operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
-                    value: <value>
+                - column: <column name>
+                  operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                  operand: 
+                    value: <string (column name or string const)>
+                    is_col: <boolean>
+                - column: <column name>
+                  operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                  operand: 
+                    value: <string (column name or string const)>
+                    is_col: <boolean>
+                - column: <column name>
+                  operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                  operand: 
+                    value: <string (column name or string const)>
+                    is_col: <boolean>
+                - column: <column name>
+                  operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" >
+                  operand: 
+                    value: <string (column name or string const)>
+                    is_col: <boolean>
               sql_snippet: < custom sql snippet assume its formatted; eg. col1 != 5 >
 
           - type: groupby
