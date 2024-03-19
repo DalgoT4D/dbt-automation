@@ -245,14 +245,23 @@ class BigQueryClient(WarehouseInterface):
 
     def get_column_data_types(self) -> list:
         """Returns a list of distinct column data types from BigQuery."""
-        try:
-            resultset = self.execute(
-                """
-                SELECT DISTINCT data_type
-                FROM `project_id.dataset_id.INFORMATION_SCHEMA.COLUMNS`
-                """
-            )
-            return [row[0] for row in resultset]
-        except Exception as e:
-            logger.error(f"Failed to fetch BigQuery column data types: {e}")
-            raise
+        bigquery_data_types = [
+            "ARRAY",
+            "BIGNUMERIC",
+            "BOOL",
+            "BYTES",
+            "DATE",
+            "DATETIME",
+            "FLOAT64",
+            "GEOGRAPHY",
+            "INT64",
+            "INTERVAL",
+            "JSON",
+            "NUMERIC",
+            "RANGE",
+            "STRING",
+            "STRUCT",
+            "TIME",
+            "TIMESTAMP"
+        ]
+        return bigquery_data_types
