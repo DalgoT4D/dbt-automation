@@ -260,9 +260,10 @@ class PostgresClient(WarehouseInterface):
         try:
             resultset = self.execute(
                 """
-                SELECT DISTINCT data_type
-                FROM information_schema.columns
-                WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
+                SELECT DISTINCT format_type(a.atttypid, a.atttypmod) as data_type
+                FROM pg_attribute a
+                JOIN pg_class pgc ON pgc.oid = a.attrelid
+                ORDER BY data_type;
                 """
             )
             return [row[0] for row in resultset]
