@@ -71,7 +71,7 @@ def casewhen_dbt_sql(
 
         # default else value will be NULL
         else_value = "NULL"
-        if else_clause["value"] is not None:
+        if else_clause["value"]:
             else_value = (
                 quote_columnname(else_clause["value"], warehouse.name)
                 if else_clause["is_col"]
