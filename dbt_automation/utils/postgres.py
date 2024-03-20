@@ -261,7 +261,7 @@ class PostgresClient(WarehouseInterface):
             "boolean",
             "char",
             "date",
-            "double",
+            "double precision",
             "float",
             "integer",
             "jsonb",
