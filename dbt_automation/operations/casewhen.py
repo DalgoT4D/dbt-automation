@@ -25,6 +25,8 @@ def casewhen_dbt_sql(
     when_clauses: list[dict] = config.get("when_clauses", [])
     else_clause: dict = config.get("else_clause", None)
     output_col_name: str = config.get("output_column_name", "output_col")
+    case_type: str = config.get("case_type", "simple")  # by default its the simple case
+    sql_snippet: str = config.get("sql_snippet", "")
     input_table = config["input"]
 
     if len(when_clauses) == 0:
@@ -36,44 +38,48 @@ def casewhen_dbt_sql(
         [quote_columnname(col_name, warehouse.name) for col_name in source_columns]
     )
 
-    dbt_code += ",\nCASE"
-    for clause in when_clauses:
-        clause_col = quote_columnname(clause["column"], warehouse.name)
-        operator = clause["operator"]
-        # for between operator we will have two operands; reset will have one operand
-        operands = [
-            (
-                quote_columnname(operand["value"], warehouse.name)
-                if operand["is_col"]
-                else quote_constvalue(str(operand["value"]), warehouse.name)
+    if case_type == "simple":
+        dbt_code += ",\nCASE"
+        for clause in when_clauses:
+            clause_col = quote_columnname(clause["column"], warehouse.name)
+            operator = clause["operator"]
+            # for between operator we will have two operands; reset will have one operand
+            operands = [
+                (
+                    quote_columnname(operand["value"], warehouse.name)
+                    if operand["is_col"]
+                    else quote_constvalue(str(operand["value"]), warehouse.name)
+                )
+                for operand in clause["operands"]
+            ]
+            then_value = (
+                quote_columnname(clause["then"]["value"], warehouse.name)
+                if clause["then"]["is_col"]
+                else quote_constvalue(str(clause["then"]["value"]), warehouse.name)
             )
-            for operand in clause["operands"]
-        ]
-        then_value = (
-            quote_columnname(clause["then"]["value"], warehouse.name)
-            if clause["then"]["is_col"]
-            else quote_constvalue(str(clause["then"]["value"]), warehouse.name)
+
+            operator_prefix = operator
+            if operator == "between":
+                operator_prefix = "BETWEEN"
+                operator = " AND "
+
+            # expression for between will be : BETWEEN col1 AND col2
+            # expression for others will be : <= col1
+            expression = f'{operator_prefix} {f"{operator}".join(operands)}'
+
+            dbt_code += f"\n    WHEN {clause_col} {expression} THEN {then_value}"
+
+        else_value = (
+            quote_columnname(else_clause["value"], warehouse.name)
+            if else_clause["is_col"]
+            else quote_constvalue(str(else_clause["value"]), warehouse.name)
         )
+        dbt_code += f"\n    ELSE {else_value}"
+        dbt_code += f"\nEND AS {quote_columnname(output_col_name, warehouse.name)}\n"
 
-        operator_prefix = operator
-        if operator == "between":
-            operator_prefix = "BETWEEN"
-            operator = " AND "
-
-        # expression for between will be : BETWEEN col1 AND col2
-        # expression for others will be : <= col1
-        expression = f'{operator_prefix} {f"{operator}".join(operands)}'
-
-        dbt_code += f"\n    WHEN {clause_col} {expression} THEN {then_value}"
-
-    else_value = (
-        quote_columnname(else_clause["value"], warehouse.name)
-        if else_clause["is_col"]
-        else quote_constvalue(str(else_clause["value"]), warehouse.name)
-    )
-
-    dbt_code += f"\n    ELSE {else_value}"
-    dbt_code += f"\nEND AS {quote_columnname(output_col_name, warehouse.name)}\n"
+    elif case_type == "advance":
+        # custom sql snippet
+        dbt_code += f",\n{sql_snippet}\n"
 
     select_from = source_or_ref(**input_table)
     if input_table["input_type"] == "cte":

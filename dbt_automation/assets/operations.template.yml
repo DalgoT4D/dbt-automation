@@ -325,6 +325,7 @@ operations:
           - <column name>
         dest_schema:  <destination schema>
         output_name: <name of the output model>
+        case_type: <"simple" or "advance">
         when_clauses:
           - column: <column name>
             operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" or "between">
@@ -348,6 +349,7 @@ operations:
           value: <string (column name or string const)>
           is_col: <boolean>
         output_column_name: <output column name>
+        sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_col_name'>
   
     - type: mergeoperations
       config:
@@ -562,6 +564,7 @@ operations:
                 - <column name>
                 - <column name>
                 - <column name>
+              case_type: <"simple" or "advance">
               when_clauses:
                 - column: <column name>
                   operator: <"=" or "!=" or "<" or ">" or "<=" or ">=" or "between">
@@ -585,4 +588,5 @@ operations:
                 value: <string (column name or string const)>
                 is_col: <boolean>
               output_column_name: <output column name>
+              sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_col_name'>
   ```    
