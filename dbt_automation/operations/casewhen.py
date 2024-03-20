@@ -69,11 +69,14 @@ def casewhen_dbt_sql(
 
             dbt_code += f"\n    WHEN {clause_col} {expression} THEN {then_value}"
 
-        else_value = (
-            quote_columnname(else_clause["value"], warehouse.name)
-            if else_clause["is_col"]
-            else quote_constvalue(str(else_clause["value"]), warehouse.name)
-        )
+        # default else value will be NULL
+        else_value = "NULL"
+        if else_clause["value"] is not None:
+            else_value = (
+                quote_columnname(else_clause["value"], warehouse.name)
+                if else_clause["is_col"]
+                else quote_constvalue(str(else_clause["value"]), warehouse.name)
+            )
         dbt_code += f"\n    ELSE {else_value}"
         dbt_code += f"\nEND AS {quote_columnname(output_col_name, warehouse.name)}\n"
 
