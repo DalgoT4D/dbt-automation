@@ -257,16 +257,20 @@ class PostgresClient(WarehouseInterface):
 
     def get_column_data_types(self) -> list:
         """Returns a list of distinct column data types from PostgreSQL."""
-        try:
-            resultset = self.execute(
-                """
-                SELECT DISTINCT format_type(a.atttypid, a.atttypmod) as data_type
-                FROM pg_attribute a
-                JOIN pg_class pgc ON pgc.oid = a.attrelid
-                ORDER BY data_type;
-                """
-            )
-            return [row[0] for row in resultset]
-        except Exception as e:
-            logger.error(f"Failed to fetch PostgreSQL column data types: {e}")
-            raise
+        postgres_data_types = [
+            "boolean",
+            "char",
+            "date",
+            "double",
+            "float",
+            "integer",
+            "jsonb",
+            "numeric",
+            "text",
+            "time",
+            "timestamp",
+            "timestamp with time zone",
+            "uuid",
+            "varchar",
+        ]
+        return postgres_data_types
