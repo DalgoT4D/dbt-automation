@@ -254,3 +254,23 @@ class PostgresClient(WarehouseInterface):
         except Exception as e:
             logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
             raise
+
+    def get_column_data_types(self) -> list:
+        """Returns a list of distinct column data types from PostgreSQL."""
+        postgres_data_types = [
+            "boolean",
+            "char",
+            "date",
+            "double",
+            "float",
+            "integer",
+            "jsonb",
+            "numeric",
+            "text",
+            "time",
+            "timestamp",
+            "timestamp with time zone",
+            "uuid",
+            "varchar",
+        ]
+        return postgres_data_types

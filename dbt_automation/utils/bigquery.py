@@ -242,3 +242,26 @@ class BigQueryClient(WarehouseInterface):
         except Exception as e:
             logger.error(f"Failed to fetch total rows for {schema}.{table}: {e}")
             raise
+
+    def get_column_data_types(self) -> list:
+        """Returns a list of distinct column data types from BigQuery."""
+        bigquery_data_types = [
+            "ARRAY",
+            "BIGNUMERIC",
+            "BOOL",
+            "BYTES",
+            "DATE",
+            "DATETIME",
+            "FLOAT64",
+            "GEOGRAPHY",
+            "INT64",
+            "INTERVAL",
+            "JSON",
+            "NUMERIC",
+            "RANGE",
+            "STRING",
+            "STRUCT",
+            "TIME",
+            "TIMESTAMP"
+        ]
+        return bigquery_data_types
