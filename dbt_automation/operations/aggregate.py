@@ -18,6 +18,9 @@ logger = getLogger()
 #         "source_name": "pytest_intermediate",
 #         "input_name": "arithmetic_add",
 #     },
+#     "source_columns": [
+#         "col_1", "col_2", "col_3",
+#     ],
 #     "aggregate_on": [
 #         {
 #             "operation": "count",
@@ -34,8 +37,21 @@ logger = getLogger()
 # }, wc_client)
 
 # SELECT
-#  COUNT("NGO")  AS "count__ngo", COUNT(DISTINCT "Month")  AS "distinctmonths"
+# "col_1",
+# "col_2",
+# "col_3",
+# (SELECT  COUNT("NGO") FROM {{source('pytest_intermediate', 'arithmetic_add')}}
+# ) AS "count__ngo",(SELECT  COUNT(DISTINCT "Month") FROM {{source('pytest_intermediate', 'arithmetic_add')}}
+# ) AS "distinctmonths"
 # FROM {{source('pytest_intermediate', 'arithmetic_add')}}
+
+
+def select_from(input_table: dict):
+    """generates the correct FROM clause for the input table"""
+    selectfrom = source_or_ref(**input_table)
+    if input_table["input_type"] == "cte":
+        return f"FROM {selectfrom}\n"
+    return f"FROM {{{{{selectfrom}}}}}\n"
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
@@ -46,19 +62,20 @@ def aggregate_dbt_sql(
     """
     Generate SQL code for the coalesce_columns operation.
     """
-    source_columns = config.get(
-        "source_columns", []
-    )  # we wont be using any select on source_columns; sql will fail, only aggregate columns will be selected
+    source_columns = config.get("source_columns", [])
     aggregate_on: list[dict] = config.get("aggregate_on", [])
     input_table = config["input"]
 
     dbt_code = "SELECT\n"
 
-    # dbt_code += ",\n".join(
-    #     [quote_columnname(col_name, warehouse.name) for col_name in source_columns]
-    # )
+    if len(source_columns) > 0:
+        dbt_code += ",\n".join(
+            [quote_columnname(col_name, warehouse.name) for col_name in source_columns]
+        )
+        dbt_code += ",\n"
 
     for agg_col in aggregate_on:
+        dbt_code += "(SELECT "
         if agg_col["operation"] == "count":
             dbt_code += (
                 f" COUNT({quote_columnname(agg_col['column'], warehouse.name)}) "
@@ -67,20 +84,17 @@ def aggregate_dbt_sql(
             dbt_code += f" COUNT(DISTINCT {quote_columnname(agg_col['column'], warehouse.name)}) "
         else:
             dbt_code += f" {agg_col['operation'].upper()}({quote_columnname(agg_col['column'], warehouse.name)}) "
-
+        dbt_code += select_from(input_table)
+        dbt_code += ")"
         dbt_code += (
             f" AS {quote_columnname(agg_col['output_col_name'], warehouse.name)},"
         )
 
     dbt_code = dbt_code[:-1]  # remove the last comma
     dbt_code += "\n"
-    select_from = source_or_ref(**input_table)
-    if input_table["input_type"] == "cte":
-        dbt_code += f"FROM {select_from}\n"
-    else:
-        dbt_code += f"FROM {{{{{select_from}}}}}\n"
+    dbt_code += select_from(input_table)
 
-    return dbt_code, [col["output_col_name"] for col in aggregate_on]
+    return dbt_code, source_columns + [col["output_col_name"] for col in aggregate_on]
 
 
 def aggregate(config: dict, warehouse: WarehouseInterface, project_dir: str):

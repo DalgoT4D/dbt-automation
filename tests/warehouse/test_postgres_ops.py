@@ -612,7 +612,7 @@ class TestPostgresOperations:
         table_data_agg = wc_client.get_table_data(
             "pytest_intermediate", output_name, 10
         )
-        assert len(table_data_agg) == 1
+        assert len(table_data_agg) == 5
 
     def test_casewhen(self):
         """test casewhen operation"""
