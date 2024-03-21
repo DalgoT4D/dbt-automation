@@ -683,16 +683,19 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
-            "input_arr": [
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet1",
+                "source_name": None,
+            },
+            "other_inputs": [
                 {
-                    "input_type": "model",
-                    "input_name": "_airbyte_raw_Sheet1",
-                    "source_name": None,
-                },
-                {
-                    "input_type": "model",
-                    "input_name": "_airbyte_raw_Sheet2",
-                    "source_name": None,
+                    "input": {
+                        "input_type": "model",
+                        "input_name": "_airbyte_raw_Sheet2",
+                        "source_name": None,
+                    },
+                    "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
                 },
             ],
         }
