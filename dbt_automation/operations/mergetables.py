@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.utils.tableutils import source_or_ref
+from dbt_automation.utils.columnutils import quote_constvalue
 
 basicConfig(level=INFO)
 logger = getLogger()
@@ -17,53 +18,61 @@ logger = getLogger()
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
 def union_tables_sql(config, warehouse: WarehouseInterface):
-    """Generates SQL code for unioning tables using the dbt_utils union_relations macro."""
-    input_arr = config["input_arr"]
-    dest_schema = config["dest_schema"]
-    source_columns = config["source_columns"]
+    """
+    Generates SQL code for unioning tables using the dbt_utils union_relations macro.
+    NOTE: THIS OPERATION WONT WORK WITH CTES AS OFF NOW
+    """
+    input_tables = [
+        {"input": config["input"], "source_columns": config["source_columns"]}
+    ] + config.get("other_inputs", [])
 
     names = set()
-    for input in input_arr:
-        name = source_or_ref(**input)
+    for table in input_tables:
+        name = source_or_ref(**table["input"])
         if name in names:
             logger.error("This appears more than once: %s", name)
             raise ValueError("Duplicate inputs found")
         names.add(name)
 
     relations = "["
-    for input in input_arr:
-        relations += f"{source_or_ref(**input)},"
+    for table in input_tables:
+        relations += f"{source_or_ref(**table['input'])},"
     relations = relations[:-1]
     relations += "]"
     dbt_code = ""
 
-    if config["input_arr"][0]["input_type"] != "cte":
-        dbt_code += f"{{{{ config(materialized='table',schema='{dest_schema}') }}}}\n"
-
-    include_cols = [f'"{col}"' for col in source_columns]
+    output_cols = set()
+    for table in input_tables:
+        output_cols.update(table["source_columns"])
 
     # pylint:disable=consider-using-f-string
     dbt_code += "{{ dbt_utils.union_relations("
-    dbt_code += f"relations={relations} , " + f"include=[{','.join(include_cols)}]"
+    dbt_code += (
+        f"relations={relations} , "
+        + f"include=[{','.join([quote_constvalue(col, 'postgres') for col in list(output_cols)])}]"
+    )
     dbt_code += ")}}"
 
-    return dbt_code, source_columns
+    return dbt_code, list(output_cols)
 
 
 def union_tables(config, warehouse: WarehouseInterface, project_dir):
     """Generates a dbt model which uses the dbt_utils union_relations macro to union tables."""
+    dest_schema = config["dest_schema"]
     output_model_name = config["output_name"]
+    dbt_sql = ""
+    if config["input"] != "cte":
+        dbt_sql = (
+            "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
+        )
 
-    union_code, output_cols = union_tables_sql(config, warehouse)
+    select_statement, output_cols = union_tables_sql(config, warehouse)
+    dbt_sql += "\n" + select_statement
 
     dbtproject = dbtProject(project_dir)
-    dbtproject.ensure_models_dir(config["dest_schema"])
+    dbtproject.ensure_models_dir(dest_schema)
 
-    model_sql_path = dbtproject.write_model(
-        config["dest_schema"],
-        output_model_name,
-        union_code,
-    )
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, dbt_sql)
 
     return model_sql_path, output_cols
 

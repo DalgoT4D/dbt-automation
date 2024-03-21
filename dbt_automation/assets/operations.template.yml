@@ -15,20 +15,34 @@ operations:
         output_name: <name of the output model>
         dest_schema: <enter your destination/output schema>
         input:
-            - input_type: <"source" or "model">
-              input_name: <name of source table or ref model>
-              source_name: <name of the source defined in source.yml; will be null for type "model">
-            - input_type: <"source" or "model">
-              input_name: <name of source table or ref model>
-              source_name: <name of the source defined in source.yml; will be null for type "model">
-            - input_type: <"source" or "model">
-              input_name: <name of source table or ref model>
-              source_name: <name of the source defined in source.yml; will be null for type "model">
+            input_type: <"source" or "model">
+            input_name: <name of source table or ref model>
+            source_name: <name of the source defined in source.yml; will be null for type "model">
         source_columns:
           - <column name>
           - <column name>
           - <column name>
           - ...
+        other_inputs:
+            - input:
+                input_type: <"source" or "model" table2>
+                input_name: <name of source table or ref model table2>
+                source_name: <name of the source defined in source.yml; will be null for type "model" table2>
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ..
+            - input:
+                input_type: <"source" or "model">
+                input_name: <name of source table or ref model>
+                source_name: <name of the source defined in source.yml; will be null for type "model">
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
+        
     - type: syncsources
       config:
         source_name: <top level name of the source in sources.yml file in dbt project. all tables will go under here>
@@ -480,8 +494,6 @@ operations:
                 - <column name>
                 - <column name>
                 - <column name>
-              dest_schema:  <destination schema>
-              output_name: <name of the output model>
               join_type: <"inner" or "left">
               join_on:
                 key1: <colname of table1>
@@ -589,4 +601,29 @@ operations:
                 is_col: <boolean>
               output_column_name: <output column name>
               sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_col_name'>
-  ```    
+          - type: unionall
+            config:
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
+              other_inputs:
+                  - input:
+                      input_type: <"source" or "model" table2>
+                      input_name: <name of source table or ref model table2>
+                      source_name: <name of the source defined in source.yml; will be null for type "model" table2>
+                    source_columns:
+                      - <column name>
+                      - <column name>
+                      - <column name>
+                      - ..
+                  - input:
+                      input_type: <"source" or "model">
+                      input_name: <name of source table or ref model>
+                      source_name: <name of the source defined in source.yml; will be null for type "model">
+                    source_columns:
+                      - <column name>
+                      - <column name>
+                      - <column name>
+                      - ...
