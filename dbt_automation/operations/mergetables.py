@@ -3,7 +3,6 @@
 import os
 
 import argparse
-from collections import Counter
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
 
@@ -14,6 +13,35 @@ from dbt_automation.utils.columnutils import quote_constvalue
 
 basicConfig(level=INFO)
 logger = getLogger()
+
+# sql, len_output_set = mergetables.union_tables_sql({
+#     "input": {
+#         "input_type": "source",
+#         "source_name": "pytest_intermediate",
+#         "input_name": "arithmetic_add",
+#     },
+#     "source_columns": [
+#         "NGO", "Month", "measure1", "measure2"
+#     ],
+#     "other_inputs": [
+#         {
+#             "input": {
+#                 "input_type": "source",
+#                 "source_name": "pytest_intermediate",
+#                 "input_name": "arithmetic_div",
+#             },
+#             "source_columns": [
+#                 "NGO", "Month", "measure1",
+#             ],
+#         }
+#     ],
+# }, wc_client)
+
+# {{ dbt_utils.union_relations(relations=[
+#     source('pytest_intermediate', 'arithmetic_add'),
+#     source('pytest_intermediate', 'arithmetic_div')
+#     ] , include=['NGO','measure2','Month','measure1'])
+# }}
 
 
 # pylint:disable=unused-argument,logging-fstring-interpolation
