@@ -94,7 +94,7 @@ def aggregate_dbt_sql(
     dbt_code += "\n"
     dbt_code += select_from(input_table)
 
-    return dbt_code, [col["output_col_name"] for col in aggregate_on]
+    return dbt_code, source_columns + [col["output_col_name"] for col in aggregate_on]
 
 
 def aggregate(config: dict, warehouse: WarehouseInterface, project_dir: str):
