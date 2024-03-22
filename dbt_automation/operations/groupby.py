@@ -18,17 +18,17 @@ logger = getLogger()
 #         {
 #             "operation": "count",
 #             "column": "measure1",
-#             "output_col_name": "measure1__count",
+#             "output_column_name": "measure1__count",
 #         },
 #         {
 #             "operation": "countdistinct",
 #             "column": "measure2",
-#             "output_col_name": "measure2__count",
+#             "output_column_name": "measure2__count",
 #         },
 #         {
 #             "operation": "sum",
 #             "column": "Indicator",
-#             "output_col_name": "sum_of_indicator"
+#             "output_column_name": "sum_of_indicator"
 #         },
 #     ],
 #     "input": {
@@ -79,7 +79,7 @@ def groupby_dbt_sql(
             dbt_code += f",\n {agg_col['operation'].upper()}({quote_columnname(agg_col['column'], warehouse.name)})"
 
         dbt_code += (
-            f" AS {quote_columnname(agg_col['output_col_name'], warehouse.name)}"
+            f" AS {quote_columnname(agg_col['output_column_name'], warehouse.name)}"
         )
 
     dbt_code += "\n"
@@ -95,7 +95,9 @@ def groupby_dbt_sql(
             [quote_columnname(col_name, warehouse.name) for col_name in source_columns]
         )
 
-    output_columns = source_columns + [col["output_col_name"] for col in aggregate_on]
+    output_columns = source_columns + [
+        col["output_column_name"] for col in aggregate_on
+    ]
 
     return dbt_code, output_columns
 

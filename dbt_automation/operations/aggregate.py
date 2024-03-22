@@ -25,12 +25,12 @@ logger = getLogger()
 #         {
 #             "operation": "count",
 #             "column": "NGO",
-#             "output_col_name": "count__ngo"
+#             "output_column_name": "count__ngo"
 #         },
 #         {
 #             "operation": "countdistinct",
 #             "column": "Month",
-#             "output_col_name": "distinctmonths"
+#             "output_column_name": "distinctmonths"
 #         },
 #     ],
 
@@ -87,14 +87,16 @@ def aggregate_dbt_sql(
         dbt_code += select_from(input_table)
         dbt_code += ")"
         dbt_code += (
-            f" AS {quote_columnname(agg_col['output_col_name'], warehouse.name)},"
+            f" AS {quote_columnname(agg_col['output_column_name'], warehouse.name)},"
         )
 
     dbt_code = dbt_code[:-1]  # remove the last comma
     dbt_code += "\n"
     dbt_code += select_from(input_table)
 
-    return dbt_code, source_columns + [col["output_col_name"] for col in aggregate_on]
+    return dbt_code, source_columns + [
+        col["output_column_name"] for col in aggregate_on
+    ]
 
 
 def aggregate(config: dict, warehouse: WarehouseInterface, project_dir: str):

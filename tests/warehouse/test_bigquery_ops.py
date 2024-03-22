@@ -577,8 +577,16 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "aggregate_on": [
-                {"column": "measure1", "operation": "sum", "output_col_name": "agg1"},
-                {"column": "measure2", "operation": "sum", "output_col_name": "agg2"},
+                {
+                    "column": "measure1",
+                    "operation": "sum",
+                    "output_column_name": "agg1",
+                },
+                {
+                    "column": "measure2",
+                    "operation": "sum",
+                    "output_column_name": "agg2",
+                },
             ],
         }
 
