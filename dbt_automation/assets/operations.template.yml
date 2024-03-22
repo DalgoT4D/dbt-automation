@@ -300,13 +300,13 @@ operations:
         aggregate_on:
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-            output_col_name: <output col name>
+            output_column_name: <output col name>
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-            output_col_name: <output col name>
+            output_column_name: <output col name>
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-            output_col_name: <output col name>
+            output_column_name: <output col name>
 
     - type: aggregate
       config: 
@@ -319,13 +319,13 @@ operations:
         aggregate_on:
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-            output_col_name: <output col name>
+            output_column_name: <output col name>
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-            output_col_name: <output col name>
+            output_column_name: <output col name>
           - column: <column name from source column>
             operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-            output_col_name: <output col name>
+            output_column_name: <output col name>
     
     - type: casewhen
       config: 
@@ -363,7 +363,7 @@ operations:
           value: <string (column name or string const)>
           is_col: <boolean>
         output_column_name: <output column name>
-        sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_col_name'>
+        sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_column_name'>
   
     - type: mergeoperations
       config:
@@ -549,26 +549,26 @@ operations:
               aggregate_on:
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-                  output_col_name: <output col name>
+                  output_column_name: <output col name>
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-                  output_col_name: <output col name>
+                  output_column_name: <output col name>
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-                  output_col_name: <output col name>
+                  output_column_name: <output col name>
 
           - type: aggregate
             config:
               aggregate_on:
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-                  output_col_name: <output col name>
+                  output_column_name: <output col name>
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-                  output_col_name: <output col name>
+                  output_column_name: <output col name>
                 - column: <column name from source column>
                   operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-                  output_col_name: <output col name>
+                  output_column_name: <output col name>
 
           - type: casewhen
             config: 
@@ -600,7 +600,7 @@ operations:
                 value: <string (column name or string const)>
                 is_col: <boolean>
               output_column_name: <output column name>
-              sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_col_name'>
+              sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_column_name'>
           - type: unionall
             config:
               source_columns:

@@ -588,8 +588,16 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_name": output_name,
             "aggregate_on": [
-                {"column": "measure1", "operation": "sum", "output_col_name": "agg1"},
-                {"column": "measure2", "operation": "sum", "output_col_name": "agg2"},
+                {
+                    "column": "measure1",
+                    "operation": "sum",
+                    "output_column_name": "agg1",
+                },
+                {
+                    "column": "measure2",
+                    "operation": "sum",
+                    "output_column_name": "agg2",
+                },
             ],
         }
 
@@ -695,7 +703,13 @@ class TestPostgresOperations:
                         "input_name": "_airbyte_raw_Sheet2",
                         "source_name": None,
                     },
-                    "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+                    "source_columns": [
+                        "NGO",
+                        "Month",
+                        "measure1",
+                        "measure2",
+                        "Indicator",
+                    ],
                 },
             ],
         }
