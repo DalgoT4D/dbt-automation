@@ -46,7 +46,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_add(["
         for operand in operands:
-            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
+            dbt_code += f"{quote_constvalue(quote_columnname(str(operand['value']), warehouse.name), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
@@ -62,7 +62,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_subtract(["
         for operand in operands:
-            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
+            dbt_code += f"{quote_constvalue(quote_columnname(str(operand['value']), warehouse.name), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
         dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
@@ -71,7 +71,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         dbt_code += ","
         dbt_code += "{{dbt_utils.safe_divide("
         for operand in operands:
-            dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
+            dbt_code += f"{quote_constvalue(quote_columnname(str(operand['value']), warehouse.name), warehouse.name)},"
         dbt_code += ")}}"
         dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
 
