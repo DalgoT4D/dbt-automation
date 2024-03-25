@@ -49,14 +49,14 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
             dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
-        dbt_code += f" AS {output_col_name} "
+        dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
 
     if operator == "mul":
         dbt_code += ","
         for operand in operands:
             dbt_code += f"{quote_columnname(str(operand['value']), warehouse.name) if operand['is_col'] else quote_constvalue(str(operand['value']), warehouse.name)} * "
         dbt_code = dbt_code[:-2]
-        dbt_code += f" AS {output_col_name} "
+        dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
 
     if operator == "sub":
         dbt_code += ","
@@ -65,7 +65,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
             dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code = dbt_code[:-1]
         dbt_code += "])}}"
-        dbt_code += f" AS {output_col_name} "
+        dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
 
     if operator == "div":
         dbt_code += ","
@@ -73,7 +73,7 @@ def arithmetic_dbt_sql(config: dict, warehouse: WarehouseInterface):
         for operand in operands:
             dbt_code += f"{quote_constvalue(str(operand['value']), warehouse.name)},"
         dbt_code += ")}}"
-        dbt_code += f" AS {output_col_name} "
+        dbt_code += f" AS {quote_columnname(output_col_name, warehouse.name)} "
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
