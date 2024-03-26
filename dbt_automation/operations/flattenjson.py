@@ -35,8 +35,6 @@ def flattenjson_dbt_sql(
     else:
         dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
 
-    # json_columns = warehouse.get_json_columnspec(source_schema, input_name, json_column)
-
     # convert to sql-friendly column names
     sql_columns = make_cleaned_column_names(json_columns_to_copy)
 

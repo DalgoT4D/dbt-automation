@@ -113,10 +113,6 @@ def merge_operations_sql(
             op_select_statement, out_cols = casewhen_dbt_sql(
                 operation["config"], warehouse
             )
-        elif operation["type"] == "flattenjson":
-            op_select_statement, out_cols = flattenjson_dbt_sql(
-                operation["config"], warehouse
-            )
         elif operation["type"] == "unionall":
             op_select_statement, out_cols = union_tables_sql(
                 operation["config"], warehouse
