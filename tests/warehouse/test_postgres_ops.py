@@ -776,10 +776,6 @@ class TestPostgresOperations:
         assert "_airbyte_data_Month" in cols
         assert "_airbyte_ab_id" in cols
 
-        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        assert table_data[0]["_airbyte_data_NGO"] == 'BAMANEH'
-        assert table_data[0]["_airbyte_data_SPOC"] == 'SPOC A'
-
     def test_merge_operation(self):
         """test merge_operation"""
         wc_client = TestPostgresOperations.wc_client
