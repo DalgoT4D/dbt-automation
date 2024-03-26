@@ -35,9 +35,11 @@ def flattenjson_dbt_sql(
     else:
         dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
 
-    # convert to sql-friendly column names
+    json_column_with_prefix = f"{json_column}"
+
     sql_columns = make_cleaned_column_names(json_columns_to_copy)
-    sql_columns = [f"_{col}" for col in sql_columns]
+
+    sql_columns = [f"{json_column_with_prefix}_{col}" for col in sql_columns]
 
     # after cleaning we may have duplicates
     sql_columns = dedup_list(sql_columns)
