@@ -28,22 +28,20 @@ def flattenjson_dbt_sql(
     """
     source_columns = config["source_columns"]
     json_column = config["json_column"]
-    # json_columns_to_copy = config["json_columns_to_copy"]
+    json_columns_to_copy = config["json_columns_to_copy"]
 
     if source_columns == "*":
         dbt_code = "SELECT *\n"
     else:
         dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
 
-    json_columns_spec = config["json_keys"]
-
     # convert to sql-friendly column names
-    sql_columns = make_cleaned_column_names(json_columns_spec)
+    sql_columns = make_cleaned_column_names(json_columns_to_copy)
 
     # after cleaning we may have duplicates
     sql_columns = dedup_list(sql_columns)
 
-    for json_field, sql_column in zip(json_columns_spec, sql_columns):
+    for json_field, sql_column in zip(json_columns_to_copy, sql_columns):
         dbt_code += (
             "," + warehouse.json_extract_op(json_column, json_field, sql_column) + "\n"
         )
