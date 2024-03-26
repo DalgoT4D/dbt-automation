@@ -45,17 +45,17 @@ def test_quote_columnname():
 def test_make_cleaned_column_names():
     """test make_cleaned_column_names"""
     assert make_cleaned_column_names(["colname", "colname", "colname"]) == [
-        "_colname",
-        "_colname_b",
-        "_colname_c",
+        "colname",
+        "colname_b",
+        "colname_c",
     ]
     assert make_cleaned_column_names(["colname", "col name!", "123"]) == [
-        "_colname",
-        "_col_name_",
-        "_c123",
+        "colname",
+        "col_name_",
+        "c123",
     ]
     assert make_cleaned_column_names(["colname", "colname", "colname"]) == [
-        "_colname",
-        "_colname_b",
-        "_colname_c",
+        "colname",
+        "colname_b",
+        "colname_c",
     ]
