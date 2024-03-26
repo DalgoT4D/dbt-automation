@@ -742,13 +742,13 @@ class TestPostgresOperations:
     def test_flattenjson(self):
         """Test flattenjson."""
         wc_client = TestPostgresOperations.wc_client
-        output_name = "flatten"
+        output_name = "flatten_json"
 
         config = {
             "input": {
-                "input_type": "model",
+                "input_type": "source",
                 "input_name": "_airbyte_raw_Sheet1",
-                "source_name": None,
+                "source_name": "sample",
             },
             "dest_schema": "pytest_intermediate",
             "source_schema": "pytest_intermediate",
@@ -772,10 +772,13 @@ class TestPostgresOperations:
                 "pytest_intermediate", output_name
             )
         ]
-        assert "output_column_name" in cols
+        assert "_airbyte_data_NGO" in cols
+        assert "_airbyte_data_Month" in cols
+        assert "_airbyte_ab_id" in cols
 
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        assert table_data[0]["output_column_name"] == "NGO"  # Replace with expected value
+        assert table_data[0]["_airbyte_data_NGO"] == 'BAMANEH'
+        assert table_data[0]["_airbyte_data_SPOC"] == 'SPOC A'
 
     def test_merge_operation(self):
         """test merge_operation"""
