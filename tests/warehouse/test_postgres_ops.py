@@ -5,6 +5,7 @@ from pathlib import Path
 import math
 import subprocess
 from logging import basicConfig, getLogger, INFO
+from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
 from dbt_automation.operations.mergeoperations import merge_operations
 from dbt_automation.utils.warehouseclient import get_client
@@ -737,6 +738,44 @@ class TestPostgresOperations:
         )
 
         assert len(table_data1) + len(table_data2) == len(table_data_union)
+
+    def test_flattenjson(self):
+        """Test flattenjson."""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "flatten"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet1",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "source_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "source_columns": [
+                "_airbyte_ab_id",
+                "_airbyte_data",
+                "_airbyte_emitted_at",
+            ],
+            "json_column": "_airbyte_data",
+            "json_columns_to_copy": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+        }
+
+        flattenjson(config, wc_client, TestPostgresOperations.test_project_dir)
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
+        assert "output_column_name" in cols
+
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert table_data[0]["output_column_name"] == "NGO"  # Replace with expected value
 
     def test_merge_operation(self):
         """test merge_operation"""
