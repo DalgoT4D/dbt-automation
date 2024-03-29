@@ -260,6 +260,7 @@ class PostgresClient(WarehouseInterface):
         postgres_data_types = [
             "boolean",
             "char",
+            "character varying",
             "date",
             "double precision",
             "float",
