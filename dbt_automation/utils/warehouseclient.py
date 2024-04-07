@@ -16,6 +16,9 @@ def map_airbyte_keys_to_postgres_keys(conn_info: dict):
 
         if method["tunnel_method"] == "SSH_KEY_AUTH":
             conn_info["ssh_pkey"] = method["ssh_key"]
+            conn_info["ssh_private_key_password"] = method.get(
+                "tunnel_private_key_password"
+            )
 
         elif method["tunnel_method"] == "SSH_PASSWORD_AUTH":
             conn_info["ssh_password"] = method["tunnel_user_password"]
