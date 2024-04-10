@@ -24,6 +24,7 @@ from dbt_automation.operations.regexextraction import regex_extraction
 from dbt_automation.operations.mergetables import union_tables
 from dbt_automation.operations.aggregate import aggregate
 from dbt_automation.operations.casewhen import casewhen
+from dbt_automation.operations.pivot import pivot
 
 
 basicConfig(level=INFO)
@@ -672,6 +673,44 @@ class TestBigqueryOperations:
         assert "SPOC B" not in spoc_values
         assert "SPOC C" not in spoc_values
 
+    def test_pivot(self):
+        """test casewhen operation"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "pivot_op"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet2",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "source_columns": ["SPOC"],
+            "pivot_column_name": "NGO",
+            "pivot_column_values": ["IMAGE", "FDSR", "CRC", "BAMANEH", "JTS"],
+        }
+
+        pivot(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
+        assert sorted(cols) == sorted(
+            config["pivot_column_values"] + config["source_columns"]
+        )
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 10)
+        assert len(table_data) == 3
+
     def test_mergetables(self):
         """test merge tables"""
         wc_client = TestBigqueryOperations.wc_client
@@ -967,7 +1006,14 @@ class TestBigqueryOperations:
                 "_airbyte_emitted_at",
             ],
             "json_column": "_airbyte_data",
-            "json_columns_to_copy": ["NGO", "SPOC", "Month", "measure1", "measure2", "Indicator"],
+            "json_columns_to_copy": [
+                "NGO",
+                "SPOC",
+                "Month",
+                "measure1",
+                "measure2",
+                "Indicator",
+            ],
         }
 
         flattenjson(config, wc_client, TestBigqueryOperations.test_project_dir)
