@@ -21,7 +21,8 @@ from dbt_automation.operations.groupby import groupby_dbt_sql
 from dbt_automation.operations.aggregate import aggregate_dbt_sql
 from dbt_automation.operations.casewhen import casewhen_dbt_sql
 from dbt_automation.operations.flattenjson import flattenjson_dbt_sql
-from dbt_automation.operations.mergetables import union_tables, union_tables_sql
+from dbt_automation.operations.mergetables import union_tables_sql
+from dbt_automation.operations.pivot import pivot_dbt_sql
 
 
 def merge_operations_sql(
@@ -115,6 +116,10 @@ def merge_operations_sql(
             )
         elif operation["type"] == "unionall":
             op_select_statement, out_cols = union_tables_sql(
+                operation["config"], warehouse
+            )
+        elif operation["type"] == "pivot":
+            op_select_statement, out_cols = pivot_dbt_sql(
                 operation["config"], warehouse
             )
 
