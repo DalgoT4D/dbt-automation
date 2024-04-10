@@ -47,7 +47,9 @@ def pivot_dbt_sql(
         dbt_code += ",\n"
 
     dbt_code += "{{ dbt_utils.pivot("
-    dbt_code += quote_constvalue(pivot_column_name, warehouse.name)
+    dbt_code += quote_constvalue(
+        quote_columnname(pivot_column_name, warehouse.name), warehouse.name
+    )
     dbt_code += ", "
     dbt_code += (
         "["
