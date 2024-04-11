@@ -364,6 +364,25 @@ operations:
           is_col: <boolean>
         output_column_name: <output column name>
         sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_column_name'>
+
+    - type: pivot
+      config: 
+        input:
+          input_type: <"source" or "model" of table1>
+          input_name: <name of source table or ref model table1>
+          source_name: <name of the source defined in source.yml; will be null for type "model" table1>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+        pivot_column_name: <column name>
+        pivot_column_values:
+          - <pivot col value1>
+          - <pivot col value2>
+          - <pivot col value3>  
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
+  
   
     - type: mergeoperations
       config:
@@ -627,3 +646,14 @@ operations:
                       - <column name>
                       - <column name>
                       - ...
+          - type: pivot
+            config:
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              pivot_column_name: <column name>
+              pivot_column_values:
+                - <pivot col value1>
+                - <pivot col value2>
+                - <pivot col value3>  
