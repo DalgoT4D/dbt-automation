@@ -25,6 +25,7 @@ from dbt_automation.operations.mergetables import union_tables
 from dbt_automation.operations.aggregate import aggregate
 from dbt_automation.operations.casewhen import casewhen
 from dbt_automation.operations.pivot import pivot
+from dbt_automation.operations.unpivot import unpivot
 
 
 basicConfig(level=INFO)
@@ -762,6 +763,53 @@ class TestBigqueryOperations:
         )
 
         assert len(table_data1) + len(table_data2) == len(table_data_union)
+
+    def test_unpivot(self):
+        """test unpivot operation"""
+        wc_client = TestBigqueryOperations.wc_client
+        output_name = "unpivot_op"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet2",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "output_name": output_name,
+            "source_columns": [
+                "NGO",
+                "SPOC",
+                "Month",
+                "measure1",
+                "_airbyte_ab_id",
+                "measure2",
+                "Indicator",
+            ],
+            "exclude_columns": [],
+            "unpivot_columns": ["NGO", "SPOC"],
+            "unpivot_field_name": "col_field",
+            "unpivot_value_name": "col_val",
+        }
+
+        unpivot(
+            config,
+            wc_client,
+            TestBigqueryOperations.test_project_dir,
+        )
+
+        TestBigqueryOperations.execute_dbt("run", output_name)
+
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
+        assert len(cols) == 2
+        assert sorted(cols) == sorted(
+            [config["unpivot_field_name"], config["unpivot_value_name"]]
+        )
 
     def test_merge_operation(self):
         """test merge_operation"""
