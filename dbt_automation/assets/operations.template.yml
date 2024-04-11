@@ -364,7 +364,25 @@ operations:
           is_col: <boolean>
         output_column_name: <output column name>
         sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_column_name'>
-  
+    - type: generic
+      config:
+        function_name: <name of the SQL function, such as "SUM", "AVG", "ROUND", etc.>
+        input:
+          input_type: <"source" or "model">
+          input_name: <name of source table or ref model>
+          source_name: <name of the source defined in source.yml; will be null for type "model">
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
+        operands:
+          - <operand 1, column name>
+          - <operand 2, column name>
+          - <operand 3, column name>
+          - ...
+        dest_schema: <destination schema>
+        output_name: <name of the output model>
     - type: mergeoperations
       config:
         dest_schema: <destination_schema>

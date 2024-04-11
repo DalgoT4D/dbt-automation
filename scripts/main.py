@@ -8,6 +8,7 @@ from logging import basicConfig, getLogger, INFO
 import json
 import yaml
 from dotenv import load_dotenv
+from dbt_automation.operations.generic import generic_function
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.mergeoperations import merge_operations
 from dbt_automation.operations.scaffold import scaffold
@@ -48,6 +49,7 @@ OPERATIONS_DICT = {
     "groupby": groupby,
     "aggregate": aggregate,
     "casewhen": casewhen,
+    "generic": generic_function
 }
 
 load_dotenv("./../dbconnection.env")
