@@ -1083,23 +1083,32 @@ class TestBigqueryOperations:
     def test_generic(self):
         """test generic function"""
         wc_client = TestBigqueryOperations.wc_client
-        output_name = "generic"
+        output_name = "generic_table"
 
         config = {
-            "function_name": "lower",
             "input": {
                 "input_type": "model",
                 "input_name": "_airbyte_raw_Sheet2",
                 "source_name": None,
             },
-            "operands": ["NGO"],
             "dest_schema": "pytest_intermediate",
-            "output_name": output_name,
-            "source_columns": [
-                "_airbyte_ab_id",
-                "NGO",
-                "SPOC",
-                "Indicator"
+            "output_model_name": "output_model_name",
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+            "computed_columns": [
+                {
+                    "function_name": "LOWER",
+                    "operands": [
+                        "NGO"
+                    ],
+                    "output_column_name": "ngo_lower"
+                },
+                {
+                    "function_name": "TRIM",
+                    "operands": [
+                        "Indicator"
+                    ],
+                    "output_column_name": "trimmed_indicator"
+                }
             ],
         }
 
@@ -1116,7 +1125,7 @@ class TestBigqueryOperations:
         assert "NGO" in cols
         assert "Indicator" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        ngo_column = [row['generic'] for row in table_data]
+        ngo_column = [row['ngo_lower'] for row in table_data]
 
         for value in ngo_column:
             assert value == value.lower(), f"Value {value} in 'NGO' column is not lowercase"

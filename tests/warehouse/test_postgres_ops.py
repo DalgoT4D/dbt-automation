@@ -1105,14 +1105,24 @@ class TestPostgresOperations:
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
-            "output_name": output_name,
-            "source_columns": [
-                "_airbyte_ab_id",
-                '"NGO"',
-                '"Indicator"',
+            "output_model_name": "output_model_name",
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+            "computed_columns": [
+                {
+                    "function_name": "LOWER",
+                    "operands": [
+                        "NGO"
+                    ],
+                    "output_column_name": "ngo_lower"
+                },
+                {
+                    "function_name": "TRIM",
+                    "operands": [
+                        "measure1"
+                    ],
+                    "output_column_name": "trimmed_measure_1"
+                }
             ],
-            "operands": ['"NGO"'],
-            "function_name": "lower",
         }
 
         generic_function(
@@ -1133,7 +1143,7 @@ class TestPostgresOperations:
         assert "NGO" in cols
         assert "Indicator" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        ngo_column = [row['generic'] for row in table_data]
+        ngo_column = [row['ngo_lower'] for row in table_data]
 
         for value in ngo_column:
             assert value == value.lower(), f"Value {value} in 'NGO' column is not lowercase"
