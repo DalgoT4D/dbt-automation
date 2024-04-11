@@ -1,4 +1,5 @@
 """syncs one schema in one database to the corresponding schema in the other database"""
+
 import sys
 import argparse
 from logging import basicConfig, getLogger, INFO

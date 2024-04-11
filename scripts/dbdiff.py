@@ -1,9 +1,11 @@
 """diffs two schemas in two databases"""
+
 import os
 import sys
 import argparse
 from logging import basicConfig, getLogger, INFO
 import subprocess
+import difflib
 import yaml
 
 from dbt_automation.utils.postgres import PostgresClient
@@ -75,14 +77,15 @@ comp_client = PostgresClient(connection_info["comp"])
 ref_tables = ref_client.get_tables(ref_schema)
 comp_tables = comp_client.get_tables(comp_schema)
 
-if set(ref_tables) != set(comp_tables):
+renamed_comp_tables = [t.replace("airbyte_", "") for t in comp_tables]
+if set(ref_tables) != set(renamed_comp_tables):
     print("WARNING: not the same table sets")
     if len(ref_tables) > len(comp_tables):
         print("ref has more tables")
-        print(set(ref_tables) - set(comp_tables))
+        print(set(ref_tables) - set(renamed_comp_tables))
     else:
         print("comp has more tables")
-        print(set(comp_tables) - set(ref_tables))
+        print(set(renamed_comp_tables) - set(ref_tables))
 
     ref_tables = set(ref_tables) & set(comp_tables)
 
@@ -90,6 +93,12 @@ columns_specs = {}
 for tablename in ref_tables:
     ref_columns = ref_client.get_columnspec(ref_schema, tablename)
     comp_columns = comp_client.get_columnspec(comp_schema, tablename)
+    ref_columns = set(ref_columns).difference(
+        ["_airbyte_ab_id", "_airbyte_emitted_at", "indexed_on"]
+    )
+    comp_columns = set(comp_columns).difference(
+        ["_airbyte_ab_id", "_airbyte_raw_id", "_airbyte_extracted_at", "indexed_on"]
+    )
     if set(ref_columns) != set(comp_columns):
         print(f"columns for {tablename} are not the same")
         if len(ref_columns) > len(comp_columns):
@@ -114,7 +123,13 @@ for tablename in ref_tables:
         ref_schema,
         tablename,
         columns_specs[tablename],
-        ["_airbyte_ab_id", "_airbyte_emitted_at"],
+        [
+            "_airbyte_ab_id",
+            "_airbyte_emitted_at",
+            "indexed_on",
+            "_airbyte_raw_id",
+            "_airbyte_extracted_at",
+        ],
         ref_csvfile,
     )
 
@@ -125,7 +140,13 @@ for tablename in ref_tables:
         comp_schema,
         tablename,
         columns_specs[tablename],
-        ["_airbyte_ab_id", "_airbyte_emitted_at"],
+        [
+            "_airbyte_ab_id",
+            "_airbyte_emitted_at",
+            "indexed_on",
+            "_airbyte_raw_id",
+            "_airbyte_extracted_at",
+        ],
         comp_csvfile,
     )
 
@@ -136,14 +157,17 @@ for tablename in ref_tables:
         "r",
         encoding="utf-8",
     ) as sorted_ref:
-        for idx, (line1, line2) in enumerate(zip(sorted_comp, sorted_ref)):
-            if line1 != line2:
-                print(f"mismatch for {tablename} at {idx}")
-                print(line1.strip())
-                print(line2.strip())
-                has_mismatches = True
+        for diffline in difflib.unified_diff(
+            sorted_comp.readlines(),
+            sorted_ref.readlines(),
+            fromfile=sorted_comp_csv,
+            tofile=sorted_ref_csv,
+            n=0,
+        ):
+            print(diffline)
+            has_mismatches = True
 
     if not has_mismatches:
         # delete the sorted csv files
         os.remove(sorted_ref_csv)
-        os.remove(sorted_comp_csv)
+        os.remove(sorted_comp_csv),
