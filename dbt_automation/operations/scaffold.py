@@ -1,5 +1,6 @@
 """setup the dbt project"""
 
+import glob
 import os, shutil, yaml
 from pathlib import Path
 from string import Template
@@ -44,14 +45,20 @@ def scaffold(config: dict, warehouse: WarehouseInterface, project_dir: str):
     (Path(project_dir) / "models" / "staging").mkdir()
     (Path(project_dir) / "models" / "intermediate").mkdir()
 
-    flatten_json_target = Path(project_dir) / "macros" / "flatten_json.sql"
-    custom_schema_target = Path(project_dir) / "macros" / "generate_schema_name.sql"
-    logger.info("created %s", flatten_json_target)
-    source_schema_name_macro_path = os.path.abspath(
-        os.path.join(os.path.abspath(assets.__file__), "..", "generate_schema_name.sql")
-    )
-    shutil.copy(source_schema_name_macro_path, custom_schema_target)
-    logger.info("created %s", custom_schema_target)
+    # copy all .sql files from assets/ to project_dir/macros
+    # create if the file is not present in project_dir/macros
+    assets_dir = assets.__path__[0]
+
+    # loop over all sql macros with .sql extension
+    for sql_file_path in glob.glob(os.path.join(assets_dir, "*.sql")):
+        # Get the target path in the project_dir/macros directory
+        target_path = Path(project_dir) / "macros" / Path(sql_file_path).name
+
+        # Copy the .sql file to the target path
+        shutil.copy(sql_file_path, target_path)
+
+        # Log the creation of the file
+        logger.info("created %s", target_path)
 
     dbtproject_filename = Path(project_dir) / "dbt_project.yml"
     PROJECT_TEMPLATE = Template(
