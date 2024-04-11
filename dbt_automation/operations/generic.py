@@ -18,28 +18,29 @@ def generic_function_dbt_sql(
     warehouse: WarehouseInterface,
 ):
     """
-    model_name: name of the output model
-    function_name: name of the SQL function
-    operands: list of operands (column names or constant values)
-    output_name: name of the output column
+    source_columns: list of columns to copy from the input model
+    computed_columns: list of computed columns with function_name, operands, and output_column_name
     """
-    function_name = config["function_name"]
-    operands = config["operands"]
     source_columns = config["source_columns"]
-    output_name = config["output_name"]
+    computed_columns = config["computed_columns"]
 
     if source_columns == "*":
-        dbt_code = "SELECT *\n"
+        dbt_code = "SELECT *"
     else:
-        dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}\n"
+        dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in source_columns])}"
 
-    dbt_code = f"SELECT {function_name}({', '.join([str(operand) for operand in operands])}) AS {output_name}, {', '.join(source_columns)}"
+    for computed_column in computed_columns:
+        function_name = computed_column["function_name"]
+        operands = [quote_columnname(operand, warehouse.name) for operand in computed_column["operands"]]
+        output_column_name = computed_column["output_column_name"]
+
+        dbt_code += f", {function_name}({', '.join(operands)}) AS {output_column_name}"
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
-        dbt_code += f" FROM {select_from}\n"
+        dbt_code += f" FROM {select_from}"
     else:
-        dbt_code += f" FROM {{{{{select_from}}}}}\n"
+        dbt_code += f" FROM {{{{{select_from}}}}}"
 
     return dbt_code, source_columns
 
@@ -58,10 +59,10 @@ def generic_function(config: dict, warehouse: WarehouseInterface, project_dir: s
     dbt_sql += "\n" + select_statement
 
     dest_schema = config["dest_schema"]
-    output_name = config["output_name"]
+    output_model_name = config["output_model_name"]
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_sql + select_statement)
+    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, dbt_sql + select_statement)
 
     return model_sql_path, output_cols
