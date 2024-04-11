@@ -41,7 +41,7 @@ def unpivot_dbt_sql(
     output_columns = list(set(exclude_columns) | set(unpivot_on_columns))  # union
     remove_columns = list(set(source_columns) - set(output_columns))
 
-    dbt_code = "{{ dbt_utils.unpivot("
+    dbt_code = "{{ unpivot("
     dbt_code += source_or_ref(**input_table)
     dbt_code += ", exclude="
     dbt_code += (
