@@ -382,6 +382,30 @@ operations:
           - <pivot col value3>  
         dest_schema:  <destination schema>
         output_name: <name of the output model>
+
+    - type: unpivot
+      config: 
+        input:
+          input_type: <"source" or "model" of table1>
+          input_name: <name of source table or ref model table1>
+          source_name: <name of the source defined in source.yml; will be null for type "model" table1>
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+        exclude_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+        unpivot_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+        unpivot_field_name: <by default - "field_name">
+        unpivot_value_name: <by default - "value">
+        cast_to: <data type to cast values to - "varchar" for postgres & "STRING" for bigquery>
+        dest_schema:  <destination schema>
+        output_name: <name of the output model>
   
   
     - type: mergeoperations
@@ -656,4 +680,21 @@ operations:
               pivot_column_values:
                 - <pivot col value1>
                 - <pivot col value2>
-                - <pivot col value3>  
+                - <pivot col value3>
+          - type: unpivot
+            config: 
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              exclude_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              unpivot_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+              cast_to: <data type to cast values to - "varchar" for postgres & "STRING" for bigquery>
+              unpivot_field_name: <by default - "field_name">
+              unpivot_value_name: <by default - "value">

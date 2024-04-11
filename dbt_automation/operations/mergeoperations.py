@@ -23,6 +23,7 @@ from dbt_automation.operations.casewhen import casewhen_dbt_sql
 from dbt_automation.operations.flattenjson import flattenjson_dbt_sql
 from dbt_automation.operations.mergetables import union_tables_sql
 from dbt_automation.operations.pivot import pivot_dbt_sql
+from dbt_automation.operations.unpivot import unpivot_dbt_sql
 
 
 def merge_operations_sql(
@@ -120,6 +121,10 @@ def merge_operations_sql(
             )
         elif operation["type"] == "pivot":
             op_select_statement, out_cols = pivot_dbt_sql(
+                operation["config"], warehouse
+            )
+        elif operation["type"] == "unpivot":
+            op_select_statement, out_cols = unpivot_dbt_sql(
                 operation["config"], warehouse
             )
 
