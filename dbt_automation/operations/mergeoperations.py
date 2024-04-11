@@ -9,6 +9,7 @@ from dbt_automation.operations.droprenamecolumns import (
     rename_columns_dbt_sql,
 )
 from dbt_automation.operations.flattenjson import flattenjson_dbt_sql
+from dbt_automation.operations.generic import generic_function_dbt_sql
 from dbt_automation.operations.mergetables import union_tables_sql
 from dbt_automation.operations.regexextraction import regex_extraction_sql
 from dbt_automation.utils.dbtproject import dbtProject
@@ -115,6 +116,11 @@ def merge_operations_sql(
             )
         elif operation["type"] == "unionall":
             op_select_statement, out_cols = union_tables_sql(
+                operation["config"], warehouse
+            )
+        elif operation["type"] == "generic":
+            breakpoint()
+            op_select_statement, out_cols = generic_function_dbt_sql(
                 operation["config"], warehouse
             )
 

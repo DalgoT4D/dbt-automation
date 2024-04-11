@@ -41,7 +41,7 @@ def generic_function_dbt_sql(
     else:
         dbt_code += f" FROM {{{{{select_from}}}}}\n"
 
-    return dbt_code
+    return dbt_code, source_columns
 
 
 def generic_function(config: dict, warehouse: WarehouseInterface, project_dir: str):
@@ -54,7 +54,8 @@ def generic_function(config: dict, warehouse: WarehouseInterface, project_dir: s
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    select_statement = generic_function_dbt_sql(config, warehouse)
+    select_statement, output_cols = generic_function_dbt_sql(config, warehouse)
+    dbt_sql += "\n" + select_statement
 
     dest_schema = config["dest_schema"]
     output_name = config["output_name"]
@@ -63,4 +64,4 @@ def generic_function(config: dict, warehouse: WarehouseInterface, project_dir: s
     dbtproject.ensure_models_dir(dest_schema)
     model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_sql + select_statement)
 
-    return model_sql_path
+    return model_sql_path, output_cols
