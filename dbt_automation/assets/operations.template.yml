@@ -403,6 +403,7 @@ operations:
           - <column name>
         unpivot_field_name: <by default - "field_name">
         unpivot_value_name: <by default - "value">
+        cast_to: <data type to cast values to - "varchar" for postgres & "STRING" for bigquery>
         dest_schema:  <destination schema>
         output_name: <name of the output model>
   
@@ -694,5 +695,6 @@ operations:
                 - <column name>
                 - <column name>
                 - <column name>
+              cast_to: <data type to cast values to - "varchar" for postgres & "STRING" for bigquery>
               unpivot_field_name: <by default - "field_name">
               unpivot_value_name: <by default - "value">
