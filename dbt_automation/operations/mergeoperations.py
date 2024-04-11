@@ -119,7 +119,6 @@ def merge_operations_sql(
                 operation["config"], warehouse
             )
         elif operation["type"] == "generic":
-            breakpoint()
             op_select_statement, out_cols = generic_function_dbt_sql(
                 operation["config"], warehouse
             )
