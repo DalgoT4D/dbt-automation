@@ -380,11 +380,12 @@ operations:
         computed_columns:
           - function_name: <name of the sql function>
             operands:
-              - <column name>
-            output_column_name: <output column name>
-          - function_name: <name of the sql function>
-            operands:
-              - <column name>
+            - value: <string (column name or const)>
+              is_col: <boolean>
+            - value: <string (column name or const)>
+              is_col: <boolean>
+            - value: <string (column name or const)>
+              is_col: <boolean>
             output_column_name: <output column name>
 
     - type: pivot
@@ -734,15 +735,6 @@ operations:
               dest_schema: <destination schema>
               output_model_name: <name of the output model>
               computed_columns:
-                - function_name: <name of the sql function>
-                  operands:
-                  - value: <string (column name or const)>
-                    is_col: <boolean>
-                  - value: <string (column name or const)>
-                    is_col: <boolean>
-                  - value: <string (column name or const)>
-                    is_col: <boolean>
-                  output_column_name: <output column name>
                 - function_name: <name of the sql function>
                   operands:
                   - value: <string (column name or const)>
