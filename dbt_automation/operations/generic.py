@@ -35,7 +35,7 @@ def generic_function_dbt_sql(
     for computed_column in computed_columns:
         function_name = computed_column["function_name"]
         operands = [
-            quote_constvalue(quote_columnname(str(operand["value"]), warehouse.name), warehouse.name)
+            quote_columnname(str(operand["value"]), warehouse.name)
             if operand["is_col"]
             else quote_constvalue(str(operand["value"]), warehouse.name)
             for operand in computed_column["operands"]
