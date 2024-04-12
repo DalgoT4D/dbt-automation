@@ -20,6 +20,9 @@ def generic_function_dbt_sql(
     """
     source_columns: list of columns to copy from the input model
     computed_columns: list of computed columns with function_name, operands, and output_column_name
+    function_name: name of the function to be used
+    operands: list of operands to be passed to the function
+    output_column_name: name of the output column
     """
     source_columns = config["source_columns"]
     computed_columns = config["computed_columns"]
@@ -31,7 +34,12 @@ def generic_function_dbt_sql(
 
     for computed_column in computed_columns:
         function_name = computed_column["function_name"]
-        operands = [quote_columnname(operand, warehouse.name) for operand in computed_column["operands"]]
+        operands = [
+            quote_constvalue(quote_columnname(str(operand["value"]), warehouse.name), warehouse.name)
+            if operand["is_col"]
+            else quote_constvalue(str(operand["value"]), warehouse.name)
+            for operand in computed_column["operands"]
+        ]
         output_column_name = computed_column["output_column_name"]
 
         dbt_code += f", {function_name}({', '.join(operands)}) AS {output_column_name}"

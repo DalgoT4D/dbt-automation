@@ -736,9 +736,19 @@ operations:
               computed_columns:
                 - function_name: <name of the sql function>
                   operands:
-                    - <column name>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
                   output_column_name: <output column name>
                 - function_name: <name of the sql function>
                   operands:
-                    - <column name>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
                   output_column_name: <output column name>

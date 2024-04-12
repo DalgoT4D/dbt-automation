@@ -1111,14 +1111,14 @@ class TestPostgresOperations:
                 {
                     "function_name": "LOWER",
                     "operands": [
-                        "NGO"
+                        {"value": "NGO", "is_col": True}
                     ],
                     "output_column_name": "ngo_lower"
                 },
                 {
                     "function_name": "TRIM",
                     "operands": [
-                        "measure1"
+                        {"value": "measure1", "is_col": True}
                     ],
                     "output_column_name": "trimmed_measure_1"
                 }
