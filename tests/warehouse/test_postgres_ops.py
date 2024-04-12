@@ -7,6 +7,7 @@ import subprocess
 from logging import basicConfig, getLogger, INFO
 from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
+from dbt_automation.operations.generic import generic_function
 from dbt_automation.operations.mergeoperations import merge_operations
 from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.scaffold import scaffold
@@ -1091,3 +1092,59 @@ class TestPostgresOperations:
             )
             == 0
         )
+
+    def test_generic(self):
+        """test generic operation"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "generic"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet2",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "output_model_name": output_name,
+            "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
+            "computed_columns": [
+                {
+                    "function_name": "LOWER",
+                    "operands": [
+                        {"value": "NGO", "is_col": True}
+                    ],
+                    "output_column_name": "ngo_lower"
+                },
+                {
+                    "function_name": "TRIM",
+                    "operands": [
+                        {"value": "measure1", "is_col": True}
+                    ],
+                    "output_column_name": "trimmed_measure_1"
+                }
+            ],
+        }
+
+        generic_function(
+            config,
+            wc_client,
+            TestPostgresOperations.test_project_dir,
+        )
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+
+        cols = [
+            col_dict["name"]
+            for col_dict in wc_client.get_table_columns(
+                "pytest_intermediate", output_name
+            )
+        ]
+
+        assert "NGO" in cols
+        assert "Indicator" in cols
+        table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        ngo_column = [row['ngo_lower'] for row in table_data]
+
+        for value in ngo_column:
+            assert value == value.lower(), f"Value {value} in 'NGO' column is not lowercase"
+

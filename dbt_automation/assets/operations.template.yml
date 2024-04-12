@@ -364,6 +364,29 @@ operations:
           is_col: <boolean>
         output_column_name: <output column name>
         sql_snippet: <custom sql snippet of CASE WHEN END AS 'output_column_name'>
+    - type: generic
+      config:
+        input:
+          input_type: <"source" or "model">
+          input_name: <name of source table or ref model>
+          source_name: <name of the source defined in source.yml; will be null for type "model">
+        source_columns:
+          - <column name>
+          - <column name>
+          - <column name>
+          - ...
+        dest_schema: <destination schema>
+        output_model_name: <name of the output model>
+        computed_columns:
+          - function_name: <name of the sql function>
+            operands:
+            - value: <string (column name or const)>
+              is_col: <boolean>
+            - value: <string (column name or const)>
+              is_col: <boolean>
+            - value: <string (column name or const)>
+              is_col: <boolean>
+            output_column_name: <output column name>
 
     - type: pivot
       config: 
@@ -698,3 +721,26 @@ operations:
               cast_to: <data type to cast values to - "varchar" for postgres & "STRING" for bigquery>
               unpivot_field_name: <by default - "field_name">
               unpivot_value_name: <by default - "value">
+          - type: generic
+            config:
+              input:
+                input_type: <"source" or "model">
+                input_name: <name of source table or ref model>
+                source_name: <name of the source defined in source.yml; will be null for type "model">
+              source_columns:
+                - <column name>
+                - <column name>
+                - <column name>
+                - ...
+              dest_schema: <destination schema>
+              output_model_name: <name of the output model>
+              computed_columns:
+                - function_name: <name of the sql function>
+                  operands:
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  - value: <string (column name or const)>
+                    is_col: <boolean>
+                  output_column_name: <output column name>
