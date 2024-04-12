@@ -56,13 +56,12 @@ def generic_function(config: dict, warehouse: WarehouseInterface, project_dir: s
         )
 
     select_statement, output_cols = generic_function_dbt_sql(config, warehouse)
-    dbt_sql += "\n" + select_statement
 
     dest_schema = config["dest_schema"]
-    output_model_name = config["output_model_name"]
+    output_name = config["output_model_name"]
 
     dbtproject = dbtProject(project_dir)
     dbtproject.ensure_models_dir(dest_schema)
-    model_sql_path = dbtproject.write_model(dest_schema, output_model_name, dbt_sql + select_statement)
+    model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_sql + select_statement)
 
     return model_sql_path, output_cols

@@ -1092,7 +1092,7 @@ class TestBigqueryOperations:
                 "source_name": None,
             },
             "dest_schema": "pytest_intermediate",
-            "output_model_name": "output_model_name",
+            "output_model_name": output_name,
             "source_columns": ["NGO", "Month", "measure1", "measure2", "Indicator"],
             "computed_columns": [
                 {
