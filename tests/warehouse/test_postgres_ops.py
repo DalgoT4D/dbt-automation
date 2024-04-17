@@ -40,7 +40,7 @@ class TestPostgresOperations:
         {
             "host": os.environ.get("TEST_PG_DBHOST"),
             "port": os.environ.get("TEST_PG_DBPORT"),
-            "username": os.environ.get("TEST_PG_DBUSER"),
+            "user": os.environ.get("TEST_PG_DBUSER"),
             "database": os.environ.get("TEST_PG_DBNAME"),
             "password": os.environ.get("TEST_PG_DBPASSWORD"),
         },

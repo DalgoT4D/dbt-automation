@@ -279,7 +279,7 @@ class PostgresClient(WarehouseInterface):
                         "host": self.conn_info["host"],
                         "password": self.conn_info["password"],
                         "port": int(self.conn_info["port"]),
-                        "user": self.conn_info["username"],
+                        "user": self.conn_info["user"],
                         "schema": default_schema,
                         "threads": 4,
                         "type": "postgres",
