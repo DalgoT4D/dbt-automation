@@ -46,6 +46,10 @@ class PostgresClient(WarehouseInterface):
 
     def __init__(self, conn_info: dict):
         self.name = "postgres"
+        self.cursor = None
+        self.tunnel = None
+        self.connection = None
+
         if conn_info is None:  # take creds from env
             conn_info = {
                 "host": os.getenv("DBHOST"),
@@ -55,7 +59,6 @@ class PostgresClient(WarehouseInterface):
                 "database": os.getenv("DBNAME"),
             }
 
-        self.tunnel = None
         if "ssh_host" in conn_info:
             self.tunnel = SSHTunnelForwarder(
                 (conn_info["ssh_host"], conn_info["ssh_port"]),
@@ -73,7 +76,6 @@ class PostgresClient(WarehouseInterface):
 
         else:
             self.connection = PostgresClient.get_connection(conn_info)
-        self.cursor = None
         self.conn_info = conn_info
 
     def __del__(self):
