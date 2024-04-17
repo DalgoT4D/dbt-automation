@@ -790,6 +790,7 @@ class TestBigqueryOperations:
             "unpivot_columns": ["NGO", "SPOC"],
             "unpivot_field_name": "col_field",
             "unpivot_value_name": "col_val",
+            "cast_to": "STRING",
         }
 
         unpivot(
