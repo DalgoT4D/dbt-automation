@@ -1,8 +1,9 @@
 """helpers for postgres"""
 
+import os
 from logging import basicConfig, getLogger, INFO
 import psycopg2
-import os
+from sshtunnel import SSHTunnelForwarder
 from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 
@@ -15,37 +16,79 @@ class PostgresClient(WarehouseInterface):
     """a postgres client that can be used as a context manager"""
 
     @staticmethod
-    def get_connection(host: str, port: str, user: str, password: str, database: str):
-        """returns a psycopg connection"""
-        connection = psycopg2.connect(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            database=database,
-        )
+    def get_connection(conn_info):
+        """
+        returns a psycopg connection
+        parameters are
+            host: str
+            port: str
+            user: str
+            password: str
+            database: str
+            sslmode: require | disable | prefer | allow | verify-ca | verify-full
+            sslrootcert: /path/to/cert
+            ...
+        """
+        connect_params = {}
+        for key in [
+            "host",
+            "port",
+            "user",
+            "password",
+            "database",
+            "sslmode",
+            "sslrootcert",
+        ]:
+            if key in conn_info:
+                connect_params[key] = conn_info[key]
+        connection = psycopg2.connect(**connect_params)
         return connection
 
     def __init__(self, conn_info: dict):
         self.name = "postgres"
+        self.cursor = None
+        self.tunnel = None
+        self.connection = None
+
         if conn_info is None:  # take creds from env
             conn_info = {
                 "host": os.getenv("DBHOST"),
                 "port": os.getenv("DBPORT"),
-                "username": os.getenv("DBUSER"),
+                "user": os.getenv("DBUSER"),
                 "password": os.getenv("DBPASSWORD"),
                 "database": os.getenv("DBNAME"),
             }
 
-        self.connection = PostgresClient.get_connection(
-            conn_info.get("host"),
-            conn_info.get("port"),
-            conn_info.get("username"),
-            conn_info.get("password"),
-            conn_info.get("database"),
-        )
-        self.cursor = None
+        if "ssh_host" in conn_info:
+            self.tunnel = SSHTunnelForwarder(
+                (conn_info["ssh_host"], conn_info["ssh_port"]),
+                remote_bind_address=(conn_info["host"], conn_info["port"]),
+                # ...and credentials
+                ssh_pkey=conn_info.get("ssh_pkey"),
+                ssh_username=conn_info.get("ssh_username"),
+                ssh_password=conn_info.get("ssh_password"),
+                ssh_private_key_password=conn_info.get("ssh_private_key_password"),
+            )
+            self.tunnel.start()
+            conn_info["host"] = "localhost"
+            conn_info["port"] = self.tunnel.local_bind_port
+            self.connection = PostgresClient.get_connection(conn_info)
+
+        else:
+            self.connection = PostgresClient.get_connection(conn_info)
         self.conn_info = conn_info
+
+    def __del__(self):
+        """destructor"""
+        if self.cursor is not None:
+            self.cursor.close()
+            self.cursor = None
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None
+        if self.tunnel is not None:
+            self.tunnel.stop()
+            self.tunnel = None
 
     def runcmd(self, statement: str):
         """runs a command"""
@@ -75,7 +118,7 @@ class PostgresClient(WarehouseInterface):
     def get_schemas(self) -> list:
         """returns the list of schema names in the given database connection"""
         resultset = self.execute(
-            f"""
+            """
             SELECT nspname
             FROM pg_namespace
             WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema';
@@ -132,7 +175,7 @@ class PostgresClient(WarehouseInterface):
         )
         return [{"name": x[0], "data_type": x[1]} for x in resultset]
 
-    def get_columnspec(self, schema: str, table: str):
+    def get_columnspec(self, schema: str, table_id: str):
         """get the column schema for this table"""
         return [
             x[0]
@@ -140,7 +183,7 @@ class PostgresClient(WarehouseInterface):
                 f"""SELECT column_name
                 FROM information_schema.columns
                 WHERE table_schema = '{schema}'
-                AND table_name = '{table}'
+                AND table_name = '{table_id}'
             """
             )
         ]
@@ -193,33 +236,41 @@ class PostgresClient(WarehouseInterface):
 
     def close(self):
         try:
-            self.connection.close()
+            if self.cursor is not None:
+                self.cursor.close()
+                self.cursor = None
+            if self.tunnel is not None:
+                self.tunnel.stop()
+                self.tunnel = None
+            if self.connection is not None:
+                self.connection.close()
+                self.connection = None
         except Exception:
             logger.error("something went wrong while closing the postgres connection")
 
         return True
 
     def generate_profiles_yaml_dbt(self, project_name, default_schema):
-        """Generates the profiles.yml dictionary object for dbt"""
+        """
+        Generates the profiles.yml dictionary object for dbt
+        <project_name>:
+            outputs:
+                prod:
+                    dbname:
+                    host:
+                    password:
+                    port: 5432
+                    user: airbyte_user
+                    schema:
+                    threads: 4
+                    type: postgres
+            target: prod
+        """
         if project_name is None or default_schema is None:
             raise ValueError("project_name and default_schema are required")
 
         target = "prod"
 
-        """
-        <project_name>: 
-            outputs:
-                prod: 
-                    dbname: 
-                    host: 
-                    password: 
-                    port: 5432
-                    user: airbyte_user
-                    schema: 
-                    threads: 4
-                    type: postgres
-            target: prod
-        """
         profiles_yml = {
             f"{project_name}": {
                 "outputs": {
@@ -228,7 +279,7 @@ class PostgresClient(WarehouseInterface):
                         "host": self.conn_info["host"],
                         "password": self.conn_info["password"],
                         "port": int(self.conn_info["port"]),
-                        "user": self.conn_info["username"],
+                        "user": self.conn_info["user"],
                         "schema": default_schema,
                         "threads": 4,
                         "type": "postgres",
