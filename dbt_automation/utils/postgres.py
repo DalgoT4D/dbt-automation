@@ -236,7 +236,15 @@ class PostgresClient(WarehouseInterface):
 
     def close(self):
         try:
-            self.connection.close()
+            if self.cursor is not None:
+                self.cursor.close()
+                self.cursor = None
+            if self.tunnel is not None:
+                self.tunnel.stop()
+                self.tunnel = None
+            if self.connection is not None:
+                self.connection.close()
+                self.connection = None
         except Exception:
             logger.error("something went wrong while closing the postgres connection")
 
