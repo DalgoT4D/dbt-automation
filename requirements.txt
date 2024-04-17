@@ -5,7 +5,7 @@ cffi==1.16.0
 charset-normalizer==3.3.0
 coverage==7.3.2
 cryptography==42.0.5
-dbt-automation==0.1
+dbt-automation @ git+https://github.com/DalgoT4D/dbt-automation.git
 exceptiongroup==1.1.3
 google-api-core==2.12.0
 google-auth==2.23.2
