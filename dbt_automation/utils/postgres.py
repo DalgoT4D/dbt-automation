@@ -121,7 +121,7 @@ class PostgresClient(WarehouseInterface):
             """
             SELECT nspname
             FROM pg_namespace
-            WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema';
+            WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema' AND nspname != 'airbyte_internal';
             """
         )
         return [x[0] for x in resultset]

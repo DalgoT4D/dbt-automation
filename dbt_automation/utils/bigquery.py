@@ -42,7 +42,7 @@ class BigQueryClient(WarehouseInterface):
     def get_schemas(self) -> list:
         """returns the list of schema names in the given connection"""
         datasets = self.bqclient.list_datasets()
-        return [x.dataset_id for x in datasets]
+        return [x.dataset_id for x in datasets if x.dataset_id != "airbyte_internal"]
 
     def get_table_columns(self, schema: str, table: str) -> list:
         """fetch the list of columns from a BigQuery table along with their data types."""
@@ -262,6 +262,6 @@ class BigQueryClient(WarehouseInterface):
             "STRING",
             "STRUCT",
             "TIME",
-            "TIMESTAMP"
+            "TIMESTAMP",
         ]
         return bigquery_data_types
