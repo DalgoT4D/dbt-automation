@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from dbt_automation.operations.generic import generic_function
 from dbt_automation.operations.arithmetic import arithmetic
 from dbt_automation.operations.mergeoperations import merge_operations
+from dbt_automation.operations.rawsql import generic_sql_function
 from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.droprenamecolumns import drop_columns, rename_columns
@@ -53,7 +54,8 @@ OPERATIONS_DICT = {
     "casewhen": casewhen,
     "pivot": pivot,
     "unpivot": unpivot,
-    "generic": generic_function
+    "generic": generic_function,
+    "rawsql": generic_sql_function,
 }
 
 load_dotenv("./../dbconnection.env")
