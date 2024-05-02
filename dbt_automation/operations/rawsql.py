@@ -23,11 +23,10 @@ def raw_generic_dbt_sql(
     else:
         dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in columns])}"
 
-    if len(tables) == 1:
-        config['input']['input_name'] = tables[0]
-        select_from = source_or_ref(tables[0], tables[0], "source")
+    if not tables:
+        raise ValueError("No tables provided")
     else:
-        select_from = " JOIN ".join([f"{{{{ source('{table}', '{table}') }}}}" for table in tables])
+        config['input']['input_name'] = tables[0]
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
@@ -35,6 +34,7 @@ def raw_generic_dbt_sql(
     else:
         dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
+    breakpoint()
     return dbt_code, source_columns
 
 def generic_sql_function(config: dict, warehouse: WarehouseInterface, project_dir: str):
