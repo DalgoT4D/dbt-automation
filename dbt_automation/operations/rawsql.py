@@ -14,19 +14,18 @@ def raw_generic_dbt_sql(
     """
     source_columns = config.get('source_columns', [])
     sql_statement = config.get('raw_sql')
-    parser = Parser(sql_statement)
-    tables = parser.tables
-    columns = parser.columns
+    # parser = Parser(sql_statement)
+    # tables = parser.tables
+    # columns = parser.columns
 
-    if columns == "*":
-        dbt_code = "SELECT *"
-    else:
-        dbt_code = f"SELECT {', '.join([quote_columnname(col, warehouse.name) for col in columns])}"
+    if not sql_statement:
+        raise ValueError("Query fragment is required")
 
-    if not tables:
-        raise ValueError("No tables provided")
-    else:
-        config['input']['input_name'] = tables[0]
+    dbt_code = f"{sql_statement}"
+
+    input_config = config.get("input")
+    if not input_config or "input_name" not in input_config:
+        raise ValueError("Input configuration must include 'input_name'")
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
