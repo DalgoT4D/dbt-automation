@@ -34,7 +34,6 @@ def raw_generic_dbt_sql(
     else:
         dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
 
-    breakpoint()
     return dbt_code, source_columns
 
 def generic_sql_function(config: dict, warehouse: WarehouseInterface, project_dir: str):
