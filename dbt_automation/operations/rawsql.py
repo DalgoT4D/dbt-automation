@@ -1,39 +1,35 @@
-from sql_metadata import Parser
-
-from dbt_automation.utils.columnutils import quote_columnname
 from dbt_automation.utils.dbtproject import dbtProject
 from dbt_automation.utils.interfaces.warehouse_interface import WarehouseInterface
 from dbt_automation.utils.tableutils import source_or_ref
 
 def raw_generic_dbt_sql(
     config: str,
-    warehouse: WarehouseInterface,
 ):
     """
-    Parses the given SQL statement to extract tables and columns and generates DBT code.
+    Parses the given SQL statements to generate DBT code, handling an optional WHERE clause.
     """
-    source_columns = config.get('source_columns', [])
-    sql_statement = config.get('raw_sql')
-    # parser = Parser(sql_statement)
-    # tables = parser.tables
-    # columns = parser.columns
+    sql_statement_1 = config.get('sql_statement_1')
+    sql_statement_2 = config.get('sql_statement_2', '')
 
-    if not sql_statement:
-        raise ValueError("Query fragment is required")
+    if not sql_statement_1:
+        raise ValueError("Primary SQL statement (sql_statement_1) is required")
 
-    dbt_code = f"{sql_statement}"
+    # Check if 'SELECT' is part of the sql_statement_1, if not, prepend it
+    if not sql_statement_1.strip().lower().startswith('select'):
+        sql_statement_1 = "SELECT " + sql_statement_1
 
-    input_config = config.get("input")
-    if not input_config or "input_name" not in input_config:
-        raise ValueError("Input configuration must include 'input_name'")
+    dbt_code = f"{sql_statement_1}"
 
     select_from = source_or_ref(**config["input"])
     if config["input"]["input_type"] == "cte":
-        dbt_code += "\n FROM " + select_from + "\n"
+        dbt_code += "  FROM " + select_from
     else:
-        dbt_code += "\n FROM " + "{{" + select_from + "}}" + "\n"
+        dbt_code += "  FROM " + "{{" + select_from + "}}"
 
-    return dbt_code, source_columns
+    if sql_statement_2:
+        dbt_code += " " + sql_statement_2
+
+    return dbt_code
 
 def generic_sql_function(config: dict, warehouse: WarehouseInterface, project_dir: str):
     """
@@ -45,7 +41,7 @@ def generic_sql_function(config: dict, warehouse: WarehouseInterface, project_di
             "{{ config(materialized='table', schema='" + config["dest_schema"] + "') }}"
         )
 
-    select_statement, output_cols = raw_generic_dbt_sql(config, warehouse)
+    select_statement = raw_generic_dbt_sql(config)
 
     dest_schema = config["dest_schema"]
     output_name = config["output_model_name"]
@@ -54,4 +50,4 @@ def generic_sql_function(config: dict, warehouse: WarehouseInterface, project_di
     dbtproject.ensure_models_dir(dest_schema)
     model_sql_path = dbtproject.write_model(dest_schema, output_name, dbt_sql + select_statement)
 
-    return model_sql_path, output_cols
+    return model_sql_path

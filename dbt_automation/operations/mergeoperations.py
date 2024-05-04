@@ -138,7 +138,8 @@ def merge_operations_sql(
                 operation["config"], warehouse
             )
 
-        output_cols = out_cols
+        if output_cols:
+            output_cols = out_cols
 
         cte_sql = f" , {operation['as_cte']} as (\n"
         if cte_counter == 0:
