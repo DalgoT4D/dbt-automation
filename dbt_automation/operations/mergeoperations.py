@@ -134,8 +134,8 @@ def merge_operations_sql(
                 operation["config"], warehouse
             )
         elif operation["type"] == "rawsql":
-            op_select_statement, out_cols = raw_generic_dbt_sql(
-                operation["config"], warehouse
+            op_select_statement = raw_generic_dbt_sql(
+                operation["config"]
             )
 
         if output_cols:
