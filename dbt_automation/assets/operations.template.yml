@@ -429,7 +429,16 @@ operations:
         cast_to: <data type to cast values to - "varchar" for postgres & "STRING" for bigquery>
         dest_schema:  <destination schema>
         output_name: <name of the output model>
-  
+    - type: rawsql
+      config:
+        - input:
+            input_type: <"source" or "model" of table1>
+            input_name: <name of source table or ref model table1>
+            source_name: <name of the source defined in source.yml; will be null for type "model" table1>
+          sql_statement_1: <sql statement for select>
+          sql_statement_2: <optional sql statement for where or other clause and filters>
+          dest_schema: <destination schema>
+          output_model_name: <name of the output model>
   
     - type: mergeoperations
       config:
@@ -744,3 +753,13 @@ operations:
                   - value: <string (column name or const)>
                     is_col: <boolean>
                   output_column_name: <output column name>
+            - type: rawsql
+              config:
+                - input:
+                    input_type: <"source" or "model" of table1>
+                    input_name: <name of source table or ref model table1>
+                    source_name: <name of the source defined in source.yml; will be null for type "model" table1>
+                  sql_statement_1: <sql statement for select>
+                  sql_statement_2: <optional sql statement for where or other clause and filters>
+                  dest_schema: <destination schema>
+                  output_model_name: <name of the output model>

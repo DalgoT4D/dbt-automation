@@ -9,6 +9,7 @@ from dbt_automation.operations.flattenjson import flattenjson
 from dbt_automation.operations.droprenamecolumns import rename_columns, drop_columns
 from dbt_automation.operations.generic import generic_function
 from dbt_automation.operations.mergeoperations import merge_operations
+from dbt_automation.operations.rawsql import generic_sql_function
 from dbt_automation.utils.warehouseclient import get_client
 from dbt_automation.operations.scaffold import scaffold
 from dbt_automation.operations.syncsources import sync_sources
@@ -1043,6 +1044,13 @@ class TestPostgresOperations:
                         ],
                     },
                 },
+                {
+                "type": "rawsql",
+                "config": {
+                    "sql_statement_1": "*",
+                    "sql_statement_2": "WHERE CAST(measure1 AS INT64) != 0"
+                    },
+                },
             ],
         }
 
@@ -1092,6 +1100,8 @@ class TestPostgresOperations:
             )
             == 0
         )
+
+        assert all(row['measure1'] != 0 for row in table_data)
 
     def test_generic(self):
         """test generic operation"""
@@ -1148,3 +1158,27 @@ class TestPostgresOperations:
         for value in ngo_column:
             assert value == value.lower(), f"Value {value} in 'NGO' column is not lowercase"
 
+
+    def test_generic_sql_function(self):
+        """ test generic raw sql"""
+        wc_client = TestPostgresOperations.wc_client
+        output_name = "rawsql"
+
+        config = {
+            "input": {
+                "input_type": "model",
+                "input_name": "_airbyte_raw_Sheet1",
+                "source_name": None,
+            },
+            "dest_schema": "pytest_intermediate",
+            "output_model_name": output_name,
+            "sql_statement_1": "measure1, measure2",
+            "sql_statement_2": "WHERE measure1 = '183'"
+        }
+
+        generic_sql_function(config, wc_client, TestPostgresOperations.test_project_dir)
+
+        TestPostgresOperations.execute_dbt("run", output_name)
+        
+        col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
+        assert "183" in col_data[0]['measure1']
