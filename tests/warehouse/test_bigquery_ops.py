@@ -1157,7 +1157,7 @@ class TestBigqueryOperations:
             "dest_schema": "pytest_intermediate",
             "output_model_name": output_name,
             "sql_statement_1": "measure1, measure2",
-            "sql_statement_2": "WHERE measure = '183'"
+            "sql_statement_2": "WHERE measure1 = '183'"
         }
 
         generic_sql_function(config, wc_client, TestBigqueryOperations.test_project_dir)
