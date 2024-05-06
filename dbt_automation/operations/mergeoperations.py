@@ -134,12 +134,11 @@ def merge_operations_sql(
                 operation["config"], warehouse
             )
         elif operation["type"] == "rawsql":
-            op_select_statement = raw_generic_dbt_sql(
-                operation["config"]
+            op_select_statement, out_cols = raw_generic_dbt_sql(
+                operation["config"], warehouse
             )
 
-        if output_cols:
-            output_cols = out_cols
+        output_cols = out_cols
 
         cte_sql = f" , {operation['as_cte']} as (\n"
         if cte_counter == 0:
