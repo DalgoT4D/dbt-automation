@@ -44,6 +44,7 @@ for json_file, tablename in zip(
             "host": os.getenv("TEST_PG_DBHOST"),
             "port": os.getenv("TEST_PG_DBPORT"),
             "username": os.getenv("TEST_PG_DBUSER"),
+            "user": os.getenv("TEST_PG_DBUSER"),
             "database": os.getenv("TEST_PG_DBNAME"),
             "password": os.getenv("TEST_PG_DBPASSWORD"),
         }

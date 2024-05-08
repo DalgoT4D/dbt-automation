@@ -233,7 +233,7 @@ operations:
           - <column name>
         dest_schema:  <destination schema>
         output_name: <name of the output model>
-        join_type: <"inner" or "left">
+        join_type: <"inner" or "left" or "full outer">
         join_on:
           key1: <colname of table1>
           key2: <colname of table2>
@@ -569,7 +569,7 @@ operations:
                 - <column name>
                 - <column name>
                 - <column name>
-              join_type: <"inner" or "left">
+              join_type: <"inner" or "left" or "full outer">
               join_on:
                 key1: <colname of table1>
                 key2: <colname of table2>

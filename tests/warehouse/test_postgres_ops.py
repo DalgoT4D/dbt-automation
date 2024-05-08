@@ -1045,10 +1045,10 @@ class TestPostgresOperations:
                     },
                 },
                 {
-                "type": "rawsql",
-                "config": {
-                    "sql_statement_1": "*",
-                    "sql_statement_2": "WHERE CAST(measure1 AS INT64) != 0"
+                    "type": "rawsql",
+                    "config": {
+                        "sql_statement_1": "*",
+                        "sql_statement_2": "WHERE CAST(measure1 AS INTEGER) != 0",
                     },
                 },
             ],
@@ -1101,7 +1101,7 @@ class TestPostgresOperations:
             == 0
         )
 
-        assert all(row['measure1'] != 0 for row in table_data)
+        assert all(row["measure1"] != 0 for row in table_data)
 
     def test_generic(self):
         """test generic operation"""
@@ -1120,18 +1120,14 @@ class TestPostgresOperations:
             "computed_columns": [
                 {
                     "function_name": "LOWER",
-                    "operands": [
-                        {"value": "NGO", "is_col": True}
-                    ],
-                    "output_column_name": "ngo_lower"
+                    "operands": [{"value": "NGO", "is_col": True}],
+                    "output_column_name": "ngo_lower",
                 },
                 {
                     "function_name": "TRIM",
-                    "operands": [
-                        {"value": "measure1", "is_col": True}
-                    ],
-                    "output_column_name": "trimmed_measure_1"
-                }
+                    "operands": [{"value": "measure1", "is_col": True}],
+                    "output_column_name": "trimmed_measure_1",
+                },
             ],
         }
 
@@ -1153,14 +1149,15 @@ class TestPostgresOperations:
         assert "NGO" in cols
         assert "Indicator" in cols
         table_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        ngo_column = [row['ngo_lower'] for row in table_data]
+        ngo_column = [row["ngo_lower"] for row in table_data]
 
         for value in ngo_column:
-            assert value == value.lower(), f"Value {value} in 'NGO' column is not lowercase"
-
+            assert (
+                value == value.lower()
+            ), f"Value {value} in 'NGO' column is not lowercase"
 
     def test_generic_sql_function(self):
-        """ test generic raw sql"""
+        """test generic raw sql"""
         wc_client = TestPostgresOperations.wc_client
         output_name = "rawsql"
 
@@ -1173,12 +1170,12 @@ class TestPostgresOperations:
             "dest_schema": "pytest_intermediate",
             "output_model_name": output_name,
             "sql_statement_1": "measure1, measure2",
-            "sql_statement_2": "WHERE measure1 = '183'"
+            "sql_statement_2": "WHERE measure1 = '183'",
         }
 
         generic_sql_function(config, wc_client, TestPostgresOperations.test_project_dir)
 
         TestPostgresOperations.execute_dbt("run", output_name)
-        
+
         col_data = wc_client.get_table_data("pytest_intermediate", output_name, 1)
-        assert "183" in col_data[0]['measure1']
+        assert "183" in col_data[0]["measure1"]

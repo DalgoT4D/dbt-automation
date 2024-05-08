@@ -52,7 +52,7 @@ def joins_sql(
     config: dict,
     warehouse: WarehouseInterface,
 ):
-    """Given a regex and a column name, extract the regex from the column."""
+    """Create a JOIN operation."""
 
     input_tables = [
         {"input": config["input"], "source_columns": config["source_columns"], "seq": 1}
@@ -61,16 +61,18 @@ def joins_sql(
     join_type: str = config.get("join_type", "")
     join_on = config.get("join_on", {})
 
-    if join_type not in ["inner", "left"]:
-        raise ValueError(f"join type not supported")
+    if join_type not in ["inner", "left", "full outer"]:
+        raise ValueError(f"join type {join_type} not supported")
 
     if len(input_tables) != 2:
-        raise ValueError(f"join operation requires exactly 2 input tables")
+        raise ValueError(
+            f"join operation requires exactly 2 input tables not {len(input_tables)}"
+        )
 
     aliases = ["t1", "t2"]
 
     # select
-    dbt_code = f"\nSELECT "
+    dbt_code = "\nSELECT "
 
     output_set = set()  # to check for duplicate column names
     for i, (alias, input_table) in enumerate(zip(aliases, input_tables)):
