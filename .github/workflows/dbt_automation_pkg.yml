@@ -55,11 +55,7 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           python setup.py install
-
-      - mame: Check
-        run: |
-          echo ${{ secrets.SSH_HOST }}
-
+          
       - name: Seed data in test warehouse
         run: |
           python seeds/seed.py --warehouse postgres
