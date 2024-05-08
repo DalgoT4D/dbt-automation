@@ -18,6 +18,8 @@ parser.add_argument("--warehouse", required=True, choices=["postgres", "bigquery
 args = parser.parse_args()
 warehouse = args.warehouse
 
+load_dotenv("dbconnection.env")
+
 for json_file, tablename in zip(
     ["seeds/sample_sheet1.json", "seeds/sample_sheet2.json"],
     ["_airbyte_raw_Sheet1", "_airbyte_raw_Sheet2"],
