@@ -62,7 +62,7 @@ def quote_columnname(colname: str, warehouse: str):
 def quote_constvalue(value: str, warehouse: str):
     """encloses a constant string value inside proper quotes"""
     if value is None or value.strip().lower() == "none":
-        return "'" + "NULL" + "'"
+        return "NULL"
 
     if warehouse == "postgres":
         return "'" + value + "'"
