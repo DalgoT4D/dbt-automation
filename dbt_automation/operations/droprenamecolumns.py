@@ -69,11 +69,15 @@ def rename_columns_dbt_sql(
     source_columns = config["source_columns"]
 
     selected_columns = [col for col in source_columns if col not in columns]
-    dbt_code = (
-        "SELECT "
-        + ", ".join([quote_columnname(col, warehouse.name) for col in selected_columns])
-        + ", "
-    )
+    dbt_code = "SELECT "
+
+    if selected_columns:
+        dbt_code += (
+            ", ".join(
+                [quote_columnname(col, warehouse.name) for col in selected_columns]
+            )
+            + ", "
+        )
 
     # Rename columns
     for old_name, new_name in columns.items():
