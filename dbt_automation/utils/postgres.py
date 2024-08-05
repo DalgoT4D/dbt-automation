@@ -232,7 +232,7 @@ class PostgresClient(WarehouseInterface):
 
     def json_extract_op(self, json_column: str, json_field: str, sql_column: str):
         """outputs a sql query snippet for extracting a json field"""
-        return f"{json_column}::json->>'{json_field}' as \"{sql_column}\""
+        return f"{quote_columnname(json_column, 'postgres')}::json->>'{json_field}' as \"{sql_column}\""
 
     def close(self):
         try:
