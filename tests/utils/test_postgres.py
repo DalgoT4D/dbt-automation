@@ -107,7 +107,7 @@ def test_get_connection_7():
     """tests PostgresClient.get_connection"""
     with patch("dbt_automation.utils.postgres.psycopg2.connect") as mock_connect:
         PostgresClient.get_connection(
-            {"sslmode": {"mode": "disable", "ca_certification": "LONG-CERTIFICATE"}}
+            {"sslmode": {"mode": "disable", "ca_certificate": "LONG-CERTIFICATE"}}
         )
         mock_connect.assert_called_once()
         mock_connect.assert_called_with(sslmode="disable", sslrootcert=ANY)
