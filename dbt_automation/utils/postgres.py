@@ -41,6 +41,14 @@ class PostgresClient(WarehouseInterface):
             if key in conn_info:
                 connect_params[key] = conn_info[key]
 
+        # make sure dbname is set
+        if "database" in connect_params:
+            connect_params["dbname"] = connect_params["database"]
+
+        # ssl_mode is an alias for sslmode
+        if "ssl_mode" in conn_info:
+            conn_info["sslmode"] = conn_info["ssl_mode"]
+
         if "sslmode" in conn_info:
             # sslmode can be a string or a boolean or a dict
             if isinstance(conn_info["sslmode"], str):
@@ -63,7 +71,7 @@ class PostgresClient(WarehouseInterface):
                     # is a string (i.e. the actual certificate). so we write
                     # it to disk and pass the file path
                     with tempfile.NamedTemporaryFile(delete=False) as fp:
-                        fp.write(conn_info["ssl_mode"]["ca_certificate"].encode())
+                        fp.write(conn_info["sslmode"]["ca_certificate"].encode())
                         connect_params["sslrootcert"] = fp.name
                         connect_params["sslcert"] = fp.name
 
