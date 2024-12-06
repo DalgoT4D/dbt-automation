@@ -36,7 +36,6 @@ def test_get_connection_2():
             user="USER",
             password="PASSWORD",
             database="DATABASE",
-            dbname="DATABASE",
         )
 
 

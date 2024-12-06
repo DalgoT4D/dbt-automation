@@ -41,10 +41,6 @@ class PostgresClient(WarehouseInterface):
             if key in conn_info:
                 connect_params[key] = conn_info[key]
 
-        # make sure dbname is set
-        if "database" in connect_params:
-            connect_params["dbname"] = connect_params["database"]
-
         # ssl_mode is an alias for sslmode
         if "ssl_mode" in conn_info:
             conn_info["sslmode"] = conn_info["ssl_mode"]
