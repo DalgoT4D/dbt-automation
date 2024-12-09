@@ -1,6 +1,7 @@
 """helpers for postgres"""
 
 import os
+import tempfile
 from logging import basicConfig, getLogger, INFO
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
@@ -36,11 +37,43 @@ class PostgresClient(WarehouseInterface):
             "user",
             "password",
             "database",
-            "sslmode",
-            "sslrootcert",
         ]:
             if key in conn_info:
                 connect_params[key] = conn_info[key]
+
+        # ssl_mode is an alias for sslmode
+        if "ssl_mode" in conn_info:
+            conn_info["sslmode"] = conn_info["ssl_mode"]
+
+        if "sslmode" in conn_info:
+            # sslmode can be a string or a boolean or a dict
+            if isinstance(conn_info["sslmode"], str):
+                # "require", "disable", "verify-ca", "verify-full"
+                connect_params["sslmode"] = conn_info["sslmode"]
+            elif isinstance(conn_info["sslmode"], bool):
+                # true = require, false = disable
+                connect_params["sslmode"] = (
+                    "require" if conn_info["sslmode"] else "disable"
+                )
+            elif (
+                isinstance(conn_info["sslmode"], dict)
+                and "mode" in conn_info["sslmode"]
+            ):
+                # mode is "require", "disable", "verify-ca", "verify-full" etc
+                connect_params["sslmode"] = conn_info["sslmode"]["mode"]
+                if "ca_certificate" in conn_info["sslmode"]:
+                    # connect_params['sslcert'] needs a file path but
+                    # conn_info['sslmode']['ca_certificate']
+                    # is a string (i.e. the actual certificate). so we write
+                    # it to disk and pass the file path
+                    with tempfile.NamedTemporaryFile(delete=False) as fp:
+                        fp.write(conn_info["sslmode"]["ca_certificate"].encode())
+                        connect_params["sslrootcert"] = fp.name
+                        connect_params["sslcert"] = fp.name
+
+        if "sslrootcert" in conn_info:
+            connect_params["sslrootcert"] = conn_info["sslrootcert"]
+
         connection = psycopg2.connect(**connect_params)
         return connection
 
