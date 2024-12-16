@@ -69,7 +69,6 @@ class PostgresClient(WarehouseInterface):
                     with tempfile.NamedTemporaryFile(delete=False) as fp:
                         fp.write(conn_info["sslmode"]["ca_certificate"].encode())
                         connect_params["sslrootcert"] = fp.name
-                        connect_params["sslcert"] = fp.name
 
         if "sslrootcert" in conn_info:
             connect_params["sslrootcert"] = conn_info["sslrootcert"]
