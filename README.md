@@ -5,6 +5,9 @@
 
 Documentation can be found [here](https://github.com/DalgoT4D/dbt-automation/wiki)
 
+# NOTE the contents of this repository have been copied over to https://github.com/DalgoT4D/DDP_backend and the repository has been archived
+
+
 # Setting up the test environment
 
 - Create a `pytest.ini` file and the test warehouse credentials. 
